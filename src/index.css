@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 15%;
+
+    --primary: 220 72% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 30% 20%;
+
+    --muted: 210 30% 96%;
+    --muted-foreground: 220 10% 46%;
+
+    --accent: 35 95% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 220 72% 45%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 220 72% 45%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 35 95% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 72% 38%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 72% 55%;
+    --sidebar-ring: 35 95% 52%;
+
+    /* Brand tokens from logo */
+    --brand-blue: 220 72% 45%;
+    --brand-green: 145 63% 42%;
+    --brand-orange: 35 95% 52%;
+    --brand-red: 4 80% 52%;
+    --brand-yellow: 45 93% 55%;
+
+    /* Semantic */
+    --success: 145 63% 42%;
+    --warning: 35 95% 52%;
+    --info: 220 72% 45%;
+  }
+
+  .dark {
+    --background: 220 30% 6%;
+    --foreground: 210 20% 92%;
+    --card: 220 30% 10%;
+    --card-foreground: 210 20% 92%;
+    --popover: 220 30% 10%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 220 72% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 30% 16%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 20% 14%;
+    --muted-foreground: 210 15% 55%;
+    --accent: 35 95% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 220 72% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-navy {
+    background: linear-gradient(135deg, hsl(220 72% 40%) 0%, hsl(220 72% 45%) 50%, hsl(220 72% 52%) 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(35 95% 52%) 0%, hsl(45 93% 60%) 100%);
+  }
+
+  .gradient-navy-gold {
+    background: linear-gradient(135deg, hsl(220 72% 40%) 0%, hsl(220 72% 45%) 60%, hsl(35 95% 52% / 0.15) 100%);
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, hsl(35 95% 52%), hsl(45 93% 60%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(135deg, hsl(220 72% 45%), hsl(145 63% 42%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background: hsl(0 0% 100% / 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(0 0% 100% / 0.12);
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 30px hsl(35 95% 52% / 0.2), 0 0 60px hsl(35 95% 52% / 0.1);
+  }
+
+  .brand-shadow {
+    box-shadow: 0 4px 20px -4px hsl(220 72% 45% / 0.25);
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
