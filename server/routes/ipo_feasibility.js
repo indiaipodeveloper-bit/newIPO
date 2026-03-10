@@ -1,0 +1,91 @@
+import express from 'express';
+import pool from '../db.js';
+
+const router = express.Router();
+
+// Ensure table exists (though it usually already does based on user info)
+const initTable = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS check_ipo_eligibility (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        mobile VARCHAR(50) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        company_name VARCHAR(255),
+        current_turn_over VARCHAR(255),
+        current_pat VARCHAR(255),
+        industry VARCHAR(255),
+        business_type VARCHAR(255),
+        networth VARCHAR(255),
+        profit VARCHAR(255),
+        vintage VARCHAR(255),
+        eligibility VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ 'check_ipo_eligibility' table verified");
+  } catch (err) {
+    console.error("❌ Error verifying 'check_ipo_eligibility' table:", err.message);
+  }
+};
+
+initTable();
+
+// Get all fast feasibility enquiries for admin
+router.get('/', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM check_ipo_eligibility ORDER BY created_at DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching ipo feasibility entries:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Create a new feasibility enquiry
+router.post('/', async (req, res) => {
+  try {
+    const { 
+        name, mobile, email, company_name, 
+        current_turn_over, current_pat, industry, 
+        business_type, networth, profit, vintage, eligibility 
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !mobile) {
+      return res.status(400).json({ error: 'Name, email, and mobile are required' });
+    }
+
+    const [result] = await pool.query(
+      `INSERT INTO check_ipo_eligibility 
+      (name, mobile, email, company_name, current_turn_over, current_pat, industry, business_type, networth, profit, vintage, eligibility) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, mobile, email, company_name, current_turn_over, current_pat, industry, business_type, networth, profit, vintage, eligibility || 'Pending']
+    );
+
+    res.status(201).json({ id: result.insertId, message: "Enquiry submitted successfully" });
+  } catch (err) {
+    console.error("Error creating ipo feasibility entry:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Delete a feasibility enquiry
+router.delete('/:id', async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM check_ipo_eligibility WHERE id = ?', [req.params.id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Entry not found" });
+    }
+    
+    res.json({ message: "Entry deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting ipo feasibility entry:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+export default router;
