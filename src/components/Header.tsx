@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown, ChevronRight, LogOut, LayoutDashboard, Zap, ExternalLink, ArrowUpRight } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, Zap, ExternalLink, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,7 +27,7 @@ interface NavItem {
   dropdown?: SubItem[];
 }
 
-const navLinks: NavItem[] = [
+const STATIC_NAV_PREFIX: NavItem[] = [
   { label: "Home", href: "/" },
   {
     label: "About",
@@ -91,51 +91,14 @@ const navLinks: NavItem[] = [
       {
         title: "MAINBOARD",
         items: [
-          { label: "List of Mainboard Merchant Bankers", href: "/merchant-bankers/mainboard", external: true },
+          { label: "List of Mainboard Merchant Bankers", href: "/merchant-bankers/mainboard-list" },
         ],
       },
     ],
   },
-  {
-    label: "Resources",
-    href: "/reports",
-    icon: <Zap className="h-3.5 w-3.5" />,
-    megaMenu: [
-      {
-        title: "Reports",
-        items: [
-          { label: "Daily Reporter", href: "/reports/daily-reporter", badge: "Daily Reporter", badgeColor: "bg-brand-green text-primary-foreground" },
-          { label: "IPO Calendar", href: "/ipo-calendar" },
-          { label: "Upcoming IPO Calendar", href: "/reports/upcoming-ipo-calendar" },
-          { label: "Mainline IPO Report", href: "/reports/mainline-ipo-report" },
-          { label: "SME IPO Report", href: "/reports/sme-ipo-report" },
-          { label: "SME IPOs by Sector", href: "/reports/sme-ipos-by-sector" },
-          { label: "Mainboard IPOs by Sector", href: "/reports/mainboard-ipos-by-sector" },
-        ],
-      },
-      {
-        title: "IPO Knowledge",
-        items: [
-          { label: "IPO World Magazine", href: "/ipo-knowledge/ipo-world-magazine", badge: "IPO World Magazine", badgeColor: "bg-brand-blue text-primary-foreground" },
-          { label: "IPO Process", href: "/ipo-knowledge/ipo-process" },
-          { label: "Pre-IPO Process Guidance", href: "/ipo-knowledge/pre-ipo-process" },
-          { label: "IPO Blogs", href: "/blog" },
-          { label: "Sector Wise IPO List In India", href: "/ipo-knowledge/sector-wise-ipo-list" },
-          { label: "List of IPO Registrar", href: "/ipo-knowledge/ipo-registrar-list" },
-        ],
-      },
-      {
-        title: "Notifications / Circulars",
-        items: [
-          { label: "SEBI ICDR Amendment Regulations", href: "/notifications/sebi-icdr-amendments" },
-          { label: "SEBI SME IPO ICDR Amendments", href: "/notifications/sebi-sme-icdr-amendments" },
-          { label: "ICDR", href: "/notifications/icdr" },
-          { label: "BSE SME Eligibility Criteria", href: "/notifications/bse-sme-eligibility" },
-          { label: "NSE Emerge Eligibility Criteria", href: "/notifications/nse-emerge-eligibility" },
-        ],
-      },
-    ],
-  },
+];
+
+const STATIC_NAV_SUFFIX: NavItem[] = [
   {
     label: "News/Updates",
     href: "/news-updates",
@@ -148,6 +111,39 @@ const navLinks: NavItem[] = [
   { label: "Contact Us", href: "/contact" },
 ];
 
+const REPORTS_COLUMN: MegaColumn = {
+  title: "Reports",
+  items: [
+    { label: "Daily Reporter", href: "/reports/daily-reporter", badge: "Daily Reporter", badgeColor: "bg-brand-green text-primary-foreground" },
+    { label: "IPO Calendar", href: "/ipo-calendar" },
+    { label: "Upcoming IPO Calendar", href: "/reports/upcoming-ipo-calendar" },
+    { label: "Mainline IPO Report", href: "/reports/mainline-ipo-report" },
+    { label: "SME IPO Report", href: "/reports/sme-ipo-report" },
+    { label: "SME IPOs by Sector", href: "/reports/sme-ipos-by-sector" },
+    { label: "Mainboard IPOs by Sector", href: "/reports/mainboard-ipos-by-sector" },
+  ],
+};
+
+const FALLBACK_KNOWLEDGE: SubItem[] = [
+  { label: "IPO World Magazine", href: "/ipo-knowledge/ipo-world-magazine", badge: "IPO World Magazine", badgeColor: "bg-brand-blue text-primary-foreground" },
+  { label: "IPO Process", href: "/ipo-knowledge/ipo-process" },
+  { label: "Pre-IPO Process Guidance", href: "/ipo-knowledge/pre-ipo-process" },
+  { label: "IPO Blogs", href: "/blog" },
+  { label: "Sector Wise IPO List In India", href: "/ipo-knowledge/sector-wise-ipo-list" },
+  { label: "List of IPO Registrar", href: "/ipo-knowledge/ipo-registrar-list" },
+];
+
+const FALLBACK_NOTIFICATIONS: SubItem[] = [
+  { label: "SEBI ICDR Amendment Regulations", href: "/notifications/sebi-icdr-amendments" },
+  { label: "SEBI SME IPO ICDR Amendments", href: "/notifications/sebi-sme-icdr-amendments" },
+  { label: "ICDR", href: "/notifications/icdr" },
+  { label: "BSE SME Eligibility Criteria", href: "/notifications/bse-sme-eligibility" },
+  { label: "NSE Emerge Eligibility Criteria", href: "/notifications/nse-emerge-eligibility" },
+];
+
+interface APINotif { id: string; title: string; slug: string; is_active: boolean | number; }
+interface APICategory { id: string; name: string; slug: string; is_active: boolean | number; }
+
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -155,6 +151,52 @@ const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [notifItems, setNotifItems] = useState<SubItem[]>(FALLBACK_NOTIFICATIONS);
+  const [knowledgeItems, setKnowledgeItems] = useState<SubItem[]>(FALLBACK_KNOWLEDGE);
+
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then(r => r.ok ? r.json() : null)
+      .then((data: APINotif[] | null) => {
+        if (data && data.length > 0) {
+          const active = data.filter(n => n.is_active == 1 || n.is_active === true);
+          if (active.length > 0) {
+            setNotifItems(active.map(n => ({ label: n.title, href: `/notifications/${n.slug}` })));
+          }
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/knowledge/categories")
+      .then(r => r.ok ? r.json() : null)
+      .then((data: APICategory[] | null) => {
+        if (data && data.length > 0) {
+          const active = data.filter(c => c.is_active == 1 || c.is_active === true);
+          if (active.length > 0) {
+            setKnowledgeItems(active.map(c => ({ label: c.name, href: `/ipo-knowledge/${c.slug}` })));
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const resourcesNavItem: NavItem = {
+    label: "Resources",
+    href: "/reports",
+    icon: <Zap className="h-3.5 w-3.5" />,
+    megaMenu: [
+      REPORTS_COLUMN,
+      { title: "IPO Knowledge", items: knowledgeItems },
+      { title: "Notifications / Circulars", items: notifItems },
+    ],
+  };
+
+  const navLinks: NavItem[] = [
+    ...STATIC_NAV_PREFIX,
+    resourcesNavItem,
+    ...STATIC_NAV_SUFFIX,
+  ];
 
   const handleMouseEnter = (label: string) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -215,12 +257,13 @@ const Header = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute left-1/2 -translate-x-1/2 top-full pt-2"
+                    className="absolute left-1/2 -translate-x-1/2 top-full pt-2 z-50"
                     onMouseEnter={() => handleMouseEnter(link.label)}
                     onMouseLeave={handleMouseLeave}
                   >
-                    <div className="bg-background rounded-xl border border-border shadow-xl p-6 min-w-[600px]"
-                      style={{ maxWidth: link.megaMenu.length > 2 ? "820px" : "500px" }}
+                    <div
+                      className="bg-background rounded-xl border border-border shadow-xl p-6"
+                      style={{ minWidth: "600px", maxWidth: link.megaMenu.length > 2 ? "820px" : "500px" }}
                     >
                       <div className={`grid gap-8 ${link.megaMenu.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
                         {link.megaMenu.map((col) => (
@@ -264,7 +307,7 @@ const Header = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute left-0 top-full pt-2"
+                    className="absolute left-0 top-full pt-2 z-50"
                     onMouseEnter={() => handleMouseEnter(link.label)}
                     onMouseLeave={handleMouseLeave}
                   >
@@ -313,7 +356,7 @@ const Header = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full pt-2"
+                      className="absolute right-0 top-full pt-2 z-50"
                     >
                       <div className="bg-background rounded-xl border border-border shadow-xl py-2 min-w-[180px]">
                         <div className="px-4 py-2 border-b border-border">

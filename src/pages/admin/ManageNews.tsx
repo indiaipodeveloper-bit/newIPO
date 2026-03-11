@@ -93,8 +93,8 @@ const ManageNews = () => {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("folder", "news");
+    formData.append("file", file);
 
     const tId = toast.loading("Uploading image...");
     try {

@@ -17,6 +17,16 @@ const initTable = async () => {
                 update_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
+        
+        try {
+            await pool.query(`ALTER TABLE about_csr ADD COLUMN status VARCHAR(50) DEFAULT 'published'`);
+        } catch (e) {
+            // Error code 1060: Duplicate column name 'status' - safely ignore
+        }
+        
+        // Update any existing records without a status
+        await pool.query(`UPDATE about_csr SET status = 'published' WHERE status IS NULL OR status = ''`);
+
         console.log("✅ 'about_csr' table verified");
     } catch (err) {
         console.error("❌ Error verifying 'about_csr' table:", err.message);

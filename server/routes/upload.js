@@ -36,10 +36,9 @@ router.post('/', upload.single('file'), (req, res) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
         const folder = req.body.folder || 'misc';
-        // Generate the URL that the frontend will use to access this file
-        // Assumes Express is serving the `public` folder statically
-        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${folder}/${req.file.filename}`;
-        res.json({ url: fileUrl });
+        // Return a relative path relative to the public directory
+        const relativePath = `uploads/${folder}/${req.file.filename}`;
+        res.json({ url: relativePath });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

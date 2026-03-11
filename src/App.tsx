@@ -23,10 +23,12 @@ const IPOFeasibility = lazy(() => import("./pages/IPOFeasibility"));
 const Investors = lazy(() => import("./pages/Investors"));
 const NewsUpdates = lazy(() => import("./pages/NewsUpdates"));
 const NewsDetails = lazy(() => import("./pages/NewsDetails"));
+const Careers = lazy(() => import("./pages/Careers"));
 const Reports = lazy(() => import("./pages/Reports"));
 const IPOKnowledge = lazy(() => import("./pages/IPOKnowledge"));
-const ManageKnowledge = lazy(() => import("./pages/admin/ManageKnowledge"));
 const MerchantBankersPage = lazy(() => import("./pages/MerchantBankers"));
+const MainboardBankersPage = lazy(() => import("./pages/MainboardBankers"));
+const ManageKnowledge = lazy(() => import("./pages/admin/ManageKnowledge"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const ManageIPOs = lazy(() => import("./pages/admin/ManageIPOs"));
 const ManageBlogs = lazy(() => import("./pages/admin/ManageBlogs"));
@@ -45,6 +47,8 @@ const ManagePages = lazy(() => import("./pages/admin/ManagePages"));
 const ManageNavigation = lazy(() => import("./pages/admin/ManageNavigation"));
 const ManageBanners = lazy(() => import("./pages/admin/ManageBanners"));
 const ManageMerchantBankers = lazy(() => import("./pages/admin/ManageMerchantBankers"));
+const ManageMainboardBankers = lazy(() => import("./pages/admin/ManageMainboardBankers"));
+const ManageCareerApplications = lazy(() => import("./pages/admin/ManageCareerApplications"));
 const NotificationView = lazy(() => import("./pages/NotificationView"));
 const ManageNotifications = lazy(() => import("./pages/admin/ManageNotifications"));
 const ManageVideos = lazy(() => import("./pages/admin/ManageVideos"));
@@ -87,12 +91,14 @@ const App = () => (
               <Route path="/news-updates" element={<NewsUpdates />} />
               <Route path="/ipo-and-market-snaps" element={<MarketSnaps />} />
               <Route path="/csr" element={<CSR />} />
+              <Route path="/careers" element={<Careers />} />
               <Route path="/news/:slug" element={<NewsDetails />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/reports/:slug" element={<Reports />} />
               <Route path="/ipo-knowledge" element={<IPOKnowledge />} />
               <Route path="/ipo-knowledge/:slug" element={<IPOKnowledge />} />
               <Route path="/merchant-bankers/:category" element={<MerchantBankersPage />} />
+              <Route path="/merchant-bankers/mainboard-list" element={<MainboardBankersPage />} />
               <Route path="/notifications/:slug" element={<NotificationView />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/ipos" element={<ManageIPOs />} />
@@ -110,6 +116,8 @@ const App = () => (
               <Route path="/admin/navigation" element={<ManageNavigation />} />
               <Route path="/admin/banners" element={<ManageBanners />} />
               <Route path="/admin/merchant-bankers" element={<ManageMerchantBankers />} />
+              <Route path="/admin/mainboard-bankers" element={<ManageMainboardBankers />} />
+              <Route path="/admin/career-applications" element={<ManageCareerApplications />} />
               <Route path="/admin/knowledge" element={<ManageKnowledge />} />
               <Route path="/admin/notifications" element={<ManageNotifications />} />
               <Route path="/admin/videos" element={<ManageVideos />} />

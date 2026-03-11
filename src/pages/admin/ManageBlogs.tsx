@@ -90,8 +90,8 @@ const ManageBlogs = () => {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("folder", "blogs");
+    formData.append("file", file);
 
     const tId = toast.loading("Uploading image...");
     try {
