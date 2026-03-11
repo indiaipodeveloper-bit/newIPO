@@ -33,7 +33,7 @@ interface AdminBlog {
 }
 
 const emptyForm: Partial<AdminBlog> = {
-  title: "", slug: "", category: "ipo_blogs", status: "1", upcoming: "0", image: "",
+  title: "", new_slug: "", slug: "", category: "ipo_blogs", status: "1", upcoming: "0", image: "",
   content: "", faqs: "", new_highlight_text: "",
   gmp_date: "", gmp_ipo_price: "", gmp: "",
   ipo_description: "", ipo_timeline_description: "",
@@ -178,8 +178,12 @@ const ManageAdminBlogs = () => {
                       <Input value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-1.5 block">Slug</label>
-                      <Input value={form.slug || ''} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                      <label className="text-sm font-medium mb-1.5 block">URL Slug</label>
+                      <Input 
+                        value={form.new_slug || form.slug || ''} 
+                        onChange={(e) => setForm({ ...form, new_slug: e.target.value, slug: e.target.value })} 
+                        placeholder="e.g. my-awesome-ipo"
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-1.5 block">Category</label>

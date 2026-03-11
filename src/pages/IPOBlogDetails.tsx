@@ -30,6 +30,12 @@ interface AdminBlogFull {
   created_at: string;
 }
 
+const isValid = (val: any) => {
+  if (val === null || val === undefined) return false;
+  const s = String(val).toLowerCase().trim();
+  return s !== "null" && s !== "[null]" && s !== "" && s !== "undefined";
+};
+
 const IPOBlogDetails = () => {
   const { slug } = useParams();
   const [blog, setBlog] = useState<AdminBlogFull | null>(null);
@@ -103,14 +109,14 @@ const IPOBlogDetails = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge className="bg-primary/10 text-primary hover:bg-primary/20 backdrop-blur-md">
-                  {blog.category.replace('_', ' ').toUpperCase()}
+                  {(blog.category || 'IPO').replace('_', ' ').toUpperCase()}
                 </Badge>
                 {blog.upcoming == "1" ? (
                   <Badge className="bg-amber-100 text-amber-800 border-amber-300">UPCOMING</Badge>
                 ) : (
                   <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">CURRENT</Badge>
                 )}
-                {blog.new_highlight_text && (
+                {isValid(blog.new_highlight_text) && (
                   <Badge className="bg-purple-100 text-purple-800 border-purple-300">{blog.new_highlight_text}</Badge>
                 )}
               </div>
@@ -119,7 +125,7 @@ const IPOBlogDetails = () => {
                 {blog.title}
               </h1>
 
-              {blog.image && (
+              {isValid(blog.image) && (
                 <div className="rounded-xl overflow-hidden bg-slate-100 mb-8 border border-slate-200">
                   <img src={blog.image} alt={blog.title} className="w-full h-auto object-cover max-h-[400px]" />
                 </div>
@@ -127,19 +133,19 @@ const IPOBlogDetails = () => {
 
               {/* Core Info Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                {blog.gmp_ipo_price && (
+                {isValid(blog.gmp_ipo_price) && (
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <p className="text-sm text-slate-500 mb-1 flex items-center"><IndianRupee className="w-4 h-4 mr-1"/> Price Band</p>
                     <p className="font-bold text-lg text-slate-900">{blog.gmp_ipo_price}</p>
                   </div>
                 )}
-                {blog.gmp && (
+                {isValid(blog.gmp) && (
                   <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
                     <p className="text-sm text-emerald-600 mb-1 flex items-center"><TrendingUp className="w-4 h-4 mr-1"/> Latest GMP</p>
                     <p className="font-bold text-lg text-emerald-700">{blog.gmp}</p>
                   </div>
                 )}
-                {blog.gmp_date && (
+                {isValid(blog.gmp_date) && (
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <p className="text-sm text-slate-500 mb-1 flex items-center"><Calendar className="w-4 h-4 mr-1"/> Important Date</p>
                     <p className="font-bold text-lg text-slate-900">{blog.gmp_date}</p>
@@ -148,7 +154,7 @@ const IPOBlogDetails = () => {
               </div>
 
               {/* Main HTML Content rendered directly since it's an admin blog */}
-              {blog.content && (
+              {isValid(blog.content) && (
                 <div 
                   className="prose prose-slate max-w-none prose-headings:font-heading prose-a:text-primary mt-8"
                   dangerouslySetInnerHTML={{ __html: blog.content }}
@@ -157,16 +163,16 @@ const IPOBlogDetails = () => {
             </div>
 
             {/* Financials & Strengths */}
-            {(blog.finantial_information_assets || blog.competative_strenght) && (
+            {(isValid(blog.finantial_information_assets) || isValid(blog.competative_strenght)) && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-                {blog.finantial_information_assets && (
+                {isValid(blog.finantial_information_assets) && (
                   <div className="mb-8">
                     <h3 className="text-2xl font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">Financial Information</h3>
                     <div className="prose prose-sm max-w-none overflow-x-auto" dangerouslySetInnerHTML={{ __html: blog.finantial_information_assets }} />
                   </div>
                 )}
 
-                {blog.competative_strenght && (
+                {isValid(blog.competative_strenght) && (
                   <div>
                     <h3 className="text-2xl font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">Competitive Strengths</h3>
                     <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: blog.competative_strenght }} />
@@ -180,11 +186,11 @@ const IPOBlogDetails = () => {
           <div className="lg:col-span-4 space-y-6">
             
             {/* Download section */}
-            {(blog.drhp || blog.rhp) && (
+            {(isValid(blog.drhp) || isValid(blog.rhp)) && (
               <div className="bg-primary text-primary-foreground rounded-2xl shadow-lg p-6">
                 <h3 className="text-xl font-bold mb-4 font-heading">Official Documents</h3>
                 <div className="space-y-3">
-                  {blog.drhp && (
+                  {isValid(blog.drhp) && (
                     <Button variant="secondary" className="w-full flex justify-between group" asChild>
                       <a href={blog.drhp} target="_blank" rel="noopener noreferrer">
                         <span>Download DRHP</span>
@@ -192,7 +198,7 @@ const IPOBlogDetails = () => {
                       </a>
                     </Button>
                   )}
-                  {blog.rhp && (
+                  {isValid(blog.rhp) && (
                     <Button variant="secondary" className="w-full flex justify-between group" asChild>
                       <a href={blog.rhp} target="_blank" rel="noopener noreferrer">
                         <span>Download RHP</span>
@@ -205,20 +211,22 @@ const IPOBlogDetails = () => {
             )}
 
             {/* Timelines and Lots */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-xl font-bold mb-4 text-slate-900 font-heading">Timelines & Details</h3>
-              {blog.ipo_description && (
-                <div className="mb-4 text-sm text-slate-600 border-l-2 border-primary pl-3">
-                    <div dangerouslySetInnerHTML={{ __html: blog.ipo_description }} />
-                </div>
-              )}
-              {blog.ipo_timeline_description && (
-                <div className="text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: blog.ipo_timeline_description }} />
-              )}
-            </div>
+            {(isValid(blog.ipo_description) || isValid(blog.ipo_timeline_description)) && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 className="text-xl font-bold mb-4 text-slate-900 font-heading">Timelines & Details</h3>
+                {isValid(blog.ipo_description) && (
+                  <div className="mb-4 text-sm text-slate-600 border-l-2 border-primary pl-3">
+                      <div dangerouslySetInnerHTML={{ __html: blog.ipo_description }} />
+                  </div>
+                )}
+                {isValid(blog.ipo_timeline_description) && (
+                  <div className="text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: blog.ipo_timeline_description }} />
+                )}
+              </div>
+            )}
 
             {/* Lots Size */}
-            {blog.ipo_lots_amount && (
+            {isValid(blog.ipo_lots_amount) && (
                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                  <h3 className="text-xl font-bold mb-4 text-slate-900 font-heading">Lot Size</h3>
                  <div className="text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: blog.ipo_lots_amount }} />
