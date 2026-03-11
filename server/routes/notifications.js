@@ -16,10 +16,10 @@ router.get('/', async (req, res) => {
 // POST create a notification
 router.post('/', async (req, res) => {
     try {
-        const { title, slug, pdf_url = null, description = '', is_active = 1, sort_order = 0 } = req.body;
+        const { title, slug, pdf_url = null, link = null, description = '', is_active = 1, sort_order = 0 } = req.body;
         const [result] = await pool.execute(
-            'INSERT INTO notification_pdfs (title, slug, pdf_url, description, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)',
-            [title, slug, pdf_url, description, is_active, sort_order]
+            'INSERT INTO notification_pdfs (title, slug, pdf_url, link, description, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [title, slug, pdf_url, link, description, is_active, sort_order]
         );
         const [rows] = await pool.execute('SELECT * FROM notification_pdfs WHERE id = ?', [result.insertId]);
         res.status(201).json(rows[0]);

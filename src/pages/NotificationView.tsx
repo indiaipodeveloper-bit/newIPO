@@ -12,6 +12,7 @@ interface NotificationPdf {
   title: string;
   slug: string;
   pdf_url: string | null;
+  link: string | null;
   description: string | null;
 }
 
@@ -87,30 +88,43 @@ const NotificationView = () => {
                     <span className="text-sm font-medium text-foreground">{pdf.title}</span>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" asChild>
-                        <a href={pdf.pdf_url} target="_blank" rel="noopener noreferrer">
+                        <a href={pdf.pdf_url.startsWith('http') || pdf.pdf_url.startsWith('/') ? pdf.pdf_url : `/${pdf.pdf_url}`} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open in New Tab
                         </a>
                       </Button>
                       <Button size="sm" asChild className="bg-primary text-primary-foreground">
-                        <a href={pdf.pdf_url} download>
+                        <a href={pdf.pdf_url.startsWith('http') || pdf.pdf_url.startsWith('/') ? pdf.pdf_url : `/${pdf.pdf_url}`} download>
                           <Download className="h-3.5 w-3.5 mr-1" /> Download
                         </a>
                       </Button>
                     </div>
                   </div>
                   <iframe
-                    src={pdf.pdf_url}
+                    src={pdf.pdf_url.startsWith('http') || pdf.pdf_url.startsWith('/') ? pdf.pdf_url : `/${pdf.pdf_url}`}
                     className="w-full border-0"
                     style={{ height: "80vh" }}
                     title={pdf.title}
                   />
                 </div>
+              ) : pdf?.link ? (
+                <div className="border border-border rounded-xl overflow-hidden p-12 text-center bg-card">
+                  <ExternalLink className="h-16 w-16 text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-foreground mb-3">External Link Available</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    This notification is available as an external link. Click the button below to view it.
+                  </p>
+                  <Button size="lg" asChild className="bg-primary text-primary-foreground font-semibold">
+                    <a href={pdf.link.startsWith('http') ? pdf.link : `https://${pdf.link}`} target="_blank" rel="noopener noreferrer">
+                      Open External Link <ExternalLink className="h-4 w-4 ml-2" />
+                    </a>
+                  </Button>
+                </div>
               ) : (
                 <div className="border-2 border-dashed border-border rounded-xl p-12 text-center">
                   <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">PDF Not Available Yet</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">PDF/Link Not Available Yet</h3>
                   <p className="text-sm text-muted-foreground">
-                    Admin will upload the PDF for "{pdf?.title}" soon. Please check back later.
+                    Admin will upload the PDF or Link for "{pdf?.title}" soon. Please check back later.
                   </p>
                 </div>
               )}

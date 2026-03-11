@@ -22,6 +22,7 @@ import ipoFeasibilityRoutes from './routes/ipo_feasibility.js';
 import csrRoutes from './routes/csr.js';
 import mainboardBankerRoutes from './routes/mainboard_bankers.js';
 import careerRoutes from './routes/careers.js';
+import adminBlogsRoutes from './routes/admin_blogs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,6 +82,7 @@ async function initDB() {
                 title VARCHAR(255) NOT NULL,
                 slug VARCHAR(255) NOT NULL UNIQUE,
                 pdf_url VARCHAR(512),
+                link VARCHAR(512) DEFAULT NULL,
                 description TEXT,
                 is_active TINYINT(1) DEFAULT 1,
                 sort_order INT DEFAULT 0,
@@ -245,6 +247,7 @@ app.use('/api/ipo_feasibility', ipoFeasibilityRoutes);
 app.use('/api/csr', csrRoutes);
 app.use('/api/mainboard-bankers', mainboardBankerRoutes);
 app.use('/api/careers', careerRoutes);
+app.use('/api/admin-blogs', adminBlogsRoutes);
 
 // Start server after DB init
 initDB().then(() => {
