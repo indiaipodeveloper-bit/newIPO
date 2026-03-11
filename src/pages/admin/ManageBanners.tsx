@@ -42,8 +42,8 @@ const ManageBanners = () => {
     setUploading(true);
 
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("folder", "banners");
+    formData.append("file", file);
 
     try {
       const res = await fetch("/api/upload", {

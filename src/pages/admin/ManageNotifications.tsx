@@ -79,8 +79,8 @@ const ManageNotifications = () => {
   const uploadPdf = async (id: string, file: File) => {
     setUploading(id);
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("folder", "notifications");
+    formData.append("file", file);
 
     try {
       const res = await fetch("/api/upload", {

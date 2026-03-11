@@ -20,6 +20,8 @@ import investorRoutes from './routes/investor.js';
 import socialMediaRoutes from './routes/social_media.js';
 import ipoFeasibilityRoutes from './routes/ipo_feasibility.js';
 import csrRoutes from './routes/csr.js';
+import mainboardBankerRoutes from './routes/mainboard_bankers.js';
+import careerRoutes from './routes/careers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +37,9 @@ app.use(express.json());
 
 // Serve static files from the public directory (for uploaded images/PDFs)
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Explicitly serve uploads folder to ensure PDF access
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 // Initialize MySQL tables
 async function initDB() {
@@ -238,6 +243,8 @@ app.use('/api/investor', investorRoutes);
 app.use('/api/social_media', socialMediaRoutes);
 app.use('/api/ipo_feasibility', ipoFeasibilityRoutes);
 app.use('/api/csr', csrRoutes);
+app.use('/api/mainboard-bankers', mainboardBankerRoutes);
+app.use('/api/careers', careerRoutes);
 
 // Start server after DB init
 initDB().then(() => {

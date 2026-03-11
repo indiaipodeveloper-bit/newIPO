@@ -52,7 +52,7 @@ const Footer = () => {
                 { label: "Youtube Videos", href: "/ipo-video-updates" },
                 { label: "News", href: "/news-updates" },
                 { label: "Contact Us", href: "/contact" },
-                { label: "Career", href: "/contact" },
+                { label: "Career", href: "/careers" },
               ].map((item) => (
                 <Link
                   key={item.label}

@@ -3,18 +3,53 @@ import pool from '../db.js';
 
 const router = express.Router();
 
-// GET all bankers (with optional category filter)
+// GET all bankers
 router.get('/', async (req, res) => {
     try {
-        let query = 'SELECT * FROM merchant_bankers';
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+        const fetchAll = req.query.all === 'true'; // allows bypassing pagination if needed
+
+        let query = 'SELECT * FROM marchantbankers';
+        let countQuery = 'SELECT COUNT(*) as total FROM marchantbankers';
         const params = [];
-        if (req.query.category) {
-            query += ' WHERE category = ?';
-            params.push(req.query.category);
+        const conditions = [];
+        
+        // Optional filtering by category (if your DB uses typeofb or another field, adjust appropriately)
+        // Ignoring typeofb for now since we haven't confirmed it, but adding search.
+        if (search) {
+            conditions.push('(title LIKE ? OR sub_title LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`);
         }
-        query += ' ORDER BY sort_order ASC';
-        const [rows] = await pool.execute(query, params);
-        res.json(rows);
+
+        if (conditions.length > 0) {
+            const whereClause = ' WHERE ' + conditions.join(' AND ');
+            query += whereClause;
+            countQuery += whereClause;
+        }
+        
+        query += ' ORDER BY id DESC';
+
+        if (!fetchAll) {
+            query += ' LIMIT ? OFFSET ?';
+        }
+
+        const [[{ total }]] = await pool.query(countQuery, params);
+        
+        const dataParams = fetchAll ? params : [...params, limit, offset];
+        const [rows] = await pool.query(query, dataParams);
+        
+        res.json({
+            data: rows,
+            pagination: fetchAll ? null : {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -24,21 +59,27 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const {
-            name, category, location = '', sebi_registration = '', website = '',
-            services = '', total_ipos = 0, established_year = null, description = '',
-            logo_url = null, is_active = 1, sort_order = 0,
-            total_raised = 0, avg_size = 0, avg_subscription = 0
+            title = '', sub_title = '', slug = '', mcat_id = 0, image = '', description = '',
+            meta_title = '', meta_desc = '', meta_keywords = '', noOfiposofar = '', ipos = '',
+            totalfundraised = '', avgiposize = '', avglisting_gain = '', avgsubscription = '',
+            faqs = '', nseemer = '', bsesme = '', yearwise_ipolisting = '', sme_ipos_by_size = '',
+            sme_ipos_by_subscription = '', cemail = '', cmobile = '', caddress = '', cweblink = ''
         } = req.body;
+        
         const [result] = await pool.execute(
-            `INSERT INTO merchant_bankers 
-            (name, category, location, sebi_registration, website, services, total_ipos, 
-             established_year, description, logo_url, is_active, sort_order, total_raised, avg_size, avg_subscription)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, category, location, sebi_registration, website, services, total_ipos,
-             established_year, description, logo_url, is_active, sort_order,
-             total_raised, avg_size, avg_subscription]
+            `INSERT INTO marchantbankers 
+            (title, sub_title, slug, mcat_id, image, description, meta_title, meta_desc, meta_keywords,
+             noOfiposofar, ipos, totalfundraised, avgiposize, avglisting_gain, avgsubscription, faqs,
+             nseemer, bsesme, yearwise_ipolisting, sme_ipos_by_size, sme_ipos_by_subscription,
+             cemail, cmobile, caddress, cweblink)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [title, sub_title, slug, mcat_id, image, description, meta_title, meta_desc, meta_keywords,
+             noOfiposofar, ipos, totalfundraised, avgiposize, avglisting_gain, avgsubscription, faqs,
+             nseemer, bsesme, yearwise_ipolisting, sme_ipos_by_size, sme_ipos_by_subscription,
+             cemail, cmobile, caddress, cweblink]
         );
-        const [rows] = await pool.execute('SELECT * FROM merchant_bankers WHERE id = ?', [result.insertId]);
+        
+        const [rows] = await pool.execute('SELECT * FROM marchantbankers WHERE id = ?', [result.insertId]);
         res.status(201).json(rows[0]);
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -48,13 +89,38 @@ router.post('/', async (req, res) => {
 // PUT update a banker
 router.put('/:id', async (req, res) => {
     try {
-        const fields = Object.keys(req.body).map(k => `${k} = ?`).join(', ');
-        const values = [...Object.values(req.body), req.params.id];
-        await pool.execute(`UPDATE merchant_bankers SET ${fields} WHERE id = ?`, values);
-        const [rows] = await pool.execute('SELECT * FROM merchant_bankers WHERE id = ?', [req.params.id]);
+        const allowedFields = [
+            'title', 'sub_title', 'slug', 'mcat_id', 'image', 'description', 
+            'meta_title', 'meta_desc', 'meta_keywords', 'noOfiposofar', 'ipos', 
+            'totalfundraised', 'avgiposize', 'avglisting_gain', 'avgsubscription', 'faqs',
+            'nseemer', 'bsesme', 'yearwise_ipolisting', 'sme_ipos_by_size', 'sme_ipos_by_subscription',
+            'cemail', 'cmobile', 'caddress', 'cweblink'
+        ];
+        
+        const updateFields = [];
+        const values = [];
+        
+        for (const [key, value] of Object.entries(req.body)) {
+            if (allowedFields.includes(key)) {
+                updateFields.push(`${key} = ?`);
+                values.push(value);
+            }
+        }
+        
+        if (updateFields.length === 0) {
+            return res.status(400).json({ error: 'No valid fields provided for update' });
+        }
+        
+        values.push(req.params.id);
+        
+        const queryStr = `UPDATE marchantbankers SET ${updateFields.join(', ')} WHERE id = ?`;
+        await pool.execute(queryStr, values);
+        
+        const [rows] = await pool.execute('SELECT * FROM marchantbankers WHERE id = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Banker not found' });
         res.json(rows[0]);
     } catch (err) {
+        console.error("Update Banker Error:", err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -62,7 +128,7 @@ router.put('/:id', async (req, res) => {
 // DELETE a banker
 router.delete('/:id', async (req, res) => {
     try {
-        const [result] = await pool.execute('DELETE FROM merchant_bankers WHERE id = ?', [req.params.id]);
+        const [result] = await pool.execute('DELETE FROM marchantbankers WHERE id = ?', [req.params.id]);
         if (result.affectedRows === 0) return res.status(404).json({ error: 'Banker not found' });
         res.json({ message: 'Deleted successfully' });
     } catch (err) {
