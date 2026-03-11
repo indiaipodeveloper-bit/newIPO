@@ -15,6 +15,12 @@ interface IPOBlog {
   created_at: string;
 }
 
+const isValid = (val: any) => {
+  if (val === null || val === undefined) return false;
+  const s = String(val).toLowerCase().trim();
+  return s !== "null" && s !== "[null]" && s !== "" && s !== "undefined";
+};
+
 const IPOBlogs = () => {
   const [blogs, setBlogs] = useState<IPOBlog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,10 +122,10 @@ const IPOBlogs = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.05 }}
                 >
-                  <Link to={`/ipo-blogs/${blog.slug}`} className="block h-full group">
+                  <Link to={`/ipo-blogs/${blog.slug || blog.id}`} className="block h-full group">
                     <div className="h-full bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
                       <div className="aspect-[16/10] bg-muted relative overflow-hidden flex items-center justify-center p-4">
-                        {blog.image ? (
+                        {isValid(blog.image) ? (
                           <img src={blog.image} alt={blog.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -141,22 +147,22 @@ const IPOBlogs = () => {
                         </h3>
                         
                         <div className="mt-auto space-y-3 pt-4 border-t border-border">
-                          {blog.gmp_ipo_price && (
+                          {isValid(blog.gmp_ipo_price) && (
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground flex items-center"><IndianRupee className="w-3.5 h-3.5 mr-1"/> Price</span>
                               <span className="font-semibold">{blog.gmp_ipo_price}</span>
                             </div>
                           )}
-                          {blog.gmp && (
+                          {isValid(blog.gmp) && (
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground flex items-center"><TrendingUp className="w-3.5 h-3.5 mr-1"/> GMP</span>
                               <span className="font-semibold text-brand-green">{blog.gmp}</span>
                             </div>
                           )}
-                          {blog.gmp_date && (
+                          {isValid(blog.gmp_date) && (
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground flex items-center"><Calendar className="w-3.5 h-3.5 mr-1"/> Date</span>
-                              <span className="font-medium text-xs">{blog.gmp_date}</span>
+                              <span className="font-medium text-xs text-right">{blog.gmp_date}</span>
                             </div>
                           )}
                         </div>
