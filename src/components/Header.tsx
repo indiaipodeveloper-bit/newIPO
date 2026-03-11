@@ -128,7 +128,7 @@ const FALLBACK_KNOWLEDGE: SubItem[] = [
   { label: "IPO World Magazine", href: "/ipo-knowledge/ipo-world-magazine", badge: "IPO World Magazine", badgeColor: "bg-brand-blue text-primary-foreground" },
   { label: "IPO Process", href: "/ipo-knowledge/ipo-process" },
   { label: "Pre-IPO Process Guidance", href: "/ipo-knowledge/pre-ipo-process" },
-  { label: "IPO Blogs", href: "/blog" },
+  { label: "IPO Blogs", href: "/ipo-blogs" },
   { label: "Sector Wise IPO List In India", href: "/ipo-knowledge/sector-wise-ipo-list" },
   { label: "List of IPO Registrar", href: "/ipo-knowledge/ipo-registrar-list" },
 ];
@@ -141,7 +141,7 @@ const FALLBACK_NOTIFICATIONS: SubItem[] = [
   { label: "NSE Emerge Eligibility Criteria", href: "/notifications/nse-emerge-eligibility" },
 ];
 
-interface APINotif { id: string; title: string; slug: string; is_active: boolean | number; }
+interface APINotif { id: string; title: string; slug: string; is_active: boolean | number; link: string | null; }
 interface APICategory { id: string; name: string; slug: string; is_active: boolean | number; }
 
 const Header = () => {
@@ -162,7 +162,11 @@ const Header = () => {
         if (data && data.length > 0) {
           const active = data.filter(n => n.is_active == 1 || n.is_active === true);
           if (active.length > 0) {
-            setNotifItems(active.map(n => ({ label: n.title, href: `/notifications/${n.slug}` })));
+            setNotifItems(active.map(n => ({ 
+              label: n.title, 
+              href: n.link ? (n.link.startsWith('http') ? n.link : `https://${n.link}`) : `/notifications/${n.slug}`,
+              external: !!n.link
+            })));
           }
         }
       })
@@ -174,7 +178,10 @@ const Header = () => {
         if (data && data.length > 0) {
           const active = data.filter(c => c.is_active == 1 || c.is_active === true);
           if (active.length > 0) {
-            setKnowledgeItems(active.map(c => ({ label: c.name, href: `/ipo-knowledge/${c.slug}` })));
+            setKnowledgeItems([
+              { label: "IPO Blogs", href: "/ipo-blogs" },
+              ...active.map(c => ({ label: c.name, href: `/ipo-knowledge/${c.slug}` }))
+            ]);
           }
         }
       })
@@ -279,13 +286,22 @@ const Header = () => {
                                     >
                                       {item.badge}
                                     </Link>
+                                  ) : item.external ? (
+                                    <a
+                                      href={item.href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-foreground/70 hover:text-primary hover:bg-secondary rounded-md transition-colors"
+                                    >
+                                      {item.label}
+                                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                                    </a>
                                   ) : (
                                     <Link
                                       to={item.href}
                                       className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-foreground/70 hover:text-primary hover:bg-secondary rounded-md transition-colors"
                                     >
                                       {item.label}
-                                      {item.external && <ExternalLink className="h-3 w-3 text-muted-foreground" />}
                                     </Link>
                                   )}
                                 </div>
@@ -316,9 +332,12 @@ const Header = () => {
                         <Link
                           key={item.label}
                           to={item.href}
+                          target={item.external ? "_blank" : undefined}
+                          rel={item.external ? "noopener noreferrer" : undefined}
                           className="flex items-center gap-2 px-4 py-2.5 text-sm text-foreground/70 hover:text-primary hover:bg-secondary transition-colors"
                         >
                           {item.label}
+                          {item.external && <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />}
                         </Link>
                       ))}
                     </div>
@@ -431,14 +450,28 @@ const Header = () => {
                                 <div key={col.title}>
                                   <p className="text-xs font-bold text-primary uppercase tracking-wide px-3 py-1">{col.title}</p>
                                   {col.items.map((item) => (
-                                    <Link
-                                      key={item.label}
-                                      to={item.href}
-                                      className="block px-3 py-1.5 text-sm text-foreground/60 hover:text-primary transition-colors"
-                                      onClick={() => setMobileOpen(false)}
-                                    >
-                                      {item.label}
-                                    </Link>
+                                    item.external ? (
+                                      <a
+                                        key={item.label}
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-foreground/60 hover:text-primary transition-colors"
+                                        onClick={() => setMobileOpen(false)}
+                                      >
+                                        {item.label}
+                                        <ExternalLink className="h-3 w-3" />
+                                      </a>
+                                    ) : (
+                                      <Link
+                                        key={item.label}
+                                        to={item.href}
+                                        className="block px-3 py-1.5 text-sm text-foreground/60 hover:text-primary transition-colors"
+                                        onClick={() => setMobileOpen(false)}
+                                      >
+                                        {item.label}
+                                      </Link>
+                                    )
                                   ))}
                                 </div>
                               ))}

@@ -25,6 +25,7 @@ const sidebarLinks = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Pages", href: "/admin/pages", icon: Layout },
   { label: "Navigation", href: "/admin/navigation", icon: Navigation },
+  { label: "Manage IPO Blogs", href: "/admin/ipo-blogs", icon: BookOpen },
   { label: "SEO Settings", href: "/admin/seo", icon: Settings },
 ];
 

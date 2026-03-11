@@ -7,14 +7,14 @@ import { toast } from "sonner";
 import { Plus, Trash2, Edit2, Save, X, Upload, FileText, Eye, EyeOff, ExternalLink } from "lucide-react";
 
 interface NotifPdf {
-  id: string; title: string; slug: string; pdf_url: string | null;
+  id: string; title: string; slug: string; pdf_url: string | null; link: string | null;
   description: string | null; sort_order: number; is_active: boolean;
 }
 
 const ManageNotifications = () => {
   const [pdfs, setPdfs] = useState<NotifPdf[]>([]);
   const [showNew, setShowNew] = useState(false);
-  const [newData, setNewData] = useState({ title: "", slug: "", description: "" });
+  const [newData, setNewData] = useState({ title: "", slug: "", description: "", link: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<NotifPdf>>({});
   const [uploading, setUploading] = useState<string | null>(null);
@@ -37,11 +37,11 @@ const ManageNotifications = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: newData.title, slug, description: newData.description || null, sort_order: pdfs.length
+          title: newData.title, slug, description: newData.description || null, link: newData.link || null, sort_order: pdfs.length
         })
       });
       if (!res.ok) throw new Error("Failed");
-      toast.success("Added!"); setNewData({ title: "", slug: "", description: "" }); setShowNew(false); fetchData();
+      toast.success("Added!"); setNewData({ title: "", slug: "", description: "", link: "" }); setShowNew(false); fetchData();
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -70,7 +70,7 @@ const ManageNotifications = () => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: editData.title, description: editData.description
+        title: editData.title, description: editData.description, link: editData.link
       })
     });
     toast.success("Updated!"); setEditingId(null); fetchData();
@@ -123,6 +123,7 @@ const ManageNotifications = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input placeholder="Title *" value={newData.title} onChange={(e) => setNewData({ ...newData, title: e.target.value })} />
               <Input placeholder="Slug (auto)" value={newData.slug} onChange={(e) => setNewData({ ...newData, slug: e.target.value })} />
+              <Input placeholder="External Link (Optional)" value={newData.link} onChange={(e) => setNewData({ ...newData, link: e.target.value })} className="md:col-span-2" />
               <Input placeholder="Description" value={newData.description} onChange={(e) => setNewData({ ...newData, description: e.target.value })} className="md:col-span-2" />
             </div>
             <div className="flex gap-2">
@@ -138,6 +139,7 @@ const ManageNotifications = () => {
               {editingId === p.id ? (
                 <div className="space-y-3">
                   <Input value={editData.title || ""} onChange={(e) => setEditData({ ...editData, title: e.target.value })} />
+                  <Input value={editData.link || ""} onChange={(e) => setEditData({ ...editData, link: e.target.value })} placeholder="External Link (Optional)" />
                   <Input value={editData.description || ""} onChange={(e) => setEditData({ ...editData, description: e.target.value })} placeholder="Description" />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={saveEdit} className="bg-primary text-primary-foreground"><Save className="h-3.5 w-3.5 mr-1" /> Save</Button>
@@ -154,8 +156,10 @@ const ManageNotifications = () => {
                         <Badge variant="outline" className="text-[10px]">{p.slug}</Badge>
                         {p.pdf_url ? (
                           <Badge className="bg-green-100 text-green-700 text-[10px]">PDF Uploaded</Badge>
+                        ) : p.link ? (
+                          <Badge className="bg-blue-100 text-blue-700 text-[10px]">Link Added</Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-[10px]">No PDF</Badge>
+                          <Badge variant="secondary" className="text-[10px]">No PDF / Link</Badge>
                         )}
                         {!p.is_active && <Badge variant="secondary" className="text-[10px]">Hidden</Badge>}
                       </div>
@@ -182,8 +186,15 @@ const ManageNotifications = () => {
                     </label>
                     {p.pdf_url && (
                       <Button size="sm" variant="outline" asChild>
-                        <a href={p.pdf_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3.5 w-3.5 mr-1" /> View
+                        <a href={p.pdf_url.startsWith('http') || p.pdf_url.startsWith('/') ? p.pdf_url : `/${p.pdf_url}`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5 mr-1" /> View PDF
+                        </a>
+                      </Button>
+                    )}
+                    {p.link && (
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={p.link.startsWith('http') ? p.link : `https://${p.link}`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open Link
                         </a>
                       </Button>
                     )}

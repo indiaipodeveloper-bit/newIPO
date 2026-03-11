@@ -26,6 +26,8 @@ const NewsDetails = lazy(() => import("./pages/NewsDetails"));
 const Careers = lazy(() => import("./pages/Careers"));
 const Reports = lazy(() => import("./pages/Reports"));
 const IPOKnowledge = lazy(() => import("./pages/IPOKnowledge"));
+const IPOBlogs = lazy(() => import("./pages/IPOBlogs"));
+const IPOBlogDetails = lazy(() => import("./pages/IPOBlogDetails"));
 const MerchantBankersPage = lazy(() => import("./pages/MerchantBankers"));
 const MainboardBankersPage = lazy(() => import("./pages/MainboardBankers"));
 const ManageKnowledge = lazy(() => import("./pages/admin/ManageKnowledge"));
@@ -36,6 +38,7 @@ const ManageNews = lazy(() => import("./pages/admin/ManageNews"));
 const ManageLeads = lazy(() => import("./pages/admin/ManageLeads"));
 const ManageInvestors = lazy(() => import("./pages/admin/ManageInvestors"));
 const ManageIPOFeasibility = lazy(() => import("./pages/admin/ManageIPOFeasibility"));
+const ManageAdminBlogs = lazy(() => import("./pages/admin/ManageAdminBlogs"));
 const ManageCSR = lazy(() => import("./pages/admin/ManageCSR"));
 const ManageMarketSnaps = lazy(() => import('./pages/admin/ManageMarketSnaps'));
 const MarketSnaps = lazy(() => import('./pages/MarketSnaps'));
@@ -97,6 +100,8 @@ const App = () => (
               <Route path="/reports/:slug" element={<Reports />} />
               <Route path="/ipo-knowledge" element={<IPOKnowledge />} />
               <Route path="/ipo-knowledge/:slug" element={<IPOKnowledge />} />
+              <Route path="/ipo-blogs" element={<IPOBlogs />} />
+              <Route path="/ipo-blogs/:slug" element={<IPOBlogDetails />} />
               <Route path="/merchant-bankers/:category" element={<MerchantBankersPage />} />
               <Route path="/merchant-bankers/mainboard-list" element={<MainboardBankersPage />} />
               <Route path="/notifications/:slug" element={<NotificationView />} />
@@ -107,6 +112,7 @@ const App = () => (
               <Route path="/admin/leads" element={<ManageLeads />} />
               <Route path="/admin/investors" element={<ManageInvestors />} />
               <Route path="/admin/ipo-feasibility" element={<ManageIPOFeasibility />} />
+              <Route path="/admin/ipo-blogs" element={<ManageAdminBlogs />} />
               <Route path="/admin/csr" element={<ManageCSR />} />
               <Route path="/admin/market-snaps" element={<ManageMarketSnaps />} />
               <Route path="/admin/users" element={<ManageUsers />} />
