@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck, Megaphone, HelpCircle } from "lucide-react";
+import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck, Megaphone, HelpCircle, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Manage IPOs", href: "/admin/ipos", icon: TrendingUp },
+  { label: "Manage Sectors", href: "/admin/sectors", icon: LayoutGrid },
   { label: "Manage Blogs", href: "/admin/blogs", icon: BookOpen },
   { label: "News / Updates", href: "/admin/news", icon: Newspaper },
   { label: "Merchant Bankers (SME)", href: "/admin/merchant-bankers", icon: Building2 },

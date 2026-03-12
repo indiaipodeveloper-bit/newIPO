@@ -9,349 +9,334 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Home, ChevronRight, TrendingUp, Search, FileText, Calendar,
-  BarChart3, PieChart, Download, ExternalLink, Filter
+  BarChart3, PieChart, Info, Loader2, ChevronLeft, ChevronRight as ChevronRightIcon,
+  ArrowUpRight
 } from "lucide-react";
+import { ipoListApi } from "@/services/api";
 
-const iconMap: Record<string, React.ElementType> = {
-  FileText, Calendar, BarChart3, TrendingUp, PieChart,
-};
+const SPECIAL_SLUGS = [
+  "ipo-calendar",
+  "upcoming-ipo-calendar",
+  "mainline-ipo-report",
+  "sme-ipo-report",
+  "sme-ipos-by-sector",
+  "mainboard-ipos-by-sector"
+];
 
-interface ReportCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  icon: string | null;
-}
-
-interface ReportItem {
-  id: string;
-  category_id: string;
-  title: string;
-  logo_url: string | null;
-  last_updated: string | null;
-  status: string | null;
-  status_color: string | null;
-  estimated_amount: string | null;
-  exchange: string | null;
-  sector: string | null;
-  description: string | null;
-  drhp_link: string | null;
-}
-
-const statusColorMap: Record<string, string> = {
-  red: "bg-red-600 text-white",
-  green: "bg-green-600 text-white",
-  blue: "bg-blue-600 text-white",
-  yellow: "bg-yellow-500 text-white",
-  orange: "bg-orange-500 text-white",
-  purple: "bg-purple-600 text-white",
-  gray: "bg-gray-500 text-white",
+const formatDate = (dateStr: any, options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short' }) => {
+  if (!dateStr || dateStr === "0" || dateStr === 0) return 'TBA';
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? 'TBA' : d.toLocaleDateString('en-IN', options);
 };
 
 const Reports = () => {
   const { slug } = useParams();
-  const [categories, setCategories] = useState<ReportCategory[]>([]);
-  const [items, setItems] = useState<ReportItem[]>([]);
-  const [activeCategory, setActiveCategory] = useState<ReportCategory | null>(null);
-  const [search, setSearch] = useState("");
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterTab, setFilterTab] = useState<"all" | "mainline" | "sme">("all");
+  const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 0 });
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [slug, pagination.page, search]);
 
-  useEffect(() => {
-    if (categories.length > 0) {
-      const found = slug
-        ? categories.find((c) => c.slug === slug)
-        : categories[0];
-      if (found) {
-        setActiveCategory(found);
-        fetchItems(found.id);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      let params: any = {
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        search: search
+      };
+
+      if (slug?.includes("by-sector")) {
+        params.sort = "sector_name";
       }
+
+      // Set filters based on slug
+      if (slug === "upcoming-ipo-calendar") {
+        params.upcoming = "1";
+      } else if (slug === "mainline-ipo-report") {
+        params.category = "mainline";
+      } else if (slug === "sme-ipo-report") {
+        params.category = "sme";
+      } else if (slug === "sme-ipos-by-sector") {
+        params.category = "sme";
+        // Sectors are usually handled by sorting or specific filters, here we'll just ensure it's SME
+      } else if (slug === "mainboard-ipos-by-sector") {
+        params.category = "mainline"; // Mainboard and Mainline often used interchangeably here
+      }
+
+      const res = await ipoListApi.getAll(params);
+      setItems(res.data);
+      setPagination(prev => ({ ...prev, total: res.pagination.total, totalPages: res.pagination.totalPages }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  }, [categories, slug]);
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("/api/reports/categories");
-      if (res.ok) setCategories(await res.json());
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
   };
 
-  const fetchItems = async (categoryId: string) => {
-    try {
-      const res = await fetch(`/api/reports/items?category_id=${categoryId}`);
-      if (res.ok) setItems(await res.json());
-    } catch (err) { console.error(err); }
+  const getTitle = () => {
+    switch(slug) {
+      case "upcoming-ipo-calendar": return "Upcoming IPO Calendar";
+      case "mainline-ipo-report": return "Mainline IPO Report";
+      case "sme-ipo-report": return "SME IPO Report";
+      case "sme-ipos-by-sector": return "SME IPOs by Sector";
+      case "mainboard-ipos-by-sector": return "Mainboard IPOs by Sector";
+      default: return "IPO Reports";
+    }
   };
-
-  const filteredItems = items.filter((item) => {
-    const matchSearch = item.title.toLowerCase().includes(search.toLowerCase()) ||
-      (item.sector?.toLowerCase().includes(search.toLowerCase()));
-    if (filterTab === "all") return matchSearch;
-    if (filterTab === "mainline") return matchSearch && item.exchange?.toLowerCase().includes("nse");
-    if (filterTab === "sme") return matchSearch && item.exchange?.toLowerCase().includes("sme");
-    return matchSearch;
-  });
-
-  const IconComponent = activeCategory?.icon ? iconMap[activeCategory.icon] || TrendingUp : TrendingUp;
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead
-        title={activeCategory ? `${activeCategory.name} - IndiaIPO` : "Reports - IndiaIPO"}
-        description={activeCategory?.description || "IPO Reports and Analysis"}
+      <SEOHead 
+        title={`${getTitle()} - IndiaIPO`}
+        description={`Detailed ${getTitle()} including company info, gmp, issue size and more.`}
       />
       <Header />
       <main>
-        {/* Hero Banner */}
-        <section className="bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 py-12 md:py-16">
+        <section className="bg-gradient-to-r from-[#001529] via-[#002140] to-[#003366] py-12">
           <div className="container mx-auto px-4">
-            {/* Breadcrumbs */}
             <div className="flex items-center gap-2 text-sm text-white/70 mb-6">
               <Link to="/" className="flex items-center gap-1 hover:text-white transition-colors">
-                <Home className="h-4 w-4" />
-                Home
+                <Home className="h-4 w-4" /> Home
               </Link>
               <ChevronRight className="h-3 w-3" />
-              <span className="text-white font-medium">
-                {activeCategory?.name || "Reports"}
-              </span>
+              <Link to="/reports" className="hover:text-white">Reports</Link>
+              <ChevronRight className="h-3 w-3" />
+              <span className="text-white font-medium">{getTitle()}</span>
             </div>
-            <div className="border-t border-white/20 pt-6">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-2xl md:text-4xl font-bold text-white flex items-center gap-3"
-              >
-                <IconComponent className="h-8 w-8" />
-                {activeCategory?.name || "Reports Dashboard"}
-              </motion.h1>
-            </div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-3xl md:text-5xl font-bold text-white tracking-tight"
+            >
+              {getTitle().split(' ').map((word, i) => (
+                <span key={i} className={i % 2 === 1 ? "text-[#FFD700]" : ""}>{word} </span>
+              ))}
+            </motion.h1>
+            <p className="text-white/60 mt-3 max-w-2xl">
+              Professional real-time tracking of {getTitle().toLowerCase()} for smart investment decisions.
+            </p>
           </div>
         </section>
 
-        <div className="container mx-auto px-4 py-8">
-          {/* Category Tabs */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
-            {categories.map((cat) => {
-              const CatIcon = iconMap[cat.icon || "FileText"] || FileText;
-              const isActive = activeCategory?.id === cat.id;
-              return (
-                <Link
-                  key={cat.id}
-                  to={`/reports/${cat.slug}`}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 text-center justify-center
-                    ${isActive
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-lg"
-                      : "bg-card text-foreground border-border hover:border-primary/40 hover:shadow-md"
-                    }`}
-                >
-                  <CatIcon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{cat.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Description */}
-          {activeCategory?.description && (
-            <div className="bg-card border border-border rounded-xl p-5 mb-8">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {activeCategory.description}
-              </p>
-            </div>
-          )}
-
-          {/* Filter Tabs + Search */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-border flex-wrap gap-4">
-              <h2 className="text-lg font-bold text-foreground">
-                {activeCategory?.name} List
-              </h2>
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-48 md:w-64"
-                />
-                <Button size="icon" className="bg-primary text-primary-foreground">
-                  <Search className="h-4 w-4" />
-                </Button>
+        <section className="py-10">
+          <div className="container mx-auto px-4">
+            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+              {/* Toolbar */}
+              <div className="p-4 md:p-6 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground">Live {getTitle()}</h2>
+                    <p className="text-xs text-muted-foreground">{pagination.total} records found</p>
+                  </div>
+                </div>
+                <div className="relative w-full md:w-80">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search company name..." 
+                    className="pl-10 h-11 rounded-xl"
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setPagination(p => ({ ...p, page: 1 })); }}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Sub-filter tabs */}
-            <div className="flex border-b border-border">
-              {[
-                { key: "all" as const, label: "All IPOs" },
-                { key: "mainline" as const, label: "Mainline IPOs" },
-                { key: "sme" as const, label: "SME IPOs" },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setFilterTab(tab.key)}
-                  className={`flex-1 py-3 text-sm font-semibold transition-all border-b-2
-                    ${filterTab === tab.key
-                      ? "text-primary border-primary bg-primary/5"
-                      : "text-muted-foreground border-transparent hover:text-foreground"
-                    }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gradient-to-r from-blue-900 to-purple-900 text-white text-xs uppercase">
-                    <th className="px-4 py-3 text-left font-semibold">
-                      <span className="flex items-center gap-1">
-                        <FileText className="h-3 w-3" />
-                        Company
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Last Updated
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Status
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      <span className="flex items-center gap-1">
-                        <BarChart3 className="h-3 w-3" />
-                        Estimated Issue Amount (Rs.Cr.)
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      <span className="flex items-center gap-1">
-                        <Filter className="h-3 w-3" />
-                        Exchange
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.length > 0 ? (
-                    filteredItems.map((item, idx) => (
-                      <tr
-                        key={item.id}
-                        className={`border-b border-border hover:bg-secondary/50 transition-colors ${idx % 2 === 0 ? "bg-background" : "bg-secondary/20"
-                          }`}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            {item.logo_url && (
-                              <img src={item.logo_url} alt="" className="w-8 h-8 rounded object-contain border border-border" />
+              {/* Unique Table Styling */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-[#001529] text-white">
+                      <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Company</th>
+                      <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Dates</th>
+                      <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Issue Size</th>
+                      <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">Price Band</th>
+                      <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider">GMP</th>
+                      <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={6} className="py-24 text-center">
+                          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+                          <p className="text-muted-foreground font-medium">Fetching real-time data...</p>
+                        </td>
+                      </tr>
+                    ) : items.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-24 text-center">
+                          <Info className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                          <p className="text-muted-foreground font-medium">No records matching your search</p>
+                        </td>
+                      </tr>
+                    ) : items.map((item, idx) => (
+                      <tr key={item.id} className={`hover:bg-primary/5 transition-colors group ${idx % 2 === 0 ? "bg-background" : "bg-muted/10"}`}>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-4">
+                            {item.logo ? (
+                              <img src={String(item.logo)} alt="" className="w-10 h-10 rounded-lg object-contain border border-border bg-white p-1 group-hover:scale-110 transition-transform" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                {String(item.issuer_company)[0]}
+                              </div>
                             )}
                             <div>
-                              <p className="text-sm font-medium text-foreground">{item.title}</p>
-                              {item.sector && (
-                                <p className="text-xs text-muted-foreground">{item.sector}</p>
-                              )}
+                              <p className="font-bold text-foreground group-hover:text-primary transition-colors cursor-pointer">{item.issuer_company}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="secondary" className="text-[10px] py-0">{item.exchange || 'BSE/NSE'}</Badge>
+                                {item.sector_name && <span className="text-[10px] text-muted-foreground uppercase">{item.sector_name}</span>}
+                                {(!item.sector_name && item.issue_category) && <span className="text-[10px] text-muted-foreground capitalize">{item.issue_category}</span>}
+                              </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {item.last_updated || "—"}
-                          </span>
+                        <td className="px-6 py-5">
+                          <div className="text-sm font-medium text-foreground">
+                            {formatDate(item.open_date)} - {formatDate(item.close_date)}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1">Listing: {formatDate(item.listing_date, { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                         </td>
-                        <td className="px-4 py-3">
-                          {item.status && (
-                            <Badge className={`text-[10px] font-bold ${statusColorMap[item.status_color || "blue"]}`}>
+                        <td className="px-6 py-5">
+                          <span className="font-bold text-foreground">₹{item.issue_size || '0'}</span>
+                          <span className="text-[10px] text-muted-foreground ml-1">Cr</span>
+                        </td>
+                        <td className="px-6 py-5">
+                           <div className="text-sm font-semibold text-foreground">
+                             ₹{item.issue_lowest_price || '0'} - ₹{item.issue_highest_price || '0'}
+                           </div>
+                           <p className="text-[10px] text-muted-foreground mt-1">Lot: {item.lot_size || '0'} Shares</p>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className={`text-sm font-bold ${Number(item.gmp) > 0 ? "text-success" : "text-destructive"}`}>
+                            {Number(item.gmp) > 0 ? `+₹${item.gmp}` : `₹${item.gmp}`}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1">Current Price: ₹{item.current_price || '0'}</p>
+                        </td>
+                        <td className="px-6 py-5 text-center">
+                          {item.blog_slug ? (
+                            <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-lg font-bold px-3 py-0 h-8 text-[10px] uppercase tracking-wider shadow-lg shadow-primary/20">
+                              <Link to={`/ipo-blogs/${item.blog_slug}`}>Analyze <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+                            </Button>
+                          ) : (
+                            <Badge className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${
+                              String(item.status).toLowerCase() === 'active' ? "bg-success/10 text-success border-success/30" : "bg-muted text-muted-foreground border-border"
+                            }`}>
                               {item.status}
                             </Badge>
                           )}
                         </td>
-                        <td className="px-4 py-3">
-                          <span className="text-sm text-foreground font-medium">
-                            {item.estimated_amount || "—"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {item.exchange && (
-                            <div className="flex gap-1 flex-wrap">
-                              {item.exchange.split(",").map((ex) => (
-                                <Badge
-                                  key={ex.trim()}
-                                  variant="outline"
-                                  className="text-[10px] font-bold border-primary/30 text-primary"
-                                >
-                                  {ex.trim()}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-12 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <FileText className="h-12 w-12 text-muted-foreground/30" />
-                          <p className="text-muted-foreground">
-                            {loading ? "Loading..." : "No data available yet. Admin will add content soon."}
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Bottom info section */}
-          <div className="mt-8 grid md:grid-cols-3 gap-6">
-            <div className="bg-card border border-border rounded-xl p-5">
-              <h3 className="font-bold text-foreground mb-2 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                About This Report
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Keep track of upcoming Mainboard and SME IPOs in India, along with insightful inputs and facts at your fingertips.
-                Our exclusive section offers access to downloadable DRHPs submitted by companies to SEBI, BSE, NSE.
-              </p>
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="p-4 md:p-6 border-t border-border flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground hidden md:block">
+                    Showing Page {pagination.page} of {pagination.totalPages}
+                  </p>
+                  <div className="flex items-center gap-2 mx-auto md:mx-0">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
+                      disabled={pagination.page === 1}
+                      className="rounded-xl"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const pages = [];
+                        const { page, totalPages } = pagination;
+                        const delta = 1;
+                        
+                        for (let i = 1; i <= totalPages; i++) {
+                          if (
+                            i === 1 || 
+                            i === totalPages || 
+                            (i >= page - delta && i <= page + delta)
+                          ) {
+                            if (pages.length > 0 && i - pages[pages.length - 1] > 1) {
+                              pages.push(-1);
+                            }
+                            pages.push(i);
+                          }
+                        }
+                        
+                        return pages.map((p, idx) => (
+                          p === -1 ? (
+                            <span key={`ell-${idx}`} className="text-muted-foreground px-1">...</span>
+                          ) : (
+                            <Button
+                              key={p}
+                              variant={pagination.page === p ? "default" : "ghost"}
+                              size="sm"
+                              onClick={() => setPagination(prev => ({ ...prev, page: p }))}
+                              className="h-9 w-9 rounded-lg flex-shrink-0"
+                            >
+                              {p}
+                            </Button>
+                          )
+                        ));
+                      })()}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
+                      disabled={pagination.page >= pagination.totalPages}
+                      className="rounded-xl"
+                    >
+                      Next <ChevronRightIcon className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="bg-card border border-border rounded-xl p-5">
-              <h3 className="font-bold text-foreground mb-2 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                Key Features
-              </h3>
-              <ul className="text-sm text-muted-foreground space-y-1.5">
-                <li>• Sector classification & city of origin</li>
-                <li>• Revenue performance & PAT details</li>
-                <li>• Stock exchange listing information</li>
-                <li>• Appointed merchant bankers</li>
-              </ul>
-            </div>
-            <div className="bg-gradient-to-br from-primary to-purple-700 rounded-xl p-5 text-white">
-              <h3 className="font-bold mb-2">Check IPO Feasibility</h3>
-              <p className="text-sm text-white/80 mb-4">
-                Want to check if your company is eligible for IPO? Get a free feasibility check.
-              </p>
-              <Button asChild className="bg-white text-primary hover:bg-white/90 font-semibold">
-                <Link to="/contact">Get Started →</Link>
-              </Button>
+            
+            <div className="mt-12 grid md:grid-cols-3 gap-8">
+              <div className="p-6 bg-[#001529]/5 rounded-3xl border border-primary/10">
+                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-primary/30">
+                  <PieChart className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-[#001529] mb-3">Professional Analysis</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Every IPO record is verified and tracked with precision to give you the most accurate prediction of listing gains and market sentiment.
+                </p>
+              </div>
+              
+              <div className="p-6 bg-[#001529]/5 rounded-3xl border border-primary/10">
+                <div className="w-12 h-12 bg-[#FFD700] rounded-2xl flex items-center justify-center text-[#001529] mb-6 shadow-lg shadow-[#FFD700]/30">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-[#001529] mb-3">Real-time Updates</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Our database is updated daily with the latest GMP, price adjustments, and listing dates as soon as they are announced by SEBI.
+                </p>
+              </div>
+
+              <div className="p-6 bg-gradient-to-br from-[#001529] to-[#003366] rounded-3xl text-white shadow-xl">
+                 <h3 className="text-xl font-bold mb-3 flex items-center gap-2 text-[#FFD700]">
+                   <TrendingUp className="h-5 w-5" />
+                   IPO Feasibility
+                 </h3>
+                 <p className="text-white/70 text-sm mb-6">
+                   Curious about your own company's IPO journey? Let our experts guide you through the complex SEBI regulations.
+                 </p>
+                 <Button asChild className="w-full bg-[#FFD700] text-[#001529] hover:bg-[#FFD700]/90 font-bold h-12 rounded-xl">
+                   <Link to="/ipo-feasibility">Check Eligibility Now</Link>
+                 </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </main>
       <Footer />
     </div>
