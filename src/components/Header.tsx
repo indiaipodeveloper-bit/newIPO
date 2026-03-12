@@ -45,34 +45,34 @@ const STATIC_NAV_PREFIX: NavItem[] = [
       {
         title: "IPO",
         items: [
-          { label: "Initial Public Offering (IPO)", href: "/services#ipo" },
-          { label: "SME IPO Consultation", href: "/services#sme-ipo" },
-          { label: "Mainline IPO Consultation", href: "/services#mainline-ipo" },
-          { label: "Follow-On Public Offer (FPO)", href: "/services#fpo" },
-          { label: "Pre-IPO Funding Consultants", href: "/services#pre-ipo" },
+          { label: "Initial Public Offering (IPO)", href: "/services/initial-public-offering" },
+          { label: "SME IPO Consultation", href: "/services/sme-ipo" },
+          { label: "Mainline IPO Consultation", href: "/services/mainline-ipo" },
+          { label: "Follow-On Public Offer (FPO)", href: "/services/fpo" },
+          { label: "Pre-IPO Funding Consultants", href: "/services/pre-ipo" },
         ],
       },
       {
         title: "Capital Raising",
         items: [
-          { label: "Social Stock Exchange", href: "/services#sse" },
-          { label: "Private Placement", href: "/services#private-placement" },
-          { label: "Project Funding", href: "/services#project-funding" },
-          { label: "REIT", href: "/services#reit" },
-          { label: "SM REIT", href: "/services#sm-reit" },
-          { label: "Rights Issue Advisory", href: "/services#rights-issue" },
-          { label: "InvIT Rights Issue", href: "/services#invit-rights" },
-          { label: "InvIT Public Issue", href: "/services#invit-public" },
-          { label: "Debt Syndication", href: "/services#debt-syndication" },
+          { label: "Social Stock Exchange", href: "/services/social-stock-exchange" },
+          { label: "Private Placement", href: "/services/private-placement" },
+          { label: "Project Funding", href: "/services/project-funding" },
+          { label: "REIT", href: "/services/reit" },
+          { label: "SM REIT", href: "/services/sm-reit" },
+          { label: "Rights Issue Advisory", href: "/services/rights-issue" },
+          { label: "InvIT Rights Issue", href: "/services/invit-rights" },
+          { label: "InvIT Public Issue", href: "/services/invit-public" },
+          { label: "Debt Syndication", href: "/services/debt-syndication" },
         ],
       },
       {
         title: "Finance Advisory",
         items: [
-          { label: "Business Valuation", href: "/services#valuation" },
-          { label: "Corporate Finance", href: "/services#corporate-finance" },
-          { label: "Financial Modelling", href: "/services#financial-modelling" },
-          { label: "Project Finance", href: "/services#project-finance" },
+          { label: "Business Valuation", href: "/services/valuation" },
+          { label: "Corporate Finance", href: "/services/corporate-finance" },
+          { label: "Financial Modelling", href: "/services/financial-modelling" },
+          { label: "Project Finance", href: "/services/project-finance" },
         ],
       },
     ],
@@ -176,7 +176,7 @@ const Header = () => {
       .then(r => r.ok ? r.json() : null)
       .then((data: APICategory[] | null) => {
         if (data && data.length > 0) {
-          const active = data.filter(c => c.is_active == 1 || c.is_active === true);
+          const active = data.filter(c => (c.is_active == 1 || c.is_active === true) && !["SEBI ICDR Amendment Regulations", "SEBI SME IPO ICDR Amendments", "ICDR", "BSE SME Eligibility Criteria", "NSE Emerge Eligibility Criteria"].includes(c.name));
           if (active.length > 0) {
             setKnowledgeItems([
               { label: "IPO Blogs", href: "/ipo-blogs" },
@@ -228,10 +228,10 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border shadow-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={logo} alt="India IPO" className="h-12 w-auto" />
+          <img src={logo} alt="India IPO" className="h-16 w-auto" />
         </Link>
 
         {/* Desktop Nav */}

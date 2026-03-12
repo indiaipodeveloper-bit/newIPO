@@ -29,6 +29,7 @@ import registrarFaqRoutes from './routes/registrarFaqs.js';
 import dailyDigestRoutes from './routes/daily_digests.js';
 import ipoListRoutes from './routes/ipo_lists.js';
 import sectorRoutes from './routes/sectors.js';
+import subscriptionRoutes from './routes/subscriptions.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -237,6 +238,16 @@ async function initDB() {
             )
         `);
 
+        await conn.execute(`
+            CREATE TABLE IF NOT EXISTS newsletter_subscriptions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                is_active TINYINT(1) DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+
         // Check if a record exists, if not insert a default one
         const [popupRows] = await conn.execute('SELECT COUNT(*) as count FROM site_popup');
         if (popupRows[0].count === 0) {
@@ -281,6 +292,7 @@ app.use('/api/registrar-faqs', registrarFaqRoutes);
 app.use('/api/daily-digests', dailyDigestRoutes);
 app.use('/api/ipo-lists', ipoListRoutes);
 app.use('/api/sectors', sectorRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Start server after DB init
 initDB().then(() => {

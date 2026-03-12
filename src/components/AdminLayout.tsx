@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck, Megaphone, HelpCircle, LayoutGrid } from "lucide-react";
+import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck, Megaphone, HelpCircle, LayoutGrid, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
@@ -18,11 +18,12 @@ const sidebarLinks = [
   { label: "Manage Registrars", href: "/admin/registrars", icon: Users },
   { label: "Registrar FAQs", href: "/admin/registrar-faqs", icon: HelpCircle },
   { label: "Notifications PDFs", href: "/admin/notifications", icon: Bell },
-  { label: "IPO Videos", href: "/admin/videos", icon: Video },
+  // { label: "IPO Videos", href: "/admin/videos", icon: Video },
   { label: "Market Snaps", href: "/admin/market-snaps", icon: PlayCircle },
   { label: "Daily Reporter", href: "/admin/daily-digests", icon: FileText },
   { label: "Check IPO Feasibility", href: "/admin/ipo-feasibility", icon: ClipboardCheck },
   { label: "Career Applications", href: "/admin/career-applications", icon: GraduationCap },
+  { label: "Subscriptions", href: "/admin/subscriptions", icon: Mail },
   { label: "Manage CSR", href: "/admin/csr", icon: Globe },
   { label: "Investor Enquiries", href: "/admin/investors", icon: Briefcase },
   { label: "Leads", href: "/admin/leads", icon: MessageSquare, badgeKey: "leads" },
@@ -31,6 +32,7 @@ const sidebarLinks = [
   { label: "Navigation", href: "/admin/navigation", icon: Navigation },
   { label: "Manage IPO Blogs", href: "/admin/ipo-blogs", icon: BookOpen },
   { label: "Site Popup", href: "/admin/popup", icon: Megaphone },
+  { label: "Manage Banners", href: "/admin/banners", icon: Image },
   { label: "SEO Settings", href: "/admin/seo", icon: Settings },
 ];
 

@@ -16,10 +16,10 @@ router.get('/', async (req, res) => {
 // POST create a banner
 router.post('/', async (req, res) => {
     try {
-        const { title, subtitle = '', image_url, cta_text = '', cta_link = '', sort_order = 0, is_active = 1 } = req.body;
+        const { title, subtitle = '', image_url, cta_text = '', cta_link = '', badge_text = '', cta2_text = '', cta2_link = '', sort_order = 0, is_active = 1 } = req.body;
         const [result] = await pool.execute(
-            'INSERT INTO hero_banners (title, subtitle, image_url, cta_text, cta_link, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [title, subtitle, image_url, cta_text, cta_link, sort_order, is_active]
+            'INSERT INTO hero_banners (title, subtitle, image_url, cta_text, cta_link, badge_text, cta2_text, cta2_link, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [title, subtitle, image_url, cta_text, cta_link, badge_text, cta2_text, cta2_link, sort_order, is_active]
         );
         const [rows] = await pool.execute('SELECT * FROM hero_banners WHERE id = ?', [result.insertId]);
         res.status(201).json(rows[0]);

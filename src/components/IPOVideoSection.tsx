@@ -9,10 +9,21 @@ interface VideoItem {
 }
 
 const fallbackVideos: VideoItem[] = [
-  { id: "1", title: "SEDEMAC Mechatronics IPO", youtube_id: "dQw4w9WgXcQ" },
-  { id: "2", title: "OMNITECH ENGINEERING IPO", youtube_id: "dQw4w9WgXcQ" },
-  { id: "3", title: "Shri Ram Twistex IPO", youtube_id: "dQw4w9WgXcQ" },
+  { id: "1", title: "Market Update 1", youtube_id: "" },
+  { id: "2", title: "Market Update 2", youtube_id: "" },
+  { id: "3", title: "Market Update 3", youtube_id: "" },
 ];
+
+const extractYoutubeId = (url: string) => {
+  if (!url) return null;
+  if (!url.includes('/')) {
+      const potentialId = url.split('?')[0];
+      if (potentialId.length === 11) return potentialId;
+  }
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
 
 const VideoCard = ({ video, idx }: { video: VideoItem; idx: number }) => {
   const [playing, setPlaying] = useState(false);
@@ -64,11 +75,17 @@ const IPOVideoSection = () => {
   const [videos, setVideos] = useState<VideoItem[]>(fallbackVideos);
 
   useEffect(() => {
-    fetch("/api/videos")
+    fetch("/api/social_media?status=published&page=1&limit=3")
       .then(res => res.json())
       .then((data) => {
-        const activeVideos = data.filter((v: any) => v.is_active);
-        if (activeVideos.length > 0) setVideos(activeVideos);
+        if (data.data && data.data.length > 0) {
+          const mappedVideos = data.data.map((v: any) => ({
+            id: String(v.id),
+            title: v.title,
+            youtube_id: extractYoutubeId(v.url) || "dQw4w9WgXcQ"
+          }));
+          setVideos(mappedVideos);
+        }
       })
       .catch(console.error);
   }, []);
