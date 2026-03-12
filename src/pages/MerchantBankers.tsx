@@ -129,9 +129,9 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
         
         <main className="flex-1">
           {/* Header Section */}
-          <div className="bg-primary pt-12 pb-24 px-4 relative">
-            <div className="absolute inset-0 opacity-10 blur-3xl pointer-events-none">
-              <div className="absolute top-10 right-20 w-96 h-96 bg-accent rounded-full" />
+          <div className="pt-12 pb-24 px-4 relative" style={{ background: 'linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)' }}>
+            <div className="absolute inset-0 opacity-15 blur-3xl pointer-events-none">
+              <div className="absolute top-10 right-20 w-96 h-96 rounded-full" style={{ background: 'hsl(35 95% 52%)' }} />
             </div>
             <div className="container mx-auto max-w-6xl relative z-10">
               <button 
@@ -151,7 +151,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                 </div>
                 <div className="flex-1 text-primary-foreground">
                   <h1 className="text-3xl md:text-5xl font-bold mb-3">{detailBanker.title}</h1>
-                  <span className="inline-block px-3 py-1 bg-accent/20 text-accent border border-accent/40 rounded-full text-sm font-medium mb-6">
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-6" style={{ background: 'hsl(35 95% 52% / 0.2)', color: 'hsl(35 95% 72%)', border: '1px solid hsl(35 95% 52% / 0.4)' }}>
                     {detailBanker.sub_title || "SEBI Registered Merchant Banker"}
                   </span>
                   <div 
@@ -159,7 +159,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                     dangerouslySetInnerHTML={{__html: detailBanker.description || 'India based Merchant Banker specializing in IPO Advisory and Corporate Finance.'}} 
                   />
                   <div className="mt-8 flex gap-4">
-                    <Button onClick={() => setConnectBanker(detailBanker)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button onClick={() => setConnectBanker(detailBanker)} className="rounded-full font-bold" style={{ background: 'hsl(35 95% 52%)', color: 'white', boxShadow: '0 4px 16px hsl(35 95% 52% / 0.4)' }}>
                       <Mail className="w-4 h-4 mr-2" /> Connect Now
                     </Button>
                     {detailBanker.cweblink && (
@@ -364,10 +364,10 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
       <Header />
       <main className="flex-grow">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-primary via-primary/95 to-purple-700 py-16 lg:py-24 relative overflow-hidden">
+        <section className="py-16 lg:py-24 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)' }}>
           <div className="absolute inset-0 opacity-20 pointer-events-none">
-            <div className="absolute top-10 right-10 w-72 h-72 bg-accent rounded-full blur-[120px]" />
-            <div className="absolute bottom-10 left-10 w-96 h-96 bg-brand-green rounded-full blur-[150px]" />
+            <div className="absolute top-10 right-10 w-72 h-72 rounded-full blur-[120px]" style={{ background: 'hsl(35 95% 52%)' }} />
+            <div className="absolute bottom-10 left-20 w-80 h-80 rounded-full blur-[130px]" style={{ background: 'hsl(35 95% 52%)' }} />
           </div>
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
@@ -375,13 +375,13 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
               animate={{ opacity: 1, y: 0 }}
               className="max-w-3xl mx-auto text-center"
             >
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-white border border-white/20 mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6 tracking-widest uppercase" style={{ background: 'hsl(35 95% 52% / 0.2)', color: 'hsl(35 95% 72%)', border: '1px solid hsl(35 95% 52% / 0.4)' }}>
                 <Shield className="h-3.5 w-3.5" />
                 SEBI Registered Merchant Bankers
               </span>
-              <h1 className="text-3xl md:text-5xl font-bold text-white mb-5">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-5" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 {isSME ? "SME" : "Mainboard"}{" "}
-                <span className="text-accent">Merchant Bankers</span>
+                <span style={{ background: 'linear-gradient(135deg, hsl(35 95% 52%), hsl(45 93% 65%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Merchant Bankers</span>
               </h1>
               <p className="text-white/70 max-w-2xl mx-auto mb-8 text-lg">
                 {isSME
@@ -400,12 +400,12 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
               </div>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Link to={isSME ? "/merchant-bankers/mainboard-list" : "/merchant-bankers/sme"}>
-                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent">
+                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 bg-transparent rounded-full font-semibold">
                     View {isSME ? "Mainboard" : "SME"} Bankers <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                 </Link>
                 <Link to="/ipo-feasibility">
-                  <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold">
+                  <Button className="rounded-full font-bold" style={{ background: 'hsl(35 95% 52%)', color: 'white', boxShadow: '0 4px 16px hsl(35 95% 52% / 0.4)' }}>
                     Check IPO Feasibility
                   </Button>
                 </Link>
@@ -415,7 +415,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
         </section>
 
         {/* Main Listing Content */}
-        <section className="py-14 bg-secondary/20">
+        <section className="py-14" style={{ background: 'hsl(220 72% 97%)' }}>
           <div className="container mx-auto px-4">
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -441,7 +441,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                       onClick={() => { setDetailBanker(banker); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     >
                       {/* Gradient top accent bar */}
-                      <div className="h-1 w-full bg-gradient-to-r from-primary to-purple-600 group-hover:from-accent group-hover:to-primary transition-all duration-500" />
+                      <div className="h-1 w-full transition-all duration-500" style={{ background: 'linear-gradient(90deg, hsl(220 72% 45%), hsl(35 95% 52%))' }} />
 
                       {/* Card Header */}
                       <div className="p-5 flex gap-4 items-start">
@@ -461,21 +461,21 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                       </div>
 
                       {/* Card Stats */}
-                      <div className="grid grid-cols-4 gap-0 mx-5 mb-5 rounded-xl overflow-hidden border border-border">
+                      <div className="grid grid-cols-4 gap-0 mx-5 mb-5 rounded-xl overflow-hidden" style={{ border: '1px solid hsl(220 15% 90%)', background: 'hsl(220 72% 97%)' }}>
                         <div className="py-3 text-center border-r border-border last:border-r-0">
-                          <p className="text-sm font-bold text-primary">{banker.noOfiposofar || "0"}</p>
+                          <p className="text-sm font-bold" style={{ color: 'hsl(220 72% 45%)' }}>{banker.noOfiposofar || "0"}</p>
                           <p className="text-[9px] text-muted-foreground uppercase font-semibold mt-0.5 tracking-wide">IPOs</p>
                         </div>
                         <div className="py-3 text-center border-r border-border last:border-r-0">
-                          <p className="text-sm font-bold text-foreground">{banker.totalfundraised || "₹0"}</p>
+                          <p className="text-sm font-bold" style={{ color: 'hsl(35 95% 45%)' }}>{banker.totalfundraised || "₹0"}</p>
                           <p className="text-[9px] text-muted-foreground uppercase font-semibold mt-0.5 tracking-wide">Raised</p>
                         </div>
                         <div className="py-3 text-center border-r border-border last:border-r-0">
-                          <p className="text-sm font-bold text-foreground">{banker.avgiposize || "NA"}</p>
+                          <p className="text-sm font-bold" style={{ color: 'hsl(220 72% 45%)' }}>{banker.avgiposize || "NA"}</p>
                           <p className="text-[9px] text-muted-foreground uppercase font-semibold mt-0.5 tracking-wide">Avg Sz</p>
                         </div>
                         <div className="py-3 text-center">
-                          <p className="text-sm font-bold text-foreground">{banker.avgsubscription || "0x"}</p>
+                          <p className="text-sm font-bold" style={{ color: 'hsl(35 95% 45%)' }}>{banker.avgsubscription || "0x"}</p>
                           <p className="text-[9px] text-muted-foreground uppercase font-semibold mt-0.5 tracking-wide">Avg Sub</p>
                         </div>
                       </div>
@@ -484,13 +484,15 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                       <div className="px-5 pb-5 flex gap-3 mt-auto">
                         <Button
                           variant="outline"
-                          className="flex-1 border-primary/20 hover:bg-primary/5 text-primary font-semibold"
+                          className="flex-1 font-semibold rounded-lg"
+                          style={{ borderColor: 'hsl(220 72% 45% / 0.3)', color: 'hsl(220 72% 45%)' }}
                           onClick={(e) => { e.stopPropagation(); setDetailBanker(banker); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                         >
                           View Details
                         </Button>
                         <Button
-                          className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/20"
+                          className="flex-1 font-semibold rounded-lg"
+                          style={{ background: 'hsl(35 95% 52%)', color: 'white', boxShadow: '0 4px 12px hsl(35 95% 52% / 0.3)' }}
                           onClick={(e) => { e.stopPropagation(); setConnectBanker(banker); }}
                         >
                           Connect
@@ -503,15 +505,15 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                 {hasMore && (
                   <div className="mt-12 text-center">
                     <Button 
-                      variant="outline" 
                       size="lg" 
                       onClick={() => setPage(p => p + 1)}
                       disabled={loadingMore}
-                      className="border-primary/20 hover:border-primary/50 text-primary hover:bg-primary/5 py-6 px-12 rounded-full font-bold shadow-sm transition-all"
+                      className="py-6 px-12 rounded-full font-bold shadow-lg transition-all hover:scale-105"
+                      style={{ background: 'linear-gradient(135deg, hsl(220 72% 45%), hsl(220 72% 38%))', color: 'white', boxShadow: '0 4px 20px hsl(220 72% 45% / 0.35)' }}
                     >
                       {loadingMore ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                           Loading more bankers...
                         </>
                       ) : (
@@ -558,19 +560,19 @@ const ConnectModal = ({ banker, onClose }: { banker: Banker, onClose: () => void
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         className="relative bg-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-border"
       >
-        <div className="bg-primary p-6 text-primary-foreground relative">
-          <button onClick={onClose} className="absolute top-4 right-4 text-primary-foreground/70 hover:text-white transition-colors">
+        <div className="p-6 text-white relative" style={{ background: 'linear-gradient(135deg, hsl(220 72% 25%), hsl(220 72% 42%))' }}>
+          <button onClick={onClose} className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
           <div className="w-16 h-16 rounded-xl bg-white mb-4 p-2 shadow-lg">
             {banker.image ? (
               <img src={getImageUrl(banker.image)} alt={banker.title} className="w-full h-full object-contain" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-primary font-bold text-2xl">{banker.title?.[0]}</div>
+              <div className="w-full h-full flex items-center justify-center font-bold text-2xl" style={{ color: 'hsl(220 72% 45%)' }}>{banker.title?.[0]}</div>
             )}
           </div>
-          <h2 className="text-xl font-bold mb-1">Connect with {banker.title}</h2>
-          <p className="text-primary-foreground/80 text-sm">Use the details below to reach out regarding your upcoming IPO journey.</p>
+          <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>Connect with {banker.title}</h2>
+          <p className="text-white/75 text-sm">Use the details below to reach out regarding your upcoming IPO journey.</p>
         </div>
         
         <div className="p-6 space-y-6">
@@ -615,7 +617,7 @@ const ConnectModal = ({ banker, onClose }: { banker: Banker, onClose: () => void
           
           <div className="pt-6 border-t border-border mt-4">
             <a href={`mailto:${banker.cemail || "contact@example.com"}`}>
-              <Button className="w-full h-12 text-lg font-bold bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg shadow-accent/20">
+              <Button className="w-full h-12 text-lg font-bold rounded-xl" style={{ background: 'linear-gradient(135deg, hsl(35 95% 52%), hsl(45 93% 60%))', color: 'white', boxShadow: '0 4px 16px hsl(35 95% 52% / 0.35)' }}>
                 Contact Now
               </Button>
             </a>

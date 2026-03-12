@@ -16,14 +16,17 @@ interface Banner {
   image_url: string;
   cta_text: string | null;
   cta_link: string | null;
+  badge_text?: string | null;
+  cta2_text?: string | null;
+  cta2_link?: string | null;
   sort_order: number;
   is_active?: boolean;
 }
 
 const fallbackBanners: Banner[] = [
-  { id: "1", title: "India's Leading IPO Consultancy Platform", subtitle: "Expert advisory for SME IPO, Mainline IPO, FPO, and Pre-IPO funding.", image_url: heroBanner1, cta_text: "Check IPO Feasibility", cta_link: "/ipo-feasibility", sort_order: 1 },
-  { id: "2", title: "SME IPO — Your Gateway to Growth", subtitle: "Get listed on BSE SME or NSE Emerge with our end-to-end IPO consultation services.", image_url: heroBanner2, cta_text: "Explore Services", cta_link: "/services", sort_order: 2 },
-  { id: "3", title: "Trusted by 500+ Companies Nationwide", subtitle: "SEBI registered consultancy helping businesses raise capital through public markets.", image_url: heroBanner3, cta_text: "Contact Us", cta_link: "/contact", sort_order: 3 },
+  { id: "1", title: "India's Leading IPO Consultancy Platform", subtitle: "Expert advisory for SME IPO, Mainline IPO, FPO, and Pre-IPO funding.", image_url: heroBanner1, cta_text: "Check IPO Feasibility", cta_link: "/ipo-feasibility", badge_text: "SEBI Registered IPO Consultancy", cta2_text: "Contact Us", cta2_link: "/contact", sort_order: 1 },
+  { id: "2", title: "SME IPO — Your Gateway to Growth", subtitle: "Get listed on BSE SME or NSE Emerge with our end-to-end IPO consultation services.", image_url: heroBanner2, cta_text: "Explore Services", cta_link: "/services", badge_text: "Unlock Growth Potential", cta2_text: "Contact Us", cta2_link: "/contact", sort_order: 2 },
+  { id: "3", title: "Trusted by 500+ Companies Nationwide", subtitle: "SEBI registered consultancy helping businesses raise capital through public markets.", image_url: heroBanner3, cta_text: "Contact Us", cta_link: "/contact", badge_text: "Proven Track Record", cta2_text: "Our Services", cta2_link: "/services", sort_order: 3 },
 ];
 
 const HeroSection = () => {
@@ -80,10 +83,12 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-green/20 text-brand-green border border-brand-green/30 mb-6">
-              <CheckCircle className="h-3.5 w-3.5" />
-              SEBI Registered IPO Consultancy
-            </span>
+            {banner.badge_text && (
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-green/20 text-brand-green border border-brand-green/30 mb-6">
+                <CheckCircle className="h-3.5 w-3.5" />
+                {banner.badge_text}
+              </span>
+            )}
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -115,9 +120,11 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-background/30 text-background hover:bg-background/10 font-semibold text-base px-8" asChild>
-              <Link to="/contact">Contact Us</Link>
-            </Button>
+            {banner.cta2_text && (
+              <Button size="lg" variant="outline" className="border-background/30 text-background hover:bg-background/10 font-semibold text-base px-8" asChild>
+                <Link to={banner.cta2_link || "/contact"}>{banner.cta2_text}</Link>
+              </Button>
+            )}
           </motion.div>
         </div>
       </div>

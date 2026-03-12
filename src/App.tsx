@@ -23,9 +23,12 @@ const IPOFeasibility = lazy(() => import("./pages/IPOFeasibility"));
 const Investors = lazy(() => import("./pages/Investors"));
 const NewsUpdates = lazy(() => import("./pages/NewsUpdates"));
 const NewsDetails = lazy(() => import("./pages/NewsDetails"));
+const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
 const Careers = lazy(() => import("./pages/Careers"));
 const Reports = lazy(() => import("./pages/Reports"));
 const IPOKnowledge = lazy(() => import("./pages/IPOKnowledge"));
+const IPOProcess = lazy(() => import("./pages/IPOProcess"));
+const PreIPOProcess = lazy(() => import("./pages/PreIPOProcess"));
 const IPOBlogs = lazy(() => import("./pages/IPOBlogs"));
 const IPOBlogDetails = lazy(() => import("./pages/IPOBlogDetails"));
 const MerchantBankersPage = lazy(() => import("./pages/MerchantBankers"));
@@ -45,6 +48,7 @@ const MarketSnaps = lazy(() => import('./pages/MarketSnaps'));
 const CSR = lazy(() => import("./pages/CSR"));
 const ManageUsers = lazy(() => import("./pages/admin/ManageUsers"));
 const ManageReports = lazy(() => import("./pages/admin/ManageReports"));
+const ManageSubscriptions = lazy(() => import("./pages/admin/ManageSubscriptions"));
 const AdminSEO = lazy(() => import("./pages/admin/AdminSEO"));
 const ManagePages = lazy(() => import("./pages/admin/ManagePages"));
 const ManageNavigation = lazy(() => import("./pages/admin/ManageNavigation"));
@@ -89,6 +93,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/ipo-calendar" element={<IPOCalendar />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/services/:slug" element={<ServiceDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/about-us" element={<About />} />
               <Route path="/contact" element={<Contact />} />
@@ -109,6 +114,8 @@ const App = () => (
               <Route path="/reports" element={<Reports />} />
               <Route path="/reports/:slug" element={<Reports />} />
               <Route path="/ipo-knowledge" element={<IPOKnowledge />} />
+              <Route path="/ipo-knowledge/ipo-process" element={<IPOProcess />} />
+              <Route path="/ipo-knowledge/pre-ipo-process" element={<PreIPOProcess />} />
               <Route path="/ipo-knowledge/:slug" element={<IPOKnowledge />} />
               <Route path="/ipo-blogs" element={<IPOBlogs />} />
               <Route path="/ipo-blogs/:slug" element={<IPOBlogDetails />} />
@@ -140,6 +147,7 @@ const App = () => (
               <Route path="/admin/knowledge" element={<ManageKnowledge />} />
               <Route path="/admin/notifications" element={<ManageNotifications />} />
               <Route path="/admin/videos" element={<ManageVideos />} />
+              <Route path="/admin/subscriptions" element={<ManageSubscriptions />} />
               <Route path="/admin/popup" element={<ManagePopup />} />
               <Route path="/admin/registrars" element={<ManageRegistrars />} />
               <Route path="/admin/registrar-faqs" element={<ManageRegistrarFaqs />} />

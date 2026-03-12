@@ -14,17 +14,21 @@ interface Banner {
   image_url: string;
   cta_text: string | null;
   cta_link: string | null;
+  badge_text: string | null;
+  cta2_text: string | null;
+  cta2_link: string | null;
   sort_order: number;
   is_active: boolean;
-  created_at: string;
+  created_at?: string;
 }
 
 const ManageBanners = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "" });
+  const [form, setForm] = useState({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "" });
 
   const fetchBanners = async () => {
     try {
@@ -61,11 +65,14 @@ const ManageBanners = () => {
     }
   };
 
-  const handleAdd = async () => {
+  const handleSave = async () => {
     if (!form.image_url) { toast.error("Please upload an image"); return; }
     try {
-      const res = await fetch("/api/banners", {
-        method: "POST",
+      const url = editingId ? `/api/banners/${editingId}` : "/api/banners";
+      const method = editingId ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: form.title || null,
@@ -73,15 +80,35 @@ const ManageBanners = () => {
           image_url: form.image_url,
           cta_text: form.cta_text || null,
           cta_link: form.cta_link || null,
-          sort_order: banners.length + 1,
+          badge_text: form.badge_text || null,
+          cta2_text: form.cta2_text || null,
+          cta2_link: form.cta2_link || null,
+          ...(editingId ? {} : { sort_order: banners.length + 1 })
         })
       });
       if (!res.ok) throw new Error("Failed");
-      toast.success("Banner added!");
-      setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "" });
+      toast.success(editingId ? "Banner updated!" : "Banner added!");
+      setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "" });
       setShowForm(false);
+      setEditingId(null);
       fetchBanners();
     } catch (err: any) { toast.error(err.message); }
+  };
+
+  const handleEdit = (banner: Banner) => {
+    setForm({
+      title: banner.title || "",
+      subtitle: banner.subtitle || "",
+      image_url: banner.image_url || "",
+      cta_text: banner.cta_text || "",
+      cta_link: banner.cta_link || "",
+      badge_text: banner.badge_text || "",
+      cta2_text: banner.cta2_text || "",
+      cta2_link: banner.cta2_link || ""
+    });
+    setEditingId(banner.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const toggleActive = async (id: string, current: boolean) => {
@@ -112,7 +139,11 @@ const ManageBanners = () => {
             <h1 className="text-2xl font-bold text-foreground">Manage Hero Banners</h1>
             <p className="text-sm text-muted-foreground">Add, reorder, and manage homepage hero slider images</p>
           </div>
-          <Button className="bg-primary text-primary-foreground" onClick={() => setShowForm(!showForm)}>
+          <Button className="bg-primary text-primary-foreground" onClick={() => {
+            setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "" });
+            setEditingId(null);
+            setShowForm(!showForm);
+          }}>
             <Plus className="h-4 w-4 mr-1" />
             Add Banner
           </Button>
@@ -120,12 +151,18 @@ const ManageBanners = () => {
 
         {showForm && (
           <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-            <h3 className="font-semibold text-foreground">New Banner</h3>
+            <h3 className="font-semibold text-foreground">{editingId ? "Edit Banner" : "New Banner"}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input placeholder="Banner Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              <Input placeholder="CTA Button Text" value={form.cta_text} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
-              <Input placeholder="CTA Link (e.g. /services)" value={form.cta_link} onChange={(e) => setForm({ ...form, cta_link: e.target.value })} />
-              <div>
+              <Input placeholder="Badge Text (Optional)" value={form.badge_text} onChange={(e) => setForm({ ...form, badge_text: e.target.value })} />
+              
+              <Input placeholder="Primary CTA Text" value={form.cta_text} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
+              <Input placeholder="Primary CTA Link (e.g. /services)" value={form.cta_link} onChange={(e) => setForm({ ...form, cta_link: e.target.value })} />
+              
+              <Input placeholder="Secondary CTA Text (Optional)" value={form.cta2_text} onChange={(e) => setForm({ ...form, cta2_text: e.target.value })} />
+              <Input placeholder="Secondary CTA Link (Optional)" value={form.cta2_link} onChange={(e) => setForm({ ...form, cta2_link: e.target.value })} />
+              
+              <div className="md:col-span-2">
                 <label className="flex items-center gap-2 cursor-pointer border border-dashed border-border rounded-lg px-4 py-2 hover:border-primary transition-colors">
                   <Upload className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">{uploading ? "Uploading..." : form.image_url ? "Image uploaded ✓" : "Upload Banner Image"}</span>
@@ -138,8 +175,12 @@ const ManageBanners = () => {
               <img src={form.image_url} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
             )}
             <div className="flex gap-2">
-              <Button onClick={handleAdd} className="bg-primary text-primary-foreground">Save Banner</Button>
-              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button onClick={handleSave} className="bg-primary text-primary-foreground">{editingId ? "Update Banner" : "Save Banner"}</Button>
+              <Button variant="outline" onClick={() => {
+                setShowForm(false);
+                setEditingId(null);
+                setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "" });
+              }}>Cancel</Button>
             </div>
           </div>
         )}
@@ -170,6 +211,9 @@ const ManageBanners = () => {
                     {banner.is_active ? <Eye className="h-4 w-4 text-brand-green" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
                     <Switch checked={banner.is_active} onCheckedChange={() => toggleActive(banner.id, banner.is_active)} />
                   </div>
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(banner)}>
+                    Edit
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteBanner(banner.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>

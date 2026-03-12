@@ -9,11 +9,28 @@ import newsletterBg from "@/assets/newsletter-bg.jpg";
 const NewsletterSection = () => {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    toast.success("Thank you for subscribing!");
-    setEmail("");
+
+    try {
+      const res = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        toast.success("Thank you for subscribing!");
+        setEmail("");
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to subscribe");
+      }
+    } catch (err) {
+      toast.error("An error occurred. Please try again.");
+      console.error(err);
+    }
   };
 
   return (

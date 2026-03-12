@@ -21,18 +21,30 @@ const Footer = () => {
             <p className="text-background/50 text-xs font-semibold mb-3">Follow us:</p>
             <div className="flex gap-3">
               {[
-                { icon: Facebook, href: "#", label: "Facebook" },
-                { icon: () => <span className="text-xs font-bold">𝕏</span>, href: "#", label: "X" },
-                { icon: Linkedin, href: "#", label: "LinkedIn" },
-                { icon: Instagram, href: "#", label: "Instagram" },
-                { icon: Youtube, href: "#", label: "YouTube" },
+                { icon: Facebook, href: "https://www.facebook.com/01indiapo", label: "Facebook", color: "#1877F2" },
+                { icon: () => <span className="text-xs font-bold">𝕏</span>, href: "https://x.com/india_ipo1", label: "X", color: "#000000" },
+                { icon: Linkedin, href: "https://www.linkedin.com/company/india-ipo/", label: "LinkedIn", color: "#0077B5" },
+                { icon: Instagram, href: "https://www.instagram.com/india_ipo1", label: "Instagram", color: "#E4405F" },
+                { icon: Youtube, href: "https://www.youtube.com/@IndiaIPOofficial", label: "YouTube", color: "#FF0000" },
               ].map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-full bg-background/10 hover:bg-primary flex items-center justify-center text-background/70 hover:text-primary-foreground transition-colors"
+                  className="w-8 h-8 rounded-full bg-background/10 flex items-center justify-center text-background/70 transition-all hover:scale-110 shadow-sm"
+                  style={{ 
+                    color: social.color,
+                    backgroundColor: `${social.color}15` // 15 is hex for ~8% opacity
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = social.color;
+                    e.currentTarget.style.color = "white";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = `${social.color}15`;
+                    e.currentTarget.style.color = social.color;
+                  }}
                   aria-label={social.label}
                 >
                   <social.icon className="h-4 w-4" />
@@ -49,7 +61,7 @@ const Footer = () => {
                 { label: "Home", href: "/" },
                 { label: "Blogs", href: "/blog" },
                 { label: "Consultant", href: "/services" },
-                { label: "Youtube Videos", href: "/ipo-video-updates" },
+                { label: "Youtube Videos", href: "/ipo-and-market-snaps" },
                 { label: "News", href: "/news-updates" },
                 { label: "Contact Us", href: "/contact" },
                 { label: "Career", href: "/careers" },
