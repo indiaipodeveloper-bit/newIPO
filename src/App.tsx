@@ -55,6 +55,13 @@ const ManageCareerApplications = lazy(() => import("./pages/admin/ManageCareerAp
 const NotificationView = lazy(() => import("./pages/NotificationView"));
 const ManageNotifications = lazy(() => import("./pages/admin/ManageNotifications"));
 const ManageVideos = lazy(() => import("./pages/admin/ManageVideos"));
+const ManagePopup = lazy(() => import("./pages/admin/ManagePopup"));
+const Registrars = lazy(() => import("./pages/Registrars"));
+const ManageRegistrars = lazy(() => import("./pages/admin/ManageRegistrars"));
+const ManageRegistrarFaqs = lazy(() => import("./pages/admin/ManageRegistrarFaqs"));
+const DailyReporter = lazy(() => import("./pages/DailyReporter"));
+const ManageDailyDigests = lazy(() => import("./pages/admin/ManageDailyDigests"));
+const RegistrarDetails = lazy(() => import("./pages/RegistrarDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -96,6 +103,7 @@ const App = () => (
               <Route path="/csr" element={<CSR />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/news/:slug" element={<NewsDetails />} />
+              <Route path="/reports/daily-reporter" element={<DailyReporter />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/reports/:slug" element={<Reports />} />
               <Route path="/ipo-knowledge" element={<IPOKnowledge />} />
@@ -105,6 +113,8 @@ const App = () => (
               <Route path="/merchant-bankers/:category" element={<MerchantBankersPage />} />
               <Route path="/merchant-bankers/mainboard-list" element={<MainboardBankersPage />} />
               <Route path="/notifications/:slug" element={<NotificationView />} />
+              <Route path="/list-of-ipo-registrar" element={<Registrars />} />
+              <Route path="/list-of-ipo-registrar/:slug" element={<RegistrarDetails />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/ipos" element={<ManageIPOs />} />
               <Route path="/admin/blogs" element={<ManageBlogs />} />
@@ -127,6 +137,10 @@ const App = () => (
               <Route path="/admin/knowledge" element={<ManageKnowledge />} />
               <Route path="/admin/notifications" element={<ManageNotifications />} />
               <Route path="/admin/videos" element={<ManageVideos />} />
+              <Route path="/admin/popup" element={<ManagePopup />} />
+              <Route path="/admin/registrars" element={<ManageRegistrars />} />
+              <Route path="/admin/registrar-faqs" element={<ManageRegistrarFaqs />} />
+              <Route path="/admin/daily-digests" element={<ManageDailyDigests />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

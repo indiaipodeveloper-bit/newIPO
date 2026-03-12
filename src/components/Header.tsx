@@ -130,7 +130,7 @@ const FALLBACK_KNOWLEDGE: SubItem[] = [
   { label: "Pre-IPO Process Guidance", href: "/ipo-knowledge/pre-ipo-process" },
   { label: "IPO Blogs", href: "/ipo-blogs" },
   { label: "Sector Wise IPO List In India", href: "/ipo-knowledge/sector-wise-ipo-list" },
-  { label: "List of IPO Registrar", href: "/ipo-knowledge/ipo-registrar-list" },
+  { label: "List of IPO Registrar", href: "/list-of-ipo-registrar" },
 ];
 
 const FALLBACK_NOTIFICATIONS: SubItem[] = [
@@ -180,7 +180,12 @@ const Header = () => {
           if (active.length > 0) {
             setKnowledgeItems([
               { label: "IPO Blogs", href: "/ipo-blogs" },
-              ...active.map(c => ({ label: c.name, href: `/ipo-knowledge/${c.slug}` }))
+              ...active.map(c => ({ 
+                label: c.name, 
+                href: (c.name.toLowerCase() === "list of ipo registrar" || c.name.toLowerCase() === "registrar") 
+                  ? "/list-of-ipo-registrar" 
+                  : `/ipo-knowledge/${c.slug}` 
+              }))
             ]);
           }
         }

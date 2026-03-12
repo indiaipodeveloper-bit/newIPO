@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck, Megaphone, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
@@ -14,9 +14,12 @@ const sidebarLinks = [
   { label: "Mainboard Bankers", href: "/admin/mainboard-bankers", icon: Building2 },
   { label: "Reports", href: "/admin/reports", icon: FileText },
   { label: "IPO Knowledge", href: "/admin/knowledge", icon: GraduationCap },
+  { label: "Manage Registrars", href: "/admin/registrars", icon: Users },
+  { label: "Registrar FAQs", href: "/admin/registrar-faqs", icon: HelpCircle },
   { label: "Notifications PDFs", href: "/admin/notifications", icon: Bell },
   { label: "IPO Videos", href: "/admin/videos", icon: Video },
   { label: "Market Snaps", href: "/admin/market-snaps", icon: PlayCircle },
+  { label: "Daily Reporter", href: "/admin/daily-digests", icon: FileText },
   { label: "Check IPO Feasibility", href: "/admin/ipo-feasibility", icon: ClipboardCheck },
   { label: "Career Applications", href: "/admin/career-applications", icon: GraduationCap },
   { label: "Manage CSR", href: "/admin/csr", icon: Globe },
@@ -26,6 +29,7 @@ const sidebarLinks = [
   { label: "Pages", href: "/admin/pages", icon: Layout },
   { label: "Navigation", href: "/admin/navigation", icon: Navigation },
   { label: "Manage IPO Blogs", href: "/admin/ipo-blogs", icon: BookOpen },
+  { label: "Site Popup", href: "/admin/popup", icon: Megaphone },
   { label: "SEO Settings", href: "/admin/seo", icon: Settings },
 ];
 
