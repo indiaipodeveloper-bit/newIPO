@@ -1,5 +1,10 @@
 // API Configuration - Point this to your Express backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const getApiBaseUrl = () => {
+  const url = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  return url.endsWith("/api") ? url : `${url}/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const getToken = () => localStorage.getItem("token");
 
@@ -47,6 +52,24 @@ export const ipoApi = {
     fetch(`${API_BASE_URL}/ipos/${id}`, { method: "DELETE", headers: headers() }).then(handleResponse),
 };
 
+// IPO List API (ipo_lists table)
+export const ipoListApi = {
+  getAll: (params?: Record<string, string>) => {
+    const query = params ? "?" + new URLSearchParams(params).toString() : "";
+    return fetch(`${API_BASE_URL}/ipo-lists${query}`, { headers: headers() }).then(handleResponse);
+  },
+  getById: (id: string) =>
+    fetch(`${API_BASE_URL}/ipo-lists/${id}`, { headers: headers() }).then(handleResponse),
+  create: (data: Record<string, unknown>) =>
+    fetch(`${API_BASE_URL}/ipo-lists`, { method: "POST", headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
+  update: (id: string, data: Record<string, unknown>) =>
+    fetch(`${API_BASE_URL}/ipo-lists/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
+  delete: (id: string) =>
+    fetch(`${API_BASE_URL}/ipo-lists/${id}`, { method: "DELETE", headers: headers() }).then(handleResponse),
+  getSectors: () =>
+    fetch(`${API_BASE_URL}/ipo-lists/sectors/list`, { headers: headers() }).then(handleResponse),
+};
+
 // Blog API
 export const blogApi = {
   getAll: (params?: Record<string, string>) => {
@@ -89,7 +112,16 @@ export const userApi = {
     fetch(`${API_BASE_URL}/users/${id}/block`, { method: "PUT", headers: headers() }).then(handleResponse),
 };
 
-// Stats API
+// Stat API
 export const statsApi = {
   getDashboard: () => fetch(`${API_BASE_URL}/stats/dashboard`, { headers: headers() }).then(handleResponse),
+};
+
+// Sector API
+export const sectorApi = {
+  getAll: () => fetch(`${API_BASE_URL}/sectors`, { headers: headers() }).then(handleResponse),
+  getAdminAll: () => fetch(`${API_BASE_URL}/sectors/admin`, { headers: headers() }).then(handleResponse),
+  create: (data: any) => fetch(`${API_BASE_URL}/sectors`, { method: "POST", headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
+  update: (id: string, data: any) => fetch(`${API_BASE_URL}/sectors/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
+  delete: (id: string) => fetch(`${API_BASE_URL}/sectors/${id}`, { method: "DELETE", headers: headers() }).then(handleResponse),
 };

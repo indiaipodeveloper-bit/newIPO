@@ -27,6 +27,9 @@ import popupRoutes from './routes/popup.js';
 import registrarRoutes from './routes/registrars.js';
 import registrarFaqRoutes from './routes/registrarFaqs.js';
 import dailyDigestRoutes from './routes/daily_digests.js';
+import ipoListRoutes from './routes/ipo_lists.js';
+import sectorRoutes from './routes/sectors.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -276,6 +279,8 @@ app.use('/api/popup', popupRoutes);
 app.use('/api/registrars', registrarRoutes);
 app.use('/api/registrar-faqs', registrarFaqRoutes);
 app.use('/api/daily-digests', dailyDigestRoutes);
+app.use('/api/ipo-lists', ipoListRoutes);
+app.use('/api/sectors', sectorRoutes);
 
 // Start server after DB init
 initDB().then(() => {
