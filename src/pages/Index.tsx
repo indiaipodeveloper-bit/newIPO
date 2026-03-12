@@ -14,6 +14,7 @@ import IPOVideoSection from "@/components/IPOVideoSection";
 import CTABannerSection from "@/components/CTABannerSection";
 
 import SEOHead from "@/components/SEOHead";
+import SitePopup from "@/components/SitePopup";
 import { blogPosts } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,7 @@ const Index = () => {
         <NewsletterSection />
       </main>
       <Footer />
+      <SitePopup />
     </div>
   );
 };

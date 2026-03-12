@@ -1,0 +1,140 @@
+[
+  {
+    "Tables_in_newipo_db": "about_csr"
+  },
+  {
+    "Tables_in_newipo_db": "admin_blogs"
+  },
+  {
+    "Tables_in_newipo_db": "api_news"
+  },
+  {
+    "Tables_in_newipo_db": "blog_slug"
+  },
+  {
+    "Tables_in_newipo_db": "blogs"
+  },
+  {
+    "Tables_in_newipo_db": "cache"
+  },
+  {
+    "Tables_in_newipo_db": "career"
+  },
+  {
+    "Tables_in_newipo_db": "career_applications"
+  },
+  {
+    "Tables_in_newipo_db": "chatbot_data"
+  },
+  {
+    "Tables_in_newipo_db": "check_ipo_eligibility"
+  },
+  {
+    "Tables_in_newipo_db": "cron_check"
+  },
+  {
+    "Tables_in_newipo_db": "daily_digests"
+  },
+  {
+    "Tables_in_newipo_db": "failed_jobs"
+  },
+  {
+    "Tables_in_newipo_db": "hero_banners"
+  },
+  {
+    "Tables_in_newipo_db": "investor"
+  },
+  {
+    "Tables_in_newipo_db": "ipo_eligibility"
+  },
+  {
+    "Tables_in_newipo_db": "ipo_lists"
+  },
+  {
+    "Tables_in_newipo_db": "jobs"
+  },
+  {
+    "Tables_in_newipo_db": "knowledge_categories"
+  },
+  {
+    "Tables_in_newipo_db": "knowledge_items"
+  },
+  {
+    "Tables_in_newipo_db": "leads"
+  },
+  {
+    "Tables_in_newipo_db": "m_category"
+  },
+  {
+    "Tables_in_newipo_db": "magzine"
+  },
+  {
+    "Tables_in_newipo_db": "marchantbankers"
+  },
+  {
+    "Tables_in_newipo_db": "merchant_bankers"
+  },
+  {
+    "Tables_in_newipo_db": "migrations"
+  },
+  {
+    "Tables_in_newipo_db": "ncd"
+  },
+  {
+    "Tables_in_newipo_db": "ncd_issu"
+  },
+  {
+    "Tables_in_newipo_db": "notification_pdfs"
+  },
+  {
+    "Tables_in_newipo_db": "pages"
+  },
+  {
+    "Tables_in_newipo_db": "password_reset_tokens"
+  },
+  {
+    "Tables_in_newipo_db": "personal_access_tokens"
+  },
+  {
+    "Tables_in_newipo_db": "processed_jobs"
+  },
+  {
+    "Tables_in_newipo_db": "registrar"
+  },
+  {
+    "Tables_in_newipo_db": "registrar_faq"
+  },
+  {
+    "Tables_in_newipo_db": "report_categories"
+  },
+  {
+    "Tables_in_newipo_db": "report_items"
+  },
+  {
+    "Tables_in_newipo_db": "sector_by_ipo"
+  },
+  {
+    "Tables_in_newipo_db": "sectors"
+  },
+  {
+    "Tables_in_newipo_db": "sessions"
+  },
+  {
+    "Tables_in_newipo_db": "site_popup"
+  },
+  {
+    "Tables_in_newipo_db": "slider"
+  },
+  {
+    "Tables_in_newipo_db": "social_media"
+  },
+  {
+    "Tables_in_newipo_db": "users"
+  },
+  {
+    "Tables_in_newipo_db": "videos"
+  },
+  {
+    "Tables_in_newipo_db": "visitors"
+  }
+]

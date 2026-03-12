@@ -229,7 +229,9 @@ const IPOKnowledge = () => {
                     return (
                       <Link
                         key={cat.id}
-                        to={`/ipo-knowledge/${cat.slug}`}
+                        to={(cat.name.toLowerCase() === "list of ipo registrar" || cat.name.toLowerCase() === "registrar") 
+                          ? "/list-of-ipo-registrar" 
+                          : `/ipo-knowledge/${cat.slug}`}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${activeCategory?.id === cat.id
                             ? "bg-primary text-primary-foreground font-semibold"
                             : "text-foreground/70 hover:bg-secondary hover:text-primary"

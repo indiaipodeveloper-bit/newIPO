@@ -144,4 +144,30 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .registrar-description {
+    color: hsl(var(--muted-foreground));
+    line-height: 1.8;
+  }
+  .registrar-description p {
+    margin-bottom: 1.5rem;
+  }
+  .registrar-description h1, .registrar-description h2, .registrar-description h3 {
+    color: hsl(var(--foreground));
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-family: 'Montserrat', sans-serif;
+  }
+  .registrar-description ul, .registrar-description ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+  }
+  .registrar-description li {
+    margin-bottom: 0.5rem;
+  }
+  .registrar-description strong {
+    color: hsl(var(--primary));
+    font-weight: 600;
+  }
 }

@@ -23,6 +23,10 @@ import csrRoutes from './routes/csr.js';
 import mainboardBankerRoutes from './routes/mainboard_bankers.js';
 import careerRoutes from './routes/careers.js';
 import adminBlogsRoutes from './routes/admin_blogs.js';
+import popupRoutes from './routes/popup.js';
+import registrarRoutes from './routes/registrars.js';
+import registrarFaqRoutes from './routes/registrarFaqs.js';
+import dailyDigestRoutes from './routes/daily_digests.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -217,6 +221,26 @@ async function initDB() {
             )
         `);
 
+        await conn.execute(`
+            CREATE TABLE IF NOT EXISTS site_popup (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) DEFAULT '',
+                description TEXT,
+                image_url VARCHAR(512),
+                button_text VARCHAR(100) DEFAULT 'Read More',
+                button_link VARCHAR(512) DEFAULT '#',
+                is_active TINYINT(1) DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Check if a record exists, if not insert a default one
+        const [popupRows] = await conn.execute('SELECT COUNT(*) as count FROM site_popup');
+        if (popupRows[0].count === 0) {
+            await conn.execute('INSERT INTO site_popup (title, description, image_url, button_text, button_link, is_active) VALUES (?, ?, ?, ?, ?, ?)', 
+                ['New Release', 'Check out our latest news!', null, 'Learn More', '#', 0]);
+        }
+
         conn.release();
         console.log('✅ All MySQL tables initialized (including blogs)');
     } catch (err) {
@@ -248,6 +272,10 @@ app.use('/api/csr', csrRoutes);
 app.use('/api/mainboard-bankers', mainboardBankerRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/admin-blogs', adminBlogsRoutes);
+app.use('/api/popup', popupRoutes);
+app.use('/api/registrars', registrarRoutes);
+app.use('/api/registrar-faqs', registrarFaqRoutes);
+app.use('/api/daily-digests', dailyDigestRoutes);
 
 // Start server after DB init
 initDB().then(() => {
