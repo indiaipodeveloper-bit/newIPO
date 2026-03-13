@@ -59,15 +59,21 @@ const SitePopup = () => {
             className="relative w-full max-w-lg bg-card rounded-3xl overflow-hidden shadow-2xl border border-border max-h-[90vh] overflow-y-auto scrollbar-hide"
           >
             {/* Header / Banner Part */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <div className="relative w-full overflow-hidden bg-muted flex items-center justify-center min-h-[300px] max-h-[550px]">
               {data.image_url ? (
                 <img 
-                  src={data.image_url} 
+                  src={data.image_url.startsWith('http') ? data.image_url : (data.image_url.startsWith('/') ? data.image_url : `/${data.image_url}`)} 
                   alt={data.title} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain max-h-[550px]"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes(window.location.origin) && !target.src.startsWith('http')) {
+                      target.src = window.location.origin + (data.image_url?.startsWith('/') ? data.image_url : `/${data.image_url}`);
+                    }
+                  }}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                <div className="w-full h-full min-h-[300px] bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <span className="text-primary font-bold text-2xl px-6 text-center">{data.title}</span>
                 </div>
               )}

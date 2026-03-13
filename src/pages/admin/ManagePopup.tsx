@@ -170,16 +170,16 @@ const ManagePopup = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Popup Image</label>
                 <div className="flex flex-col gap-4">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted border border-border">
+                  <div className="relative w-full rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center min-h-[200px] max-h-[400px]">
                     {form.image_url ? (
                       <img 
-                        src={form.image_url} 
+                        src={form.image_url.startsWith('http') ? form.image_url : (form.image_url.startsWith('/') ? form.image_url : `/${form.image_url}`)} 
                         alt="Popup" 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-auto object-contain max-h-[400px]" 
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          if (!target.src.includes('http')) {
-                            target.src = window.location.origin + form.image_url;
+                          if (!target.src.includes(window.location.origin) && !target.src.startsWith('http')) {
+                            target.src = window.location.origin + (form.image_url?.startsWith('/') ? form.image_url : `/${form.image_url}`);
                           }
                         }}
                       />

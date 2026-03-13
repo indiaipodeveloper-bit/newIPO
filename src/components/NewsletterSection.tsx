@@ -34,7 +34,7 @@ const NewsletterSection = () => {
   };
 
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section id="newsletter-section" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0">
         <img src={newsletterBg} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-primary/90" />

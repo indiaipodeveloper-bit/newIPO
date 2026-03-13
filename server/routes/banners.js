@@ -9,6 +9,7 @@ router.get('/', async (req, res) => {
         const [rows] = await pool.execute('SELECT * FROM hero_banners ORDER BY sort_order ASC');
         res.json(rows);
     } catch (err) {
+        console.error('Error fetching banners:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -16,14 +17,15 @@ router.get('/', async (req, res) => {
 // POST create a banner
 router.post('/', async (req, res) => {
     try {
-        const { title, subtitle = '', image_url, cta_text = '', cta_link = '', badge_text = '', cta2_text = '', cta2_link = '', sort_order = 0, is_active = 1 } = req.body;
+        const { title, subtitle = '', image_url, cta_text = '', cta_link = '', badge_text = '', cta2_text = '', cta2_link = '', sort_order = 0, is_active = 1, page_path = null } = req.body;
         const [result] = await pool.execute(
-            'INSERT INTO hero_banners (title, subtitle, image_url, cta_text, cta_link, badge_text, cta2_text, cta2_link, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [title, subtitle, image_url, cta_text, cta_link, badge_text, cta2_text, cta2_link, sort_order, is_active]
+            'INSERT INTO hero_banners (title, subtitle, image_url, cta_text, cta_link, badge_text, cta2_text, cta2_link, sort_order, is_active, page_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [title, subtitle, image_url, cta_text, cta_link, badge_text, cta2_text, cta2_link, sort_order, is_active, page_path]
         );
         const [rows] = await pool.execute('SELECT * FROM hero_banners WHERE id = ?', [result.insertId]);
         res.status(201).json(rows[0]);
     } catch (err) {
+        console.error('Error creating banner:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -31,13 +33,21 @@ router.post('/', async (req, res) => {
 // PUT update a banner
 router.put('/:id', async (req, res) => {
     try {
-        const fields = Object.keys(req.body).map(k => `${k} = ?`).join(', ');
-        const values = [...Object.values(req.body), req.params.id];
-        await pool.execute(`UPDATE hero_banners SET ${fields} WHERE id = ?`, values);
+        const allowedFields = ['title', 'subtitle', 'image_url', 'cta_text', 'cta_link', 'badge_text', 'cta2_text', 'cta2_link', 'sort_order', 'is_active', 'page_path'];
+        const keys = Object.keys(req.body).filter(key => allowedFields.includes(key));
+        
+        if (keys.length === 0) return res.status(400).json({ error: 'No valid fields provided' });
+
+        const updates = keys.map(key => `${key} = ?`).join(', ');
+        const values = keys.map(key => req.body[key]);
+        values.push(req.params.id);
+
+        await pool.execute(`UPDATE hero_banners SET ${updates} WHERE id = ?`, values);
         const [rows] = await pool.execute('SELECT * FROM hero_banners WHERE id = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Banner not found' });
         res.json(rows[0]);
     } catch (err) {
+        console.error('Error updating banner:', err);
         res.status(400).json({ error: err.message });
     }
 });

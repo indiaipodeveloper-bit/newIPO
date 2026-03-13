@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -49,6 +49,17 @@ const Contact = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [banner, setBanner] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/banners")
+      .then(res => res.json())
+      .then(data => {
+        const pageBanner = data.find((b: any) => b.page_path === "/contact" && b.is_active);
+        if (pageBanner) setBanner(pageBanner);
+      })
+      .catch(err => console.error("Failed to fetch banner:", err));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,8 +101,9 @@ const Contact = () => {
         <section
           className="relative py-24 overflow-hidden"
           style={{
-            background:
-              "linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)",
+            background: banner?.image_url 
+              ? `linear-gradient(rgba(10, 25, 47, 0.7), rgba(10, 25, 47, 0.7)), url('${banner.image_url}') center/cover no-repeat`
+              : "linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)",
           }}
         >
           {/* decorative circles */}

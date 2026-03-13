@@ -11,6 +11,7 @@ const fallbackImage = "https://images.unsplash.com/photo-1590283603385-17ffb3a7f
 export default function Blog() {
   const [blogs, setBlogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [banner, setBanner] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/blogs?status=published")
@@ -25,13 +26,31 @@ export default function Blog() {
       });
   }, []);
 
+  useEffect(() => {
+    fetch("/api/banners")
+      .then(res => res.json())
+      .then(data => {
+        const pageBanner = data.find((b: any) => b.page_path === "/blog" && b.is_active);
+        if (pageBanner) setBanner(pageBanner);
+      })
+      .catch(err => console.error("Failed to fetch banner:", err));
+  }, []);
+
   return (
     <div className="min-h-screen">
       <SEOHead title="Blog" description="IPO insights, market analysis, GMP updates, and investment guides from IndiaIPO experts." keywords="IPO blog, IPO news, GMP updates, market analysis" />
       <Header />
       <main>
-        <section className="gradient-navy py-16">
-          <div className="container mx-auto px-4 text-center">
+        <section 
+          className="py-16 relative overflow-hidden"
+          style={{
+            background: banner?.image_url 
+              ? `linear-gradient(rgba(10, 25, 47, 0.7), rgba(10, 25, 47, 0.7)), url('${banner.image_url}') center/cover no-repeat`
+              : undefined
+          }}
+        >
+          {!banner?.image_url && <div className="absolute inset-0 gradient-navy" />}
+          <div className="container mx-auto px-4 text-center relative z-10">
             <h1 className="text-3xl md:text-4xl font-bold font-heading text-primary-foreground mb-3">
               IPO <span className="text-gradient-gold">Blog</span>
             </h1>
