@@ -60,7 +60,7 @@ const Footer = () => {
               {[
                 { label: "Home", href: "/" },
                 { label: "Blogs", href: "/blog" },
-                { label: "Consultant", href: "/services" },
+                { label: "Consultant", href: "/consultants" },
                 { label: "Youtube Videos", href: "/ipo-and-market-snaps" },
                 { label: "News", href: "/news-updates" },
                 { label: "Contact Us", href: "/contact" },

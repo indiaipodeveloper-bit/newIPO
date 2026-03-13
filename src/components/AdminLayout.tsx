@@ -27,6 +27,8 @@ const sidebarLinks = [
   { label: "Manage CSR", href: "/admin/csr", icon: Globe },
   { label: "Investor Enquiries", href: "/admin/investors", icon: Briefcase },
   { label: "Leads", href: "/admin/leads", icon: MessageSquare, badgeKey: "leads" },
+  { label: "Manage Consultants", href: "/admin/consultants", icon: Users },
+  { label: "Consultant Enquiries", href: "/admin/consultant-enquiries", icon: MessageSquare, badgeKey: "consultantEnquiries" },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Pages", href: "/admin/pages", icon: Layout },
   { label: "Navigation", href: "/admin/navigation", icon: Navigation },
@@ -42,6 +44,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadLeads, setUnreadLeads] = useState(0);
+  const [unreadConsultantEnquiries, setUnreadConsultantEnquiries] = useState(0);
+
 
   useEffect(() => {
     // Fetch unread leads count
@@ -52,6 +56,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           const leads = await res.json();
           const unread = leads.filter((l: any) => !l.is_read).length;
           setUnreadLeads(unread);
+        }
+        
+        const resConsultant = await fetch("/api/consultant-enquiries");
+        if (resConsultant.ok) {
+          const enquiries = await resConsultant.json();
+          const unread = enquiries.filter((e: any) => !e.is_read).length;
+          setUnreadConsultantEnquiries(unread);
         }
       } catch (err) { console.error(err); }
     };
@@ -93,7 +104,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           {sidebarLinks.map((link) => {
             const Icon = link.icon;
             const active = location.pathname === link.href;
-            const badge = link.badgeKey === "leads" ? unreadLeads : 0;
+            const badge = link.badgeKey === "leads" 
+              ? unreadLeads 
+              : link.badgeKey === "consultantEnquiries" 
+                ? unreadConsultantEnquiries 
+                : 0;
             return (
               <Link
                 key={link.href}

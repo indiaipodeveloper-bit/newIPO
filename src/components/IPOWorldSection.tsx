@@ -28,7 +28,7 @@ const IPOWorldSection = () => {
   };
 
   return (
-    <section className="py-24 bg-accent/5">
+    <section id="magazine-section" className="py-24 bg-accent/5">
       <div className="container mx-auto px-4">
         <div className="text-center mb-14">
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-4">
@@ -94,7 +94,12 @@ const IPOWorldSection = () => {
                     {mag.date}
                   </div>
                   <Button className="w-full bg-brand-green text-primary-foreground hover:bg-brand-green/90 font-semibold text-sm rounded-xl" asChild>
-                    <Link to={`/blog#magazine-${mag.slug}`}>Read Magazine</Link>
+                    <Link to="/#newsletter-section" onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('newsletter-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }}>
+                      Read Magazine
+                    </Link>
                   </Button>
                 </div>
               </motion.div>

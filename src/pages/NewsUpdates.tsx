@@ -49,6 +49,7 @@ const NewsUpdates = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [banner, setBanner] = useState<any>(null);
 
   // ── fetch news ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -83,6 +84,17 @@ const NewsUpdates = () => {
         setVideos([]);
         setVideosLoading(false);
       });
+  }, []);
+
+  // ── fetch dynamic banner ────────────────────────────────────────────────────
+  useEffect(() => {
+    fetch("/api/banners")
+      .then(res => res.json())
+      .then(data => {
+        const pageBanner = data.find((b: any) => b.page_path === "/news-updates" && b.is_active);
+        if (pageBanner) setBanner(pageBanner);
+      })
+      .catch(err => console.error("Failed to fetch banner:", err));
   }, []);
 
   // ── helpers (same logic as MarketSnaps.tsx) ────────────────────────────────
@@ -134,7 +146,9 @@ const NewsUpdates = () => {
         <section
           className="relative py-20 overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)`,
+            background: banner?.image_url 
+              ? `linear-gradient(rgba(10, 25, 47, 0.7), rgba(10, 25, 47, 0.7)), url('${banner.image_url}') center/cover no-repeat`
+              : `linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)`,
           }}
         >
           {/* decorative blobs */}

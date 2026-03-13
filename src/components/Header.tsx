@@ -34,7 +34,7 @@ const STATIC_NAV_PREFIX: NavItem[] = [
     href: "/about",
     dropdown: [
       { label: "About IndiaIPO", href: "/about" },
-      { label: "Our Team", href: "/about#team" },
+
       { label: "Our CSR", href: "/csr" },
     ],
   },
@@ -162,15 +162,15 @@ const Header = () => {
         if (data && data.length > 0) {
           const active = data.filter(n => n.is_active == 1 || n.is_active === true);
           if (active.length > 0) {
-            setNotifItems(active.map(n => ({ 
-              label: n.title, 
+            setNotifItems(active.map(n => ({
+              label: n.title,
               href: n.link ? (n.link.startsWith('http') ? n.link : `https://${n.link}`) : `/notifications/${n.slug}`,
               external: !!n.link
             })));
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     fetch("/api/knowledge/categories")
       .then(r => r.ok ? r.json() : null)
@@ -180,19 +180,19 @@ const Header = () => {
           if (active.length > 0) {
             setKnowledgeItems([
               { label: "IPO Blogs", href: "/ipo-blogs" },
-              ...active.map(c => ({ 
-                label: c.name, 
-                href: (c.name.toLowerCase() === "list of ipo registrar" || c.name.toLowerCase() === "registrar") 
-                  ? "/list-of-ipo-registrar" 
+              ...active.map(c => ({
+                label: c.name,
+                href: (c.name.toLowerCase() === "list of ipo registrar" || c.name.toLowerCase() === "registrar")
+                  ? "/list-of-ipo-registrar"
                   : (c.name.toLowerCase() === "sector wise ipo list in india" || c.slug === "sector-wise-ipo-list")
                     ? "/sector-wise-ipo"
-                    : `/ipo-knowledge/${c.slug}` 
+                    : `/ipo-knowledge/${c.slug}`
               }))
             ]);
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const resourcesNavItem: NavItem = {

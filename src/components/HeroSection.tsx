@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, CheckCircle, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 
 // Fallback images
@@ -112,7 +112,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-wrap gap-4"
           >
             <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold text-base px-8 gold-glow" asChild>
               <Link to={banner.cta_link || "/ipo-feasibility"}>
@@ -120,8 +120,17 @@ const HeroSection = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+            <Button size="lg" variant="outline" className="border-background/30 text-background hover:bg-background/10 font-semibold text-base px-8" asChild>
+              <Link to="/#newsletter-section" onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('newsletter-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Read Magazine
+              </Link>
+            </Button>
             {banner.cta2_text && (
-              <Button size="lg" variant="outline" className="border-background/30 text-background hover:bg-background/10 font-semibold text-base px-8" asChild>
+              <Button size="lg" variant="ghost" className="text-background hover:bg-background/10 font-semibold text-base px-6 h-auto py-3" asChild>
                 <Link to={banner.cta2_link || "/contact"}>{banner.cta2_text}</Link>
               </Button>
             )}

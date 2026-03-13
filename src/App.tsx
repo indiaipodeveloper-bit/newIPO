@@ -68,6 +68,10 @@ const ManageDailyDigests = lazy(() => import("./pages/admin/ManageDailyDigests")
 const RegistrarDetails = lazy(() => import("./pages/RegistrarDetails"));
 const Sectors = lazy(() => import("./pages/Sectors"));
 const ManageSectors = lazy(() => import("./pages/admin/ManageSectors"));
+const ConsultantPage = lazy(() => import("./pages/ConsultantPage"));
+const ConsultantDetail = lazy(() => import("./pages/ConsultantDetail"));
+const ManageConsultants = lazy(() => import("./pages/admin/ManageConsultants"));
+const ManageConsultantEnquiries = lazy(() => import("./pages/admin/ManageConsultantEnquiries"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -125,6 +129,9 @@ const App = () => (
               <Route path="/notifications/:slug" element={<NotificationView />} />
               <Route path="/list-of-ipo-registrar" element={<Registrars />} />
               <Route path="/list-of-ipo-registrar/:slug" element={<RegistrarDetails />} />
+              <Route path="/consultants" element={<ConsultantPage />} />
+              <Route path="/consultants/:id" element={<ConsultantDetail />} />
+
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/ipos" element={<ManageIPOs />} />
               <Route path="/admin/blogs" element={<ManageBlogs />} />
@@ -153,6 +160,8 @@ const App = () => (
               <Route path="/admin/registrar-faqs" element={<ManageRegistrarFaqs />} />
               <Route path="/admin/sectors" element={<ManageSectors />} />
               <Route path="/admin/daily-digests" element={<ManageDailyDigests />} />
+              <Route path="/admin/consultants" element={<ManageConsultants />} />
+              <Route path="/admin/consultant-enquiries" element={<ManageConsultantEnquiries />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

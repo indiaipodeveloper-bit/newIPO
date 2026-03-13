@@ -30,6 +30,9 @@ import dailyDigestRoutes from './routes/daily_digests.js';
 import ipoListRoutes from './routes/ipo_lists.js';
 import sectorRoutes from './routes/sectors.js';
 import subscriptionRoutes from './routes/subscriptions.js';
+import consultantRoutes from './routes/consultants.js';
+import consultantEnquiryRoutes from './routes/consultant_enquiries.js';
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -248,6 +251,40 @@ async function initDB() {
             )
         `);
 
+        await conn.execute(`
+            CREATE TABLE IF NOT EXISTS consultants (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                image_url VARCHAR(512),
+                experience_years INT DEFAULT 0,
+                specialization VARCHAR(255),
+                office_location VARCHAR(255),
+                success_stories TEXT,
+                tags VARCHAR(500),
+                is_active TINYINT(1) DEFAULT 1,
+                sort_order INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+
+        await conn.execute(`
+            CREATE TABLE IF NOT EXISTS consultant_enquiries (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                consultant_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                phone VARCHAR(20) DEFAULT '',
+                organisation VARCHAR(255) DEFAULT '',
+                message TEXT NOT NULL,
+                is_read TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (consultant_id) REFERENCES consultants(id) ON DELETE CASCADE
+            )
+        `);
+
         // Check if a record exists, if not insert a default one
         const [popupRows] = await conn.execute('SELECT COUNT(*) as count FROM site_popup');
         if (popupRows[0].count === 0) {
@@ -293,6 +330,9 @@ app.use('/api/daily-digests', dailyDigestRoutes);
 app.use('/api/ipo-lists', ipoListRoutes);
 app.use('/api/sectors', sectorRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/consultants', consultantRoutes);
+app.use('/api/consultant-enquiries', consultantEnquiryRoutes);
+
 
 // Start server after DB init
 initDB().then(() => {
