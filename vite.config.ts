@@ -3,23 +3,44 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-    hmr: {
-      overlay: false,
+export default defineConfig(({ mode }) => {
+
+  const isDev = mode === "development";
+
+  return {
+    server: {
+      host: "::",
+      port: 8080,
+      hmr: {
+        overlay: false,
+      },
+      proxy: {
+        "/api": {
+          target: isDev
+            ? "http://localhost:5000"
+            : "https://ipoapi.padmanutri.com",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/uploads": {
+          target: isDev
+            ? "http://localhost:5000"
+            : "https://ipoapi.padmanutri.com",
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
-    proxy: {
-      '/api': 'http://localhost:5000',
-      '/uploads': 'http://localhost:5000'
-    }
-  },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+
+    plugins: [
+      react(),
+      mode === "development" && componentTagger()
+    ].filter(Boolean),
+
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
     },
-  },
-}));
+  };
+});

@@ -39,19 +39,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
 // Serve static files from the public directory (for uploaded images/PDFs)
-app.use(express.static(path.join(__dirname, '../public')));
+// app.use(express.static(path.join(__dirname, '../public')));
 
 // Explicitly serve uploads folder to ensure PDF access
-app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+app.use(
+    "/uploads",
+    express.static("/home/u521845907/domains/padmanutri.com/public_html/ipo/uploads")
+);
 
 // Initialize MySQL tables
 async function initDB() {
@@ -288,7 +296,7 @@ async function initDB() {
         // Check if a record exists, if not insert a default one
         const [popupRows] = await conn.execute('SELECT COUNT(*) as count FROM site_popup');
         if (popupRows[0].count === 0) {
-            await conn.execute('INSERT INTO site_popup (title, description, image_url, button_text, button_link, is_active) VALUES (?, ?, ?, ?, ?, ?)', 
+            await conn.execute('INSERT INTO site_popup (title, description, image_url, button_text, button_link, is_active) VALUES (?, ?, ?, ?, ?, ?)',
                 ['New Release', 'Check out our latest news!', null, 'Learn More', '#', 0]);
         }
 

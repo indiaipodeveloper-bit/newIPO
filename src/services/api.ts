@@ -125,3 +125,23 @@ export const sectorApi = {
   update: (id: string, data: any) => fetch(`${API_BASE_URL}/sectors/${id}`, { method: "PUT", headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
   delete: (id: string) => fetch(`${API_BASE_URL}/sectors/${id}`, { method: "DELETE", headers: headers() }).then(handleResponse),
 };
+
+// Popup API
+export const popupApi = {
+  get: () => fetch(`${API_BASE_URL}/popup`, { headers: headers() }).then(handleResponse),
+  update: (data: any) => fetch(`${API_BASE_URL}/popup`, { method: "PUT", headers: headers(), body: JSON.stringify(data) }).then(handleResponse),
+};
+
+// Common Upload API
+export const uploadApi = {
+  upload: (file: File, folder: string = 'misc') => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
+    return fetch(`${API_BASE_URL}/upload`, {
+      method: "POST",
+      headers: headers(false),
+      body: formData,
+    }).then(handleResponse);
+  }
+};

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, Save, X, Upload, Users, Eye, EyeOff, Image as ImageIcon } from "lucide-react";
+import { getImageUrl } from "@/lib/utils";
 
 interface Consultant {
   id: string;
@@ -281,7 +282,7 @@ const ManageConsultants = () => {
                   <div className="flex items-center gap-5 flex-1 min-w-0">
                     <div className="w-20 h-20 rounded-2xl bg-primary/5 flex items-center justify-center overflow-hidden shrink-0 border border-primary/10 shadow-inner group relative">
                       {c.image_url ? (
-                        <img src={`/${c.image_url}`} alt={c.name} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(c.image_url)} alt={c.name} className="w-full h-full object-cover" />
                       ) : (
                         <Users className="h-10 w-10 text-primary/20" />
                       )}

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, GripVertical, Image, Eye, EyeOff, Upload } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { getImageUrl } from "@/lib/utils";
 
 interface Banner {
   id: string;
@@ -212,7 +213,7 @@ const ManageBanners = () => {
             </div>
             <Textarea placeholder="Subtitle / Description" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
             {form.image_url && (
-              <img src={form.image_url} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+              <img src={getImageUrl(form.image_url)} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
             )}
             <div className="flex gap-2">
               <Button onClick={handleSave} className="bg-primary text-primary-foreground">{editingId ? "Update Banner" : "Save Banner"}</Button>
@@ -236,7 +237,7 @@ const ManageBanners = () => {
                 <GripVertical className="h-5 w-5 text-muted-foreground shrink-0 cursor-grab" />
                 <div className="w-32 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
                   {banner.image_url ? (
-                    <img src={banner.image_url} alt="" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(banner.image_url)} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Image className="h-6 w-6 text-muted-foreground" /></div>
                   )}

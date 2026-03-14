@@ -3,6 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Edit, Loader2, PlayCircle, Clock } from "lucide-react";
+import { getImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -122,6 +123,7 @@ const ManageMarketSnaps = () => {
 
   const getThumbnail = (video: SocialMedia) => {
     if (video.img_url && video.img_url.startsWith('http')) return video.img_url;
+    if (video.img_url) return getImageUrl(video.img_url);
     
     let yId = extractYoutubeId(video.url);
     if (!yId && video.img_url && !video.img_url.startsWith('http')) {

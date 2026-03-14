@@ -1,3 +1,7 @@
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  window.location.origin.replace("ipo.", "ipoapi.");
+
 import { useState, useEffect } from "react";
 import { X, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,13 +23,20 @@ const SitePopup = () => {
   useEffect(() => {
     const fetchPopup = async () => {
       try {
-        const res = await fetch("/api/popup");
+        const res = await fetch(`${API_BASE}/api/popup`, {
+          priority: "low",
+        } as any);
+
         if (res.ok) {
           const popupData = await res.json();
+
           if (popupData.is_active) {
             setData(popupData);
-            // Show after a slight delay for better UX
-            setTimeout(() => setIsOpen(true), 1500);
+
+            // show popup after delay
+            setTimeout(() => {
+              setIsOpen(true);
+            }, 3000);
           }
         }
       } catch (err) {
@@ -33,7 +44,12 @@ const SitePopup = () => {
       }
     };
 
-    fetchPopup();
+    // Run popup fetch after page becomes idle
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(fetchPopup);
+    } else {
+      setTimeout(fetchPopup, 2000);
+    }
   }, []);
 
   if (!data) return null;
@@ -42,6 +58,7 @@ const SitePopup = () => {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -58,28 +75,36 @@ const SitePopup = () => {
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative w-full max-w-lg bg-card rounded-3xl overflow-hidden shadow-2xl border border-border max-h-[90vh] overflow-y-auto scrollbar-hide"
           >
-            {/* Header / Banner Part */}
+
+            {/* Header / Banner */}
             <div className="relative w-full overflow-hidden bg-muted flex items-center justify-center min-h-[300px] max-h-[550px]">
+
               {data.image_url ? (
-                <img 
-                  src={data.image_url.startsWith('http') ? data.image_url : (data.image_url.startsWith('/') ? data.image_url : `/${data.image_url}`)} 
-                  alt={data.title} 
+                <img
+                  loading="lazy"
+                  decoding="async"
+                  src={
+                    data.image_url?.startsWith("http")
+                      ? data.image_url
+                      : `${API_BASE}/${data.image_url?.replace(/^\/+/, "")}`
+                  }
+                  alt={data.title}
                   className="w-full h-auto object-contain max-h-[550px]"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    if (!target.src.includes(window.location.origin) && !target.src.startsWith('http')) {
-                      target.src = window.location.origin + (data.image_url?.startsWith('/') ? data.image_url : `/${data.image_url}`);
-                    }
+                    target.src = "/placeholder.svg";
                   }}
                 />
               ) : (
                 <div className="w-full h-full min-h-[300px] bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <span className="text-primary font-bold text-2xl px-6 text-center">{data.title}</span>
+                  <span className="text-primary font-bold text-2xl px-6 text-center">
+                    {data.title}
+                  </span>
                 </div>
               )}
-              
+
               {/* Close Button */}
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="absolute top-4 right-4 p-2 bg-background/50 backdrop-blur-md rounded-full text-foreground hover:bg-background transition-colors"
                 aria-label="Close"
@@ -87,7 +112,7 @@ const SitePopup = () => {
                 <X className="h-5 w-5" />
               </button>
 
-              {/* Tag - Premium touch */}
+              {/* Tag */}
               <div className="absolute top-4 left-4">
                 <span className="bg-yellow-400 text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg flex items-center gap-1">
                   <span className="relative flex h-2 w-2">
@@ -97,43 +122,60 @@ const SitePopup = () => {
                   New Release
                 </span>
               </div>
-              
-              {/* Title overlay if image exists */}
+
+              {/* Title Overlay */}
               {data.image_url && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-12">
-                   <h3 className="text-white text-xl md:text-2xl font-bold font-heading">{data.title}</h3>
+                  <h3 className="text-white text-xl md:text-2xl font-bold font-heading">
+                    {data.title}
+                  </h3>
                 </div>
               )}
             </div>
 
-            {/* Content Body */}
+            {/* Body */}
             <div className="p-6 md:p-8 space-y-6">
-              {!data.image_url && <h3 className="text-2xl font-bold font-heading text-foreground">{data.title}</h3>}
-              
+
+              {!data.image_url && (
+                <h3 className="text-2xl font-bold font-heading text-foreground">
+                  {data.title}
+                </h3>
+              )}
+
               <div className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                {data.description.split('\n').map((line, i) => (
-                   <p key={i} className={i > 0 ? "mt-2" : ""}>{line}</p>
+                {data.description.split("\n").map((line, i) => (
+                  <p key={i} className={i > 0 ? "mt-2" : ""}>
+                    {line}
+                  </p>
                 ))}
               </div>
 
-              {/* Highlight items - Static style but adds premium feel */}
+              {/* Highlight */}
               <div className="space-y-3 bg-muted/30 p-4 rounded-2xl border border-border/50">
+
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <p className="text-sm font-medium text-foreground">Premium research and real-time updates</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Premium research and real-time updates
+                  </p>
                 </div>
+
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <p className="text-sm font-medium text-foreground">Exclusive IPO insights and deep research</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Exclusive IPO insights and deep research
+                  </p>
                 </div>
+
               </div>
 
-              {/* Action Button */}
+              {/* Button */}
               <div className="pt-2">
-                <Button 
+                <Button
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 rounded-2xl font-bold text-lg shadow-lg shadow-primary/20"
                   onClick={() => {
                     setIsOpen(false);
+
                     if (data.button_link) {
                       window.location.href = data.button_link;
                     }
@@ -142,7 +184,9 @@ const SitePopup = () => {
                   {data.button_text || "Read More"}
                 </Button>
               </div>
+
             </div>
+
           </motion.div>
         </div>
       )}

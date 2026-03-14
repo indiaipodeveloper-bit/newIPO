@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
+import { getImageUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -219,7 +220,7 @@ const ManageNews = () => {
                     <tr key={n.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-2 px-4">
                         {n.image ? (
-                            <img src={n.image} alt="" className="w-10 h-10 rounded object-cover" />
+                            <img src={getImageUrl(n.image)} alt="" className="w-10 h-10 rounded object-cover" />
                         ) : (
                             <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>
                         )}
@@ -258,7 +259,7 @@ const ManageNews = () => {
                     <div className="text-center py-12 text-muted-foreground border rounded-xl bg-card">No news found.</div>
                   ) : news.map(n => (
                     <div key={n.id} className="bg-card border rounded-xl p-4 flex gap-4">
-                        {n.image && <img src={n.image} alt="" className="w-16 h-16 rounded object-cover shrink-0" />}
+                        {n.image && <img src={getImageUrl(n.image)} alt="" className="w-16 h-16 rounded object-cover shrink-0" />}
                         <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start mb-1">
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{n.category}</Badge>

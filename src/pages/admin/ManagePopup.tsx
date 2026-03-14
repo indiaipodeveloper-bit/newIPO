@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Image, Upload, Save, Eye, EyeOff } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { popupApi, uploadApi } from "@/services/api";
+import { getImageUrl } from "@/lib/utils";
 
 interface PopupData {
   id?: number;
@@ -32,9 +34,8 @@ const ManagePopup = () => {
 
   const fetchPopup = async () => {
     try {
-      const res = await fetch("/api/popup");
-      if (res.ok) {
-        const data = await res.json();
+      const data = await popupApi.get();
+      if (data) {
         setForm({
           ...data,
           is_active: !!data.is_active
@@ -44,6 +45,7 @@ const ManagePopup = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to load popup settings");
+      setLoading(false);
     }
   };
 
@@ -56,22 +58,13 @@ const ManagePopup = () => {
     if (!file) return;
     setUploading(true);
 
-    const formData = new FormData();
-    formData.append("folder", "popup");
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const { url } = await res.json();
+      const { url } = await uploadApi.upload(file, "popup");
       setForm({ ...form, image_url: url });
-      setUploading(false);
       toast.success("Image uploaded!");
     } catch (error: any) {
       toast.error("Upload failed: " + error.message);
+    } finally {
       setUploading(false);
     }
   };
@@ -79,15 +72,10 @@ const ManagePopup = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch("/api/popup", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          is_active: form.is_active ? 1 : 0
-        })
+      await popupApi.update({
+        ...form,
+        is_active: form.is_active ? 1 : 0
       });
-      if (!res.ok) throw new Error("Failed to save");
       toast.success("Popup settings updated!");
       fetchPopup();
     } catch (err: any) {
@@ -173,15 +161,9 @@ const ManagePopup = () => {
                   <div className="relative w-full rounded-lg overflow-hidden bg-muted border border-border flex items-center justify-center min-h-[200px] max-h-[400px]">
                     {form.image_url ? (
                       <img 
-                        src={form.image_url.startsWith('http') ? form.image_url : (form.image_url.startsWith('/') ? form.image_url : `/${form.image_url}`)} 
+                        src={getImageUrl(form.image_url)} 
                         alt="Popup" 
                         className="w-full h-auto object-contain max-h-[400px]" 
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          if (!target.src.includes(window.location.origin) && !target.src.startsWith('http')) {
-                            target.src = window.location.origin + (form.image_url?.startsWith('/') ? form.image_url : `/${form.image_url}`);
-                          }
-                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">

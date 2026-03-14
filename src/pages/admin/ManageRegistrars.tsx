@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, Search, Link as LinkIcon, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { getImageUrl } from "@/lib/utils";
 
 interface Registrar {
   id: number;
@@ -64,7 +65,7 @@ const ManageRegistrars = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   // Pagination
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -91,7 +92,7 @@ const ManageRegistrars = () => {
   const handleSave = async () => {
     if (!form.name) { toast.error("Registrar Name is required"); return; }
     if (!form.slug) { toast.error("Slug is required"); return; }
-    
+
     setSaving(true);
     try {
       const url = editingId ? `/api/registrars/${editingId}` : "/api/registrars";
@@ -101,9 +102,9 @@ const ManageRegistrars = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      
+
       if (!res.ok) { throw new Error("Save failed"); }
-      
+
       toast.success(editingId ? "Registrar updated!" : "Registrar created!");
       setForm(emptyForm);
       setEditingId(null);
@@ -193,10 +194,10 @@ const ManageRegistrars = () => {
             <h1 className="text-2xl font-bold font-heading text-primary">IPO Registrars</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage official IPO Registrars and their details</p>
           </div>
-          
-          <Dialog open={dialogOpen} onOpenChange={(o) => { 
-            setDialogOpen(o); 
-            if (!o) { setForm(emptyForm); setEditingId(null); } 
+
+          <Dialog open={dialogOpen} onOpenChange={(o) => {
+            setDialogOpen(o);
+            if (!o) { setForm(emptyForm); setEditingId(null); }
           }}>
             <DialogTrigger asChild>
               <Button className="bg-primary text-primary-foreground font-semibold">
@@ -207,7 +208,7 @@ const ManageRegistrars = () => {
               <DialogHeader>
                 <DialogTitle>{editingId ? "Edit Registrar" : "Add Registrar"}</DialogTitle>
               </DialogHeader>
-              
+
               <Tabs defaultValue="general" className="mt-4">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="general">General</TabsTrigger>
@@ -215,22 +216,22 @@ const ManageRegistrars = () => {
                   <TabsTrigger value="description">Description & FAQ</TabsTrigger>
                   <TabsTrigger value="seo">SEO Settings</TabsTrigger>
                 </TabsList>
-                
+
                 {/* General Tab */}
                 <TabsContent value="general" className="space-y-4 py-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Registrar Name *</label>
-                      <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} onBlur={generateSlug} placeholder="e.g. Link Intime India" />
+                      <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} onBlur={generateSlug} placeholder="e.g. Link Intime India" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Slug *</label>
-                      <Input value={form.slug} onChange={(e) => setForm({...form, slug: e.target.value})} placeholder="link-intime-india" />
+                      <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="link-intime-india" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Logo Image</label>
                       <div className="flex gap-2">
-                        <Input value={form.image} onChange={(e) => setForm({...form, image: e.target.value})} className="flex-1" />
+                        <Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="flex-1" />
                         <div className="relative shrink-0">
                           <input type="file" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
                           <Button type="button" variant="outline" disabled={uploading}>
@@ -241,17 +242,17 @@ const ManageRegistrars = () => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Location</label>
-                      <Input value={form.location} onChange={(e) => setForm({...form, location: e.target.value})} placeholder="e.g. Mumbai" />
+                      <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="e.g. Mumbai" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Established Year</label>
-                      <Input value={form.registrar_year} onChange={(e) => setForm({...form, registrar_year: e.target.value})} placeholder="e.g. 1999" />
+                      <Input value={form.registrar_year} onChange={(e) => setForm({ ...form, registrar_year: e.target.value })} placeholder="e.g. 1999" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Status</label>
-                      <select 
-                        value={form.status} 
-                        onChange={(e) => setForm({...form, status: e.target.value})}
+                      <select
+                        value={form.status}
+                        onChange={(e) => setForm({ ...form, status: e.target.value })}
                         className="w-full h-10 px-3 rounded-md border border-input bg-background"
                       >
                         <option value="Active">Active</option>
@@ -268,19 +269,19 @@ const ManageRegistrars = () => {
                       <h3 className="font-bold text-primary border-b pb-2">SME IPO Stats</h3>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Total SME IPOs</label>
-                        <Input value={form.sme_ipo} onChange={(e) => setForm({...form, sme_ipo: e.target.value})} />
+                        <Input value={form.sme_ipo} onChange={(e) => setForm({ ...form, sme_ipo: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">SME Parentage (%)</label>
-                        <Input value={form.sme_ipo_parentage} onChange={(e) => setForm({...form, sme_ipo_parentage: e.target.value})} />
+                        <Input value={form.sme_ipo_parentage} onChange={(e) => setForm({ ...form, sme_ipo_parentage: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Avg. SME Subscription</label>
-                        <Input value={form.avgsubscription_sme} onChange={(e) => setForm({...form, avgsubscription_sme: e.target.value})} />
+                        <Input value={form.avgsubscription_sme} onChange={(e) => setForm({ ...form, avgsubscription_sme: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Latest SME IPO</label>
-                        <Input value={form.latest_sme} onChange={(e) => setForm({...form, latest_sme: e.target.value})} />
+                        <Input value={form.latest_sme} onChange={(e) => setForm({ ...form, latest_sme: e.target.value })} />
                       </div>
                     </div>
 
@@ -288,19 +289,19 @@ const ManageRegistrars = () => {
                       <h3 className="font-bold text-orange-500 border-b pb-2">Mainboard IPO Stats</h3>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Total Mainboard IPOs</label>
-                        <Input value={form.mainboard_ipo} onChange={(e) => setForm({...form, mainboard_ipo: e.target.value})} />
+                        <Input value={form.mainboard_ipo} onChange={(e) => setForm({ ...form, mainboard_ipo: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Mainboard Parentage (%)</label>
-                        <Input value={form.mainboard_ipo_parentage} onChange={(e) => setForm({...form, mainboard_ipo_parentage: e.target.value})} />
+                        <Input value={form.mainboard_ipo_parentage} onChange={(e) => setForm({ ...form, mainboard_ipo_parentage: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Avg. Mainboard Subscription</label>
-                        <Input value={form.avgsubscription_mainboard} onChange={(e) => setForm({...form, avgsubscription_mainboard: e.target.value})} />
+                        <Input value={form.avgsubscription_mainboard} onChange={(e) => setForm({ ...form, avgsubscription_mainboard: e.target.value })} />
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Latest Mainboard IPO</label>
-                        <Input value={form.latest_mainbord} onChange={(e) => setForm({...form, latest_mainbord: e.target.value})} />
+                        <Input value={form.latest_mainbord} onChange={(e) => setForm({ ...form, latest_mainbord: e.target.value })} />
                       </div>
                     </div>
                   </div>
@@ -310,11 +311,11 @@ const ManageRegistrars = () => {
                 <TabsContent value="description" className="space-y-4 py-4">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold">Main Description</label>
-                    <Textarea value={form.dic} onChange={(e) => setForm({...form, dic: e.target.value})} rows={5} placeholder="Write about the registrar..." />
+                    <Textarea value={form.dic} onChange={(e) => setForm({ ...form, dic: e.target.value })} rows={5} placeholder="Write about the registrar..." />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold">FAQs (JSON format suggested)</label>
-                    <Textarea value={form.faqs} onChange={(e) => setForm({...form, faqs: e.target.value})} rows={5} placeholder="[
+                    <Textarea value={form.faqs} onChange={(e) => setForm({ ...form, faqs: e.target.value })} rows={5} placeholder="[
   { 'q': 'How to check allotment?', 'a': 'Visit official website...' }
 ]" />
                   </div>
@@ -322,17 +323,17 @@ const ManageRegistrars = () => {
 
                 {/* SEO Tab */}
                 <TabsContent value="seo" className="space-y-4 py-4">
-                   <div className="space-y-2">
+                  <div className="space-y-2">
                     <label className="text-sm font-semibold">Meta Title</label>
-                    <Input value={form.meta_title} onChange={(e) => setForm({...form, meta_title: e.target.value})} />
+                    <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold">Meta Description</label>
-                    <Textarea value={form.meta_desc} onChange={(e) => setForm({...form, meta_desc: e.target.value})} rows={3} />
+                    <Textarea value={form.meta_desc} onChange={(e) => setForm({ ...form, meta_desc: e.target.value })} rows={3} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold">Meta Keywords</label>
-                    <Input value={form.meta_keywords} onChange={(e) => setForm({...form, meta_keywords: e.target.value})} />
+                    <Input value={form.meta_keywords} onChange={(e) => setForm({ ...form, meta_keywords: e.target.value })} />
                   </div>
                 </TabsContent>
               </Tabs>
@@ -369,16 +370,10 @@ const ManageRegistrars = () => {
                     <td className="py-3 px-5">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded border bg-white p-1 overflow-hidden">
-                          <img 
-                            src={r.image || '/placeholder.png'} 
-                            alt="" 
-                            className="w-full h-full object-contain" 
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              if (r.image && !r.image.startsWith('http')) {
-                                target.src = window.location.origin + r.image;
-                              }
-                            }}
+                          <img
+                            src={getImageUrl(r.image || '/placeholder.png')}
+                            alt=""
+                            className="w-full h-full object-contain"
                           />
                         </div>
                         <div>
@@ -407,12 +402,12 @@ const ManageRegistrars = () => {
               </tbody>
             </table>
           </div>
-          
+
           {total > limit && (
             <div className="flex items-center justify-between p-4 border-t border-border bg-secondary/10">
-              <span className="text-sm text-muted-foreground">Page {page} of {Math.ceil(total/limit)}</span>
+              <span className="text-sm text-muted-foreground">Page {page} of {Math.ceil(total / limit)}</span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}>Previous</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
                 <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page * limit >= total}>Next</Button>
               </div>
             </div>

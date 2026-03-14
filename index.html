@@ -1,25 +1,46 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IndiaIPO — India's Leading IPO Consultancy Platform</title>
-    <meta name="description" content="Expert IPO consultancy for SME IPO, Mainline IPO, FPO, Pre-IPO funding. SEBI registered advisory firm." />
-    <meta name="author" content="IndiaIPO" />
-    <link rel="icon" href="/favicon.png" type="image/png" />
 
-    <meta property="og:title" content="IndiaIPO — India's Leading IPO Consultancy" />
-    <meta property="og:description" content="Expert IPO consultancy for SME IPO, Mainline IPO, FPO, Pre-IPO funding." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/favicon.png" />
+<head>
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@IndiaIPO" />
-    <meta name="twitter:image" content="/favicon.png" />
-  </head>
+  <meta charset="UTF-8" />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>IndiaIPO — India's Leading IPO Consultancy Platform</title>
+
+  <meta name="description"
+    content="Expert IPO consultancy for SME IPO, Mainline IPO, FPO, Pre-IPO funding. SEBI registered advisory firm." />
+
+  <meta name="author" content="IndiaIPO" />
+
+  <link rel="icon" href="/favicon.png" type="image/png" />
+
+  <!-- Preload main JS -->
+  <link rel="preload" href="/src/main.tsx" as="script">
+
+  <!-- Preconnect for faster API calls -->
+  <link rel="preconnect" href="https://your-api-domain.com">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="IndiaIPO — India's Leading IPO Consultancy" />
+  <meta property="og:description" content="Expert IPO consultancy for SME IPO, Mainline IPO, FPO, Pre-IPO funding." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/favicon.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@IndiaIPO" />
+  <meta name="twitter:image" content="/favicon.png" />
+
+</head>
+
+<body>
+
+  <div id="root"></div>
+
+  <script type="module" src="/src/main.tsx"></script>
+
+</body>
+
 </html>

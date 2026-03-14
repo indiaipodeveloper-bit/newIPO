@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Trash2, Edit2, Save, X, Upload, FileText, Eye, ExternalLink, Image as ImageIcon, Loader2 } from "lucide-react";
+import { getImageUrl } from "@/lib/utils";
 
 interface DailyDigest {
   id: number;
@@ -190,7 +191,7 @@ const ManageDailyDigests = () => {
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
                         {d.image ? (
-                          <img src={`/${d.image}`} alt="" className="h-full w-full object-cover" />
+                          <img src={getImageUrl(d.image)} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <ImageIcon className="h-6 w-6 text-muted-foreground" />
                         )}
@@ -255,7 +256,7 @@ const ManageDailyDigests = () => {
 
                       {d.pdf && (
                         <Button size="sm" variant="ghost" asChild>
-                          <a href={`/${d.pdf}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                          <a href={getImageUrl(d.pdf)} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
                             <Eye className="h-4 w-4" />
                           </a>
                         </Button>

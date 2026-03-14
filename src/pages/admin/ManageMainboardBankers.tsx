@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, Building2, Search, Link as LinkIcon, Info, Users, ArrowRight } from "lucide-react";
+import { getImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface MainboardBanker {
@@ -331,7 +332,7 @@ const ManageMainboardBankers = () => {
                       <td className="py-3 px-5">
                         {b.logo_url ? (
                           <div className="w-10 h-10 rounded border border-border overflow-hidden bg-white shadow-sm shrink-0">
-                            <img src={b.logo_url} alt={b.name} className="w-full h-full object-contain p-1" />
+                            <img src={getImageUrl(b.logo_url)} alt={b.name} className="w-full h-full object-contain p-1" />
                           </div>
                         ) : (
                           <div className="w-10 h-10 rounded border border-border border-dashed flex items-center justify-center bg-secondary/50 shrink-0">
