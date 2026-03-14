@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 
 export default defineConfig(({ mode }) => {
 
@@ -34,7 +35,8 @@ export default defineConfig(({ mode }) => {
 
     plugins: [
       react(),
-      mode === "development" && componentTagger()
+      mode === "development" && componentTagger(),
+      cssInjectedByJsPlugin()
     ].filter(Boolean),
 
     resolve: {

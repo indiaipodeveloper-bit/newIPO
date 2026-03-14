@@ -14,13 +14,28 @@
 
   <meta name="author" content="IndiaIPO" />
 
+  <!-- Content Security Policy to prevent XSS attacks -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; media-src 'self' https: data:; object-src 'none'; frame-src 'self' https://www.youtube.com https://youtube.com;" />
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+
   <link rel="icon" href="/favicon.png" type="image/png" />
+
+  <!-- Preconnect and asynchronously load Google Fonts to fix render-blocking -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap">
+  </noscript>
 
   <!-- Preload main JS -->
   <link rel="preload" href="/src/main.tsx" as="script">
 
   <!-- Preconnect for faster API calls -->
-  <link rel="preconnect" href="https://your-api-domain.com">
+  <link rel="preconnect" href="https://ipoapi.padmanutri.com">
+  <link rel="preload" href="https://ipoapi.padmanutri.com/api/banners" as="fetch" crossorigin="anonymous">
 
   <!-- Open Graph -->
   <meta property="og:title" content="IndiaIPO — India's Leading IPO Consultancy" />

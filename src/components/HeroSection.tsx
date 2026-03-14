@@ -83,9 +83,7 @@ const HeroSection = () => {
   useEffect(() => {
     const loadBanners = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/banners`, {
-          priority: "low",
-        } as any);
+        const res = await fetch(`${API_BASE}/api/banners`);
 
         const data = await res.json();
 
@@ -104,11 +102,7 @@ const HeroSection = () => {
       }
     };
 
-    if ("requestIdleCallback" in window) {
-      (window as any).requestIdleCallback(loadBanners);
-    } else {
-      setTimeout(loadBanners, 2000);
-    }
+    loadBanners();
   }, []);
 
   // Preload first banner

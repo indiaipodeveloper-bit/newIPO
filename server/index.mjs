@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pool from './db.js';
+import helmet from 'helmet';
 
 // Route imports
 import videoRoutes from './routes/videos.js';
@@ -45,6 +46,41 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+// Use Helmet for security headers
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://apis.google.com", "https://www.googletagmanager.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      connectSrc: ["'self'", "https:", "wss:"],
+      mediaSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
+    },
+  },
+  frameguard: {
+    action: 'deny'
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true
+  }
+}));
+
+// Fallback manual headers in case helmet misses any specific route early on
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Cache-Control', 'no-store, no-cache');
+  next();
+});
+
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
