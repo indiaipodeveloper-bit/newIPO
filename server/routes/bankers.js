@@ -57,6 +57,22 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET single banker by ID (full details)
+router.get('/:id', async (req, res) => {
+    try {
+        const [rows] = await pool.execute('SELECT * FROM marchantbankers WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ error: 'Banker not found' });
+        const r = rows[0];
+        res.json({
+            ...r,
+            name: r.title,
+            logo_url: r.image ? (r.image.startsWith('/') ? r.image : '/' + r.image) : null
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // POST create a banker
 router.post('/', async (req, res) => {
     try {

@@ -62,14 +62,37 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET single mainboard banker by ID
+// GET single mainboard banker by ID (full details)
 router.get("/:id", async (req, res) => {
   try {
-    const [data] = await pool.query("SELECT * FROM merchant_bankers WHERE id = ?", [req.params.id]);
+    const [data] = await pool.query(
+      "SELECT * FROM marchantbankers WHERE id = ? AND mcat_id = 'list-of-mainboard-merchant-bankers'",
+      [req.params.id]
+    );
     if (data.length === 0) {
-      return res.status(404).json({ error: "Banker not found" });
+      // fallback: search without mcat filter
+      const [fallback] = await pool.query("SELECT * FROM marchantbankers WHERE id = ?", [req.params.id]);
+      if (fallback.length === 0) return res.status(404).json({ error: "Banker not found" });
+      const r = fallback[0];
+      return res.json({
+        ...r,
+        name: r.title || "Unknown Banker",
+        logo_url: r.image ? (r.image.startsWith('/') ? r.image : '/' + r.image) : null,
+      });
     }
-    res.json(data[0]);
+    const r = data[0];
+    res.json({
+      ...r,
+      name: r.title || "Unknown Banker",
+      logo_url: r.image ? (r.image.startsWith('/') ? r.image : '/' + r.image) : null,
+      total_ipos: r.noOfiposofar || 0,
+      total_raised: r.totalfundraised || 0,
+      avg_size: r.avgiposize || 0,
+      avg_subscription: r.avgsubscription || 0,
+      avg_listing_gain: r.avglisting_gain || 0,
+      website: r.cweblink || "",
+      location: r.caddress || "",
+    });
   } catch (error) {
     console.error("Error fetching single mainboard banker:", error);
     res.status(500).json({ error: "Failed to fetch banker" });

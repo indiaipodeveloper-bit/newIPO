@@ -18,20 +18,14 @@ const PreIPOProcess = () => {
         {/* HERO SECTION */}
         <section 
           className="pt-20 pb-28 px-4 relative overflow-hidden"
-          style={{ 
-            background: 'linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)' 
-          }}
+          style={{ background: 'linear-gradient(135deg, #001529 0%, #002147 55%, #003380 100%)' }}
         >
-          {/* Abstract background shapes */}
-          <div className="absolute inset-0 opacity-15 blur-3xl pointer-events-none">
-            <div 
-              className="absolute top-10 right-20 w-96 h-96 rounded-full" 
-              style={{ background: 'hsl(35 95% 52%)' }} 
-            />
-            <div 
-              className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full" 
-              style={{ background: 'hsl(35 95% 52%)' }} 
-            />
+          {/* Background blobs */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full"
+              style={{ background: '#f59e08', filter: 'blur(100px)', opacity: 0.05, transform: 'translate(25%,-25%)' }} />
+            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full"
+              style={{ background: '#3b82f6', filter: 'blur(80px)', opacity: 0.05, transform: 'translate(-20%,20%)' }} />
           </div>
 
           <div className="container mx-auto max-w-5xl relative z-10">
@@ -55,16 +49,10 @@ const PreIPOProcess = () => {
                 <FileSearch className="w-12 h-12 md:w-16 md:h-16" />
               </div>
               <div className="flex-1">
-                <span 
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4 tracking-widest uppercase" 
-                  style={{ 
-                    background: 'hsl(35 95% 52% / 0.2)', 
-                    color: 'hsl(35 95% 72%)', 
-                    border: '1px solid hsl(35 95% 52% / 0.4)' 
-                  }}
-                >
-                  Expert Consultancy
-                </span>
+                <div className="inline-flex items-center gap-2 bg-[#f59e08]/20 border border-[#f59e08]/30 rounded-full px-4 py-1.5 mb-6">
+                  <div className="w-2 h-2 rounded-full bg-[#f59e08]" />
+                  <span className="text-[#f59e08] text-xs font-black uppercase tracking-widest">Expert Consultancy</span>
+                </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                   The Blueprint for Pre-IPO Readiness
                 </h1>
@@ -178,20 +166,20 @@ const PreIPOProcess = () => {
 
 
             {/* CTA Banner */}
-            <div className="mt-20 p-12 rounded-[2.5rem] text-center shadow-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(35 95% 52%), hsl(45 93% 60%))' }}>
-              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent"></div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6 relative z-10" style={{ fontFamily: 'Montserrat, sans-serif' }}>Don't Wait Until the Last Minute</h2>
-              <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium relative z-10">
+            <div className="mt-20 p-12 rounded-[2.5rem] text-center shadow-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #001529 0%, #002147 55%, #003380 100%)' }}>
+              <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5" style={{ background: '#f59e08', filter: 'blur(60px)', transform: 'translate(30%,-30%)' }} />
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-6 relative z-10">Don't Wait Until the Last Minute</h2>
+              <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto font-medium relative z-10">
                 A botched DRHP filing due to poor preparation can delay your IPO by years. Engage with our Pre-IPO experts today to architect a foolproof listing strategy.
               </p>
               <div className="flex flex-wrap gap-4 justify-center relative z-10">
                 <Link to="/contact">
-                  <button className="px-10 py-4 bg-white text-lg font-bold rounded-full transition-transform hover:scale-105 shadow-xl" style={{ color: 'hsl(220 72% 38%)' }}>
+                  <button className="px-10 py-4 text-lg font-black rounded-xl transition-all hover:scale-105 shadow-xl" style={{ background: 'linear-gradient(135deg, #f59e08, #d97706)', color: '#001529', boxShadow: '0 8px 32px rgba(245,158,8,0.35)' }}>
                     Start Pre-IPO Advisory
                   </button>
                 </Link>
                 <Link to="/ipo-feasibility">
-                  <button className="px-10 py-4 bg-transparent border-2 border-white text-white text-lg font-bold rounded-full transition-colors hover:bg-white/10 hidden md:inline-block">
+                  <button className="px-10 py-4 bg-transparent border-2 border-white/30 text-white text-lg font-black rounded-xl transition-colors hover:bg-white/10 hidden md:inline-block">
                     Check IPO Feasibility
                   </button>
                 </Link>

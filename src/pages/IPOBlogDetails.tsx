@@ -468,8 +468,17 @@ const IPOBlogDetails = () => {
                     { label: "Confidential DRHP", link: blog.confidential_drhp }
                   ].map((doc, idx) => {
                     if (!isValid(doc.link)) return null;
-                    const isExternal = String(doc.link).startsWith('http');
-                    const href = isExternal ? doc.link : `/uploads/${doc.link}`;
+                    const rawLink = String(doc.link || '').trim();
+                    const isExternal = rawLink.startsWith('http');
+                    // Prevent double /uploads/uploads/ — if already starts with /uploads or uploads/, use as-is
+                    let href: string;
+                    if (isExternal) {
+                      href = rawLink;
+                    } else if (rawLink.startsWith('/uploads') || rawLink.startsWith('uploads/')) {
+                      href = rawLink.startsWith('/') ? rawLink : `/${rawLink}`;
+                    } else {
+                      href = `/uploads/${rawLink}`;
+                    }
                     return (
                       <a key={idx} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold border border-white/10 transition-all group">
                         <span>{doc.label}</span>

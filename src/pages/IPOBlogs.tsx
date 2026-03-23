@@ -3,17 +3,14 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, TrendingUp, IndianRupee, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Calendar, TrendingUp, IndianRupee, ArrowRight, ChevronLeft, ChevronRight, Home, Newspaper, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImgSrc } from "@/utils/image";
 
 interface IPOBlog {
   id: string; title: string; slug: string;
   image: string; category: string; upcoming: string; status: string;
-  gmp_date: string; gmp_ipo_price: string; gmp: string;
-  created_at: string;
+  gmp_date: string; gmp_ipo_price: string; gmp: string; created_at: string;
 }
 
 const isValid = (val: any) => {
@@ -22,207 +19,256 @@ const isValid = (val: any) => {
   return s !== "null" && s !== "[null]" && s !== "" && s !== "undefined";
 };
 
+const N = "#001529", G = "#f59e08", G2 = "#d97706";
+
 const IPOBlogs = () => {
   const [blogs, setBlogs] = useState<IPOBlog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("all"); // 'all', 'current', 'upcoming'
+  const [filter, setFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    const fetchBlogs = async () => {
+    const fetch_ = async () => {
       setLoading(true);
       try {
         let url = `/api/admin-blogs?page=${page}&limit=12&summary=1`;
         if (filter === "current") url += "&upcoming=0";
         if (filter === "upcoming") url += "&upcoming=1";
-
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setBlogs(data.data || []);
           setTotalPages(data.totalPages || 1);
         }
-      } catch (err) {
-        console.error("Failed to load IPO blogs", err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     };
-    fetchBlogs();
+    fetch_();
   }, [filter, page]);
 
+  const filters = [
+    { key: "all", label: "All IPOs" },
+    { key: "current", label: "Current IPOs" },
+    { key: "upcoming", label: "Upcoming IPOs" },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <SEOHead 
-        title="IPO Blogs & Updates - IndiaIPO" 
-        description="Read the latest updates, GMP reviews, and comprehensive details about Current and Upcoming IPOs."
+    <div className="min-h-screen flex flex-col" style={{ background: "#F8FAFC" }}>
+      <SEOHead
+        title="IPO Blogs & Updates | IndiaIPO — GMP, Reviews & Analysis"
+        description="Read the latest updates, GMP reviews and comprehensive details about Current and Upcoming IPOs in India. Expert analysis and market insights."
+        keywords="IPO blogs India, IPO GMP today, IPO review, current IPO list, upcoming IPO 2025, IPO analysis IndiaIPO"
       />
       <Header />
 
-      {/* Hero Section */}
-      <section className="bg-primary/5 py-16 lg:py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-black/[0.02] bg-[size:32px]"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <Badge className="mb-4 bg-brand-blue/10 text-brand-blue hover:bg-brand-blue/20">Market Insights</Badge>
-          <h1 className="text-4xl lg:text-5xl font-bold font-heading text-foreground mb-4">
-            IPO Blogs & Updates
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stay ahead of the market with comprehensive analysis, GMP tracking, and detailed 
-            reviews of all Current and Upcoming Initial Public Offerings.
-          </p>
+      {/* ── HERO ── */}
+      <section className="py-14 relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${N} 0%, #002147 55%, #003380 100%)` }}>
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
+            style={{ background: G, filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1"
+          style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex items-center gap-2 text-white/50 text-sm mb-8 flex-wrap justify-center">
+            <Link to="/" className="hover:text-white flex items-center gap-1 transition-colors">
+              <Home className="h-3.5 w-3.5" /> Home
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-white/90 font-semibold">IPO Blogs</span>
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-6 text-xs font-black uppercase tracking-widest"
+              style={{ background: "rgba(245,158,8,0.2)", color: G, border: "1px solid rgba(245,158,8,0.35)" }}>
+              <Newspaper className="h-3.5 w-3.5" /> Market Insights
+            </div>
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight">
+              IPO Blogs & <span style={{ color: G }}>Updates</span>
+            </h1>
+            <p className="text-white/65 max-w-2xl mx-auto text-base md:text-lg font-medium leading-relaxed">
+              Stay ahead of the market with comprehensive analysis, GMP tracking, and detailed reviews of all Current and Upcoming Initial Public Offerings.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      {/* Content Section */}
-      <main className="flex-1 container mx-auto px-4 py-12">
-        {/* Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-4 mb-12">
-          <Button 
-            variant={filter === "all" ? "default" : "outline"}
-            className={filter === "all" ? "bg-primary text-primary-foreground" : ""}
-            onClick={() => { setFilter("all"); setPage(1); }}
-          >
-            All IPOs
-          </Button>
-          <Button 
-            variant={filter === "current" ? "default" : "outline"}
-            className={filter === "current" ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : "hover:border-emerald-600 hover:text-emerald-700"}
-            onClick={() => { setFilter("current"); setPage(1); }}
-          >
-            Current IPOs
-          </Button>
-          <Button 
-            variant={filter === "upcoming" ? "default" : "outline"}
-            className={filter === "upcoming" ? "bg-amber-600 hover:bg-amber-700 text-white border-none" : "hover:border-amber-600 hover:text-amber-700"}
-            onClick={() => { setFilter("upcoming"); setPage(1); }}
-          >
-            Upcoming IPOs
-          </Button>
+      <main className="flex-1">
+        {/* ── FILTERS ── */}
+        <div className="border-b border-slate-200 bg-white sticky top-0 z-30 shadow-sm">
+          <div className="container mx-auto px-4 py-4 flex flex-wrap gap-3 justify-center">
+            {filters.map(f => (
+              <button key={f.key} onClick={() => { setFilter(f.key); setPage(1); }}
+                className="px-6 h-10 rounded-xl text-sm font-black transition-all"
+                style={filter === f.key
+                  ? { background: `linear-gradient(135deg, ${N}, #003380)`, color: "white", boxShadow: "0 4px 16px rgba(0,21,41,0.25)" }
+                  : { background: "#F8FAFC", color: "#64748b", border: "1px solid #e2e8f0" }}>
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Loading / Grid */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Loading expert IPO insights...</p>
-          </div>
-        ) : blogs.length === 0 ? (
-          <div className="text-center py-20 border border-dashed rounded-xl border-border bg-muted/20">
-            <h3 className="text-xl font-semibold mb-2">No IPOs Found</h3>
-            <p className="text-muted-foreground">We couldn't find any IPO blogs matching your filter criteria.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <AnimatePresence>
-              {blogs.map((blog, idx) => (
-                <motion.div
-                  key={blog.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: idx * 0.05 }}
-                >
-                  <Link to={`/ipo-blogs/${blog.slug || blog.id}`} className="block h-full group">
-                    <div className="h-full bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
-                      <div className="aspect-[16/10] bg-muted relative overflow-hidden flex items-center justify-center p-4">
-                        {isValid(getImgSrc(blog.image)) ? (
-                          <img src={getImgSrc(blog.image)!} alt={blog.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                            <TrendingUp className="h-10 w-10 text-primary/40" />
-                          </div>
-                        )}
-                        <div className="absolute top-3 right-3">
-                          {blog.upcoming == "1" ? (
-                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 shadow-sm backdrop-blur-md">Upcoming</Badge>
-                          ) : (
-                            <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 shadow-sm backdrop-blur-md">Current</Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="p-5 flex-1 flex flex-col">
-                        <div className="text-xs font-semibold uppercase tracking-wider text-primary/80 mb-2">{(blog.category || 'IPO').replace('_', ' ')}</div>
-                        <h3 className="font-bold text-lg leading-tight mb-4 group-hover:text-primary transition-colors line-clamp-2" title={blog.title}>
-                          {blog.title}
-                        </h3>
-                        
-                        <div className="mt-auto space-y-3 pt-4 border-t border-border">
-                          {isValid(blog.gmp_ipo_price) && (
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground flex items-center"><IndianRupee className="w-3.5 h-3.5 mr-1"/> Price</span>
-                              <span className="font-semibold">{blog.gmp_ipo_price}</span>
-                            </div>
-                          )}
-                          {isValid(blog.gmp) && (
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground flex items-center"><TrendingUp className="w-3.5 h-3.5 mr-1"/> GMP</span>
-                              <span className="font-semibold text-brand-green">{blog.gmp}</span>
-                            </div>
-                          )}
-                          {isValid(blog.gmp_date) && (
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground flex items-center"><Calendar className="w-3.5 h-3.5 mr-1"/> Date</span>
-                              <span className="font-medium text-xs text-right">{blog.gmp_date}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-5 flex items-center text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all">
-                          Read Full Details <ArrowRight className="w-4 h-4 ml-1" />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
+        <div className="container mx-auto px-4 py-12">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="w-12 h-12 border-4 rounded-full animate-spin mb-4"
+                style={{ borderColor: `${N} transparent transparent transparent` }} />
+              <p className="text-slate-400 font-semibold">Loading expert IPO insights…</p>
+            </div>
+          ) : blogs.length === 0 ? (
+            <div className="text-center py-24 border-2 border-dashed border-slate-200 rounded-2xl bg-white">
+              <TrendingUp className="h-14 w-14 mx-auto mb-4 text-slate-200" />
+              <h3 className="text-xl font-black mb-2" style={{ color: N }}>No IPOs Found</h3>
+              <p className="text-slate-400 font-medium">No IPO blogs match the current filter.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <AnimatePresence>
+                {blogs.map((blog, idx) => (
+                  <motion.div key={blog.id}
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.04 }}>
+                    <Link to={`/ipo-blogs/${blog.slug || blog.id}`} className="block h-full group">
+                      <div className="h-full bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col">
+                        {/* Top accent */}
+                        <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${N}, ${G})` }} />
 
-        {/* Pagination Controls */}
-        {!loading && totalPages > 1 && (
-          <div className="mt-16 flex items-center justify-center gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-4"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" /> Prev
-            </Button>
-            <div className="flex items-center gap-2">
+                        {/* Image */}
+                        <div className="aspect-[16/10] bg-slate-100 relative overflow-hidden flex items-center justify-center p-4">
+                          {isValid(getImgSrc(blog.image)) ? (
+                            <img src={getImgSrc(blog.image)!} alt={blog.title}
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center"
+                              style={{ background: "rgba(0,21,41,0.06)" }}>
+                              <TrendingUp className="h-8 w-8 text-slate-300" />
+                            </div>
+                          )}
+                          {/* Status badge */}
+                          <div className="absolute top-3 right-3">
+                            {blog.upcoming === "1" ? (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-black"
+                                style={{ background: "rgba(245,158,8,0.15)", color: G2, border: "1px solid rgba(245,158,8,0.3)" }}>
+                                Upcoming
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-black"
+                                style={{ background: "rgba(34,197,94,0.12)", color: "#16a34a", border: "1px solid rgba(34,197,94,0.25)" }}>
+                                Current
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-4 flex-1 flex flex-col">
+                          <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: G2 }}>
+                            {(blog.category || "IPO").replace("_", " ")}
+                          </div>
+                          <h3 className="font-black text-sm leading-snug mb-3 line-clamp-2 transition-colors group-hover:text-[#f59e08]"
+                            style={{ color: N }} title={blog.title}>{blog.title}</h3>
+
+                          <div className="mt-auto space-y-2 pt-3 border-t border-slate-100">
+                            {isValid(blog.gmp_ipo_price) && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-400 flex items-center gap-1 font-medium">
+                                  <IndianRupee className="w-3 h-3" /> Price
+                                </span>
+                                <span className="font-black" style={{ color: N }}>{blog.gmp_ipo_price}</span>
+                              </div>
+                            )}
+                            {isValid(blog.gmp) && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-400 flex items-center gap-1 font-medium">
+                                  <TrendingUp className="w-3 h-3" /> GMP
+                                </span>
+                                <span className="font-black" style={{ color: G2 }}>{blog.gmp}</span>
+                              </div>
+                            )}
+                            {isValid(blog.gmp_date) && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-400 flex items-center gap-1 font-medium">
+                                  <Calendar className="w-3 h-3" /> Date
+                                </span>
+                                <span className="font-medium text-slate-600">{blog.gmp_date}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-4 flex items-center gap-1 text-xs font-black opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"
+                            style={{ color: G }}>
+                            Read Full Details <ArrowRight className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && totalPages > 1 && (
+            <div className="mt-12 flex items-center justify-center gap-2 flex-wrap">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="flex items-center gap-1 px-5 h-11 rounded-xl font-black text-sm text-white transition-all disabled:opacity-40"
+                style={{ background: N }}>
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </button>
               {[...Array(totalPages)].map((_, i) => {
                 const p = i + 1;
-                // Simple pagination logic to show limited numbers
                 if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
                   return (
-                    <Button
-                      key={p}
-                      variant={p === page ? "default" : "outline"}
-                      className={`w-10 h-10 p-0 ${p === page ? 'bg-primary' : 'hover:bg-primary/10'}`}
-                      onClick={() => setPage(p)}
-                    >
+                    <button key={p} onClick={() => setPage(p)}
+                      className="w-11 h-11 rounded-xl font-black text-sm transition-all"
+                      style={p === page
+                        ? { background: G, color: N, boxShadow: "0 4px 12px rgba(245,158,8,0.35)" }
+                        : { background: "#f1f5f9", color: "#475569" }}>
                       {p}
-                    </Button>
+                    </button>
                   );
                 }
-                if (p === page - 2 || p === page + 2) {
-                  return <span key={p} className="text-muted-foreground px-1">...</span>;
-                }
+                if (p === page - 2 || p === page + 2) return <span key={p} className="text-slate-400">…</span>;
                 return null;
               })}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                className="flex items-center gap-1 px-5 h-11 rounded-xl font-black text-sm text-white transition-all disabled:opacity-40"
+                style={{ background: N }}>
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-4"
-            >
-              Next <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </main>
+
+      {/* ── CTA ── */}
+      <section className="py-16 relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${N}, #002147, #003380)` }}>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h2 className="text-3xl font-black text-white mb-3">
+            Planning Your <span style={{ color: G }}>IPO Journey?</span>
+          </h2>
+          <p className="text-white/60 max-w-lg mx-auto font-medium mb-8">
+            Get expert advisory from SEBI-registered consultants and take the first step toward going public.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/ipo-feasibility"
+              className="inline-flex items-center gap-2 px-8 h-14 rounded-xl font-black text-base transition-all hover:scale-105"
+              style={{ background: `linear-gradient(135deg, ${G}, ${G2})`, color: N, boxShadow: "0 8px 32px rgba(245,158,8,0.35)" }}>
+              Check IPO Feasibility <Zap className="h-5 w-5" />
+            </Link>
+            <Link to="/contact"
+              className="inline-flex items-center gap-2 px-8 h-14 rounded-xl font-black text-base text-white border border-white/25 hover:bg-white/10 transition-all">
+              Contact Experts
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>
