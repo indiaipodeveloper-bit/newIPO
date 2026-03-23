@@ -17,6 +17,7 @@ router.get("/", async (req, res) => {
     let countQuery = "SELECT COUNT(*) as total FROM ipo_lists i";
     let dataQuery = `
       SELECT i.*, s.name AS sector_name, 
+             b.image AS blog_image,
              COALESCE(NULLIF(b.new_slug, ''), b.slug) as blog_slug
       FROM ipo_lists i 
       LEFT JOIN sectors s ON i.sector_id = s.id
@@ -63,11 +64,13 @@ router.get("/", async (req, res) => {
     const [[{ total }]] = await pool.query(countQuery, queryParams);
     const [data] = await pool.query(dataQuery, dataParams);
 
-    // Map nulls to 0 as requested
+    // Map nulls (only for numeric indicators, keep paths/slugs as null or empty)
     const processedData = data.map(item => {
       const processed = { ...item };
+      const excludeFromZero = ['logo', 'blog_image', 'blog_slug', 'sector_name', 'issuer_company', 'status', 'issue_category', 'date_declared', 'open_date', 'close_date', 'listing_date', 'merchant_bankers', 'exchange'];
+      
       Object.keys(processed).forEach(key => {
-        if (processed[key] === null) {
+        if (processed[key] === null && !excludeFromZero.includes(key)) {
           processed[key] = 0;
         }
       });

@@ -2,11 +2,24 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Pehle server/.env padho (priority zyada), phir root .env
+dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const router = express.Router();
 
 // Ensure upload directories exist
-const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+const uploadEnvPath = process.env.UPLOADS_PATH || './uploads';
+const uploadDir = uploadEnvPath.startsWith('.')
+    ? path.join(__dirname, '..', uploadEnvPath)
+    : uploadEnvPath;
+
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }

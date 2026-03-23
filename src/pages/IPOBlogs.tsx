@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, TrendingUp, IndianRupee, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getImgSrc } from "@/utils/image";
 
 interface IPOBlog {
   id: string; title: string; slug: string;
@@ -125,8 +126,8 @@ const IPOBlogs = () => {
                   <Link to={`/ipo-blogs/${blog.slug || blog.id}`} className="block h-full group">
                     <div className="h-full bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
                       <div className="aspect-[16/10] bg-muted relative overflow-hidden flex items-center justify-center p-4">
-                        {isValid(blog.image) ? (
-                          <img src={blog.image} alt={blog.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                        {isValid(getImgSrc(blog.image)) ? (
+                          <img src={getImgSrc(blog.image)!} alt={blog.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
                             <TrendingUp className="h-10 w-10 text-primary/40" />

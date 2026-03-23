@@ -10,6 +10,7 @@ import { Search, Loader2, ChevronLeft, ChevronRight, Calendar as CalendarIcon, F
 import { ipoListApi } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { getImgSrc } from "@/utils/image";
 
 const statusColor: Record<string, string> = {
   Open: "bg-green-500/10 text-green-600 border-green-200",
@@ -163,13 +164,13 @@ const IPOCalendar = () => {
                     <tr key={item.id} className="group hover:bg-blue-50/30 transition-all cursor-default">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-5">
-                          {item.logo ? (
+                          {getImgSrc(item.logo || item.blog_image) ? (
                             <div className="h-12 w-12 bg-white rounded-xl border border-slate-100 p-2 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                              <img src={String(item.logo)} alt="" className="max-h-full max-w-full object-contain" />
+                              <img src={getImgSrc(item.logo || item.blog_image)!} alt="" className="max-h-full max-w-full object-contain" />
                             </div>
                           ) : (
                             <div className="h-12 w-12 bg-blue-600/5 rounded-xl border border-blue-600/10 flex items-center justify-center text-blue-600 font-black text-xl">
-                              {String(item.issuer_company)[0]}
+                              {String(item.issuer_company || '?')[0]}
                             </div>
                           )}
                           <div>

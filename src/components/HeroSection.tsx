@@ -1,10 +1,7 @@
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  window.location.origin.replace("ipo.", "ipoapi.");
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { getImgSrc } from "@/utils/image";
 import {
   ArrowRight,
   CheckCircle,
@@ -83,8 +80,7 @@ const HeroSection = () => {
   useEffect(() => {
     const loadBanners = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/banners`);
-
+        const res = await fetch("/api/banners");
         const data = await res.json();
 
         const activeBanners = data.filter((b: Banner) => b.is_active);
@@ -112,11 +108,7 @@ const HeroSection = () => {
     const link = document.createElement("link");
     link.rel = "preload";
     link.as = "image";
-
-    link.href = banners[0].image_url.startsWith("http")
-      ? banners[0].image_url
-      : `${API_BASE}/${banners[0].image_url.replace(/^\/+/, "")}`;
-
+    link.href = getImgSrc(banners[0].image_url) || "";
     document.head.appendChild(link);
 
     return () => {
@@ -152,11 +144,7 @@ const HeroSection = () => {
           className="absolute inset-0"
         >
           <img
-            src={
-              banner.image_url?.startsWith("http")
-                ? banner.image_url
-                : `${API_BASE}/${banner.image_url.replace(/^\/+/, "")}`
-            }
+            src={getImgSrc(banner.image_url) || ""}
             alt={banner.title || "IPO Banner"}
             className="w-full h-full object-cover"
             loading="eager"
@@ -211,7 +199,7 @@ const HeroSection = () => {
             <Button
               size="lg"
               variant="outline"
-              className="border-background/30 text-background hover:bg-background/10 font-semibold text-base px-8"
+              className="bg-slate-900/40 backdrop-blur-sm border-white/30 text-white hover:bg-slate-900/60 font-semibold text-base px-8"
               asChild
             >
               <Link
@@ -232,7 +220,7 @@ const HeroSection = () => {
               <Button
                 size="lg"
                 variant="ghost"
-                className="text-background hover:bg-background/10 font-semibold text-base px-6 h-auto py-3"
+                className="bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20 font-semibold text-base px-6 h-auto py-3"
                 asChild
               >
                 <Link to={banner.cta2_link || "/contact"}>

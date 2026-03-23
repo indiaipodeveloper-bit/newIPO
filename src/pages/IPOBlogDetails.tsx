@@ -10,6 +10,7 @@ import {
   Download, FileText, Info, BarChart3, Activity, Wallet,
   CheckCircle2, HelpCircle, Star, Shield
 } from "lucide-react";
+import { getImgSrc } from "@/utils/image";
 
 interface AdminBlogFull {
   id: string; title: string; slug: string;
@@ -153,7 +154,7 @@ const IPOBlogDetails = () => {
       <SEOHead
         title={stripHtml(blog.meta_title) || `${stripHtml(blog.title)} - IndiaIPO`}
         description={stripHtml(blog.description) || `Read details and updates about ${stripHtml(blog.title)}`}
-        ogImage={blog.image}
+        ogImage={getImgSrc(blog.image) || undefined}
       />
       <Header />
 
@@ -164,9 +165,9 @@ const IPOBlogDetails = () => {
           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-600 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
         </div>
-        {isValid(blog.image) && (
+        {isValid(getImgSrc(blog.image)) && (
           <div className="absolute inset-0">
-            <img src={blog.image} alt="" className="w-full h-full object-cover opacity-10" />
+            <img src={getImgSrc(blog.image)!} alt="" className="w-full h-full object-cover opacity-10" />
           </div>
         )}
 
@@ -240,11 +241,11 @@ const IPOBlogDetails = () => {
               </div>
             </div>
 
-            {/* Right: Image Card */}
-            {isValid(blog.image) && (
+            {/* Right: Image Card */ }
+            {isValid(getImgSrc(blog.image)) && (
               <div className="lg:w-72 shrink-0">
                 <div className="rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl">
-                  <img src={blog.image} alt={blog.title} className="w-full h-52 object-cover" />
+                  <img src={getImgSrc(blog.image)!} alt={blog.title} className="w-full h-52 object-cover" />
                 </div>
               </div>
             )}

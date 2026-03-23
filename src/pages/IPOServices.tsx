@@ -464,7 +464,7 @@ const IPOServices = () => {
                 <Button asChild className="bg-[#f59e08] hover:bg-[#d97706] text-[#001529] font-black rounded-xl px-8 h-12 text-sm shadow-xl shadow-[#f59e08]/20">
                   <Link to="/contact">Get Free Consultation <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
-                <Button asChild variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-xl px-8 h-12 text-sm font-bold">
+                <Button asChild variant="outline" className="border-white/30 bg-white/10 text-white rounded-xl px-8 h-12 text-sm font-bold">
                   <Link to="/ipo-calendar">View Live IPOs</Link>
                 </Button>
               </div>
@@ -494,11 +494,10 @@ const IPOServices = () => {
                       setActiveTab(svc.id);
                       document.getElementById(svc.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
                     }}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                      activeTab === svc.id
-                        ? "bg-[#001529] text-white shadow-md"
-                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${activeTab === svc.id
+                      ? "bg-[#001529] text-white shadow-md"
+                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                      }`}
                   >
                     <Icon className="h-4 w-4" />
                     {svc.shortTitle}

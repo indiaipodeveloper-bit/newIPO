@@ -8,22 +8,21 @@ export function cn(...inputs: ClassValue[]) {
 export function getImageUrl(path: string | null | undefined): string {
   if (!path) return '';
   
-  // If we're in development, get the API URL
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const s = String(path).trim();
   
-  // If it's already a full URL, return it
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
-    // Edge case: if the database has the production URL but we are on localhost,
-    // or if the URL already contains the base, just return it.
-    if (path.includes('localhost:5000')) {
-      return path;
-    }
-    // For external URLs, return as is
-    return path;
+  // If we're in development, use the base URL if needed, but the proxy handles /uploads
+  // For absolute URLs, return as is
+  if (s.startsWith('http') || s.startsWith('data:') || s.startsWith('/src/assets') || s.startsWith('/static')) {
+    return s;
   }
   
-  // Ensure the path starts with a slash
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  // Normalize path with /uploads/
+  let cleanPath = s;
+  if (!s.startsWith('/uploads') && !s.startsWith('uploads/')) {
+    cleanPath = `/uploads/${s.startsWith('/') ? s.slice(1) : s}`;
+  } else if (s.startsWith('uploads/')) {
+    cleanPath = `/${s}`;
+  }
   
-  return `${baseUrl}${cleanPath}`;
+  return cleanPath;
 }
