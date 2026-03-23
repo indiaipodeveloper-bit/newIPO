@@ -1,1 +1,0 @@
-id, uuid, title, slug, description, content, category, image, source, published_at, latest_news, trending_news, created_at, updated_at

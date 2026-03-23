@@ -460,8 +460,8 @@ const About = () => {
                 </Button>
               </div>
               <div className="flex justify-center gap-8 mt-10">
-                <a href="tel:+919876543210" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
-                  <Phone className="h-4 w-4" /> +91 98765 43210
+                <a href="tel:+917428337280" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
+                  <Phone className="h-4 w-4" /> +91 74283 37280
                 </a>
                 <a href="mailto:info@indiaipo.com" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
                   <Mail className="h-4 w-4" /> info@indiaipo.com

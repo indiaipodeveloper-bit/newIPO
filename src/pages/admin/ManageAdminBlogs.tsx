@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, ChevronLeft, ChevronRight, Layout, BarChart, Info, List, Link as LinkIcon, Database, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdminBlog {
   id: string; title: string; new_slug: string; slug: string;
@@ -35,18 +36,78 @@ interface AdminBlog {
 const emptyForm: Partial<AdminBlog> = {
   title: "", new_slug: "", slug: "", category: "ipo_blogs", status: "1", upcoming: "0", image: "",
   content: "", faqs: "", new_highlight_text: "",
-  gmp_date: "", gmp_ipo_price: "", gmp: "",
-  ipo_description: "", ipo_timeline_description: "",
-  ipo_lots_application: "", ipo_lots_share: "", ipo_lots_amount: "",
-  finantial_information_assets: "", finantial_information_revenue: "",
-  competative_strenght: "", meta_title: "", description: "", keyword: "",
-  rhp: "", drhp: ""
+  gmp_date: "", gmp_ipo_price: "", gmp: "", gmp_last_updated: "",
+  ipo_details: "", ipo_description: "",
+  ipo_timeline_details: "", ipo_timeline_description: "",
+  ipo_lots_application: "", ipo_lots: "", ipo_lots_share: "", ipo_lots_amount: "",
+  promotor_hold_pre_issue: "", promotor_hold_post_issue: "",
+  finantial_information_ended: "", finantial_information_assets: "",
+  finantial_information_revenue: "", finantial_information_profit_tax: "",
+  financial_info_reserves_surplus: "", finantial_information_networth: "",
+  finantial_information_borrowing: "",
+  key_kpi: "", key_value: "", key_pri_ipo_eps: "",
+  key_pos_ipo_eps: "", key_pre_ipo_pe: "", key_post_ipo_pe: "",
+  competative_strenght: "",
+  meta_title: "", description: "", keyword: "",
+  rhp: "", drhp: "", confidential_drhp: "",
+  confidential: "0"
 };
 
 const ManageAdminBlogs = () => {
   const [blogs, setBlogs] = useState<AdminBlog[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const BAD_VALUES = new Set(['null', '[null]', 'undefined', '[]', '["null"]', '']);
+
+  const fixUnicode = (s: string) =>
+    s.replace(/\\u20b9/g, '₹').replace(/\\u20b5/g, '₹').replace(/\\u0026/g, '&').replace(/\\u2019/g, "'");
+
+  const formatDisplayValue = (val: any) => {
+    if (val === null || val === undefined) return '—';
+    const s = String(val).trim();
+    if (BAD_VALUES.has(s.toLowerCase())) return '—';
+    // If it's a JSON array, flatten to text for display
+    if (s.startsWith('[') && s.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) {
+          const items = parsed.filter(i => i !== null && i !== undefined && !BAD_VALUES.has(String(i).toLowerCase().trim()));
+          if (items.length === 0) return '—';
+          return fixUnicode(items[0] !== undefined ? String(items[0]) : '—');
+        }
+      } catch (e) {}
+    }
+    return fixUnicode(s);
+  };
+
+  // Convert DB JSON value to editable form string
+  const cleanFormValue = (val: any, isFaqField = false) => {
+    if (val === null || val === undefined) return '';
+    const s = String(val).trim();
+    if (BAD_VALUES.has(s.toLowerCase())) return '';
+
+    if (s.startsWith('[') && s.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) {
+          // Keep FAQs as raw JSON string for editing
+          if (isFaqField) return s;
+          const cleaned = parsed
+            .filter(item => item !== null && item !== undefined && !BAD_VALUES.has(String(item).toLowerCase().trim()))
+            .map(item => {
+              if (typeof item === 'object') return JSON.stringify(item);
+              return fixUnicode(String(item).trim());
+            })
+            .filter(item => item !== '');
+          return cleaned.join(', ');
+        }
+      } catch (e) { /* Not valid JSON */ }
+    }
+
+    return fixUnicode(s);
+  };
+
   const [form, setForm] = useState<Record<string, any>>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,16 +166,30 @@ const ManageAdminBlogs = () => {
       const res = await fetch(`/api/admin-blogs/id/${b.id}`);
       if (res.ok) {
         const fullData = await res.json();
-        setForm(fullData);
+        // Clean all fields before putting into form
+        const cleanedData: Record<string, any> = {};
+        for (const [key, val] of Object.entries(fullData)) {
+          if (key === 'content') {
+            // Keep HTML content raw for editing
+            cleanedData[key] = val ?? '';
+          } else if (key === 'faqs') {
+            cleanedData[key] = cleanFormValue(val, true);
+          } else if (typeof val === 'string' || val === null) {
+            cleanedData[key] = cleanFormValue(val);
+          } else {
+            cleanedData[key] = val;
+          }
+        }
+        setForm(cleanedData);
         setEditingId(b.id);
         setDialogOpen(true);
       } else {
         toast.error("Failed to load full details");
       }
     } catch {
-       toast.error("Error fetching full details");
+      toast.error("Error fetching full details");
     } finally {
-       setSaving(false);
+      setSaving(false);
     }
   };
 
@@ -167,126 +242,289 @@ const ManageAdminBlogs = () => {
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-full">
               <DialogHeader><DialogTitle>{editingId ? "Edit IPO Blog" : "Add New IPO Blog"}</DialogTitle></DialogHeader>
-              
-              <div className="space-y-8 mt-4">
-                {/* General Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold border-b pb-2">Basic Info</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Title *</label>
-                      <Input value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <div className="mt-4">
+                <Tabs defaultValue="basic" className="w-full">
+                  <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-6">
+                    <TabsTrigger value="basic" className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> Basic</TabsTrigger>
+                    <TabsTrigger value="gmp" className="flex items-center gap-1.5"><BarChart className="w-3.5 h-3.5" /> GMP/Lots</TabsTrigger>
+                    <TabsTrigger value="timelines" className="flex items-center gap-1.5"><List className="w-3.5 h-3.5" /> Timelines</TabsTrigger>
+                    <TabsTrigger value="financials" className="flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Financials</TabsTrigger>
+                    <TabsTrigger value="content" className="flex items-center gap-1.5"><Layout className="w-3.5 h-3.5" /> Content</TabsTrigger>
+                    <TabsTrigger value="seo" className="flex items-center gap-1.5"><LinkIcon className="w-3.5 h-3.5" /> SEO/Docs</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="basic" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Title *</label>
+                        <Input value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">URL Slug</label>
+                        <Input
+                          value={form.new_slug || form.slug || ''}
+                          onChange={(e) => setForm({ ...form, new_slug: e.target.value, slug: e.target.value })}
+                          placeholder="e.g. my-awesome-ipo"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Category</label>
+                        <Select value={String(form.category || 'ipo_blogs')} onValueChange={(v) => setForm({ ...form, category: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ipo_blogs">IPO Blogs</SelectItem>
+                            <SelectItem value="sme_ipo">SME IPO</SelectItem>
+                            <SelectItem value="buyback">Buyback</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Upcoming Status</label>
+                        <Select value={String(form.upcoming || '0')} onValueChange={(v) => setForm({ ...form, upcoming: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">Current IPO</SelectItem>
+                            <SelectItem value="1">Upcoming IPO</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-1.5 block">URL Slug</label>
-                      <Input 
-                        value={form.new_slug || form.slug || ''} 
-                        onChange={(e) => setForm({ ...form, new_slug: e.target.value, slug: e.target.value })} 
-                        placeholder="e.g. my-awesome-ipo"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Category</label>
-                      <Select value={String(form.category || 'ipo_blogs')} onValueChange={(v) => setForm({ ...form, category: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ipo_blogs">IPO Blogs</SelectItem>
-                          <SelectItem value="sme_ipo">SME IPO</SelectItem>
-                          <SelectItem value="buyback">Buyback</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Upcoming Status</label>
-                      <Select value={String(form.upcoming || '0')} onValueChange={(v) => setForm({ ...form, upcoming: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Current IPO</SelectItem>
-                          <SelectItem value="1">Upcoming IPO</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Image URL / Upload</label>
-                    <div className="flex gap-2">
+                      <label className="text-sm font-medium mb-1.5 block">Image URL / Upload</label>
+                      <div className="flex gap-2">
                         <Input value={form.image || ''} onChange={(e) => setForm({ ...form, image: e.target.value })} className="flex-1" />
                         <div className="relative">
-                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                            <Button type="button" variant="outline" className="pointer-events-none shrink-0 flex items-center gap-2">
-                              <ImageIcon className="w-4 h-4" /> Upload
-                            </Button>
+                          <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                          <Button type="button" variant="outline" className="pointer-events-none shrink-0 flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4" /> Upload
+                          </Button>
                         </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Highlight Text (Optional)</label>
+                        <Input value={form.new_highlight_text || ''} onChange={(e) => setForm({ ...form, new_highlight_text: e.target.value })} placeholder="e.g. Subscribe Now" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Confidential Label</label>
+                        <Select value={String(form.confidential || '0')} onValueChange={(v) => setForm({ ...form, confidential: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">Normal</SelectItem>
+                            <SelectItem value="1">Confidential</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </TabsContent>
 
-                {/* GMP & Price Info */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold border-b pb-2">GMP & Details</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">GMP Date</label>
-                      <Input value={form.gmp_date || ''} onChange={(e) => setForm({ ...form, gmp_date: e.target.value })} />
+                  <TabsContent value="gmp" className="space-y-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">GMP Date</label>
+                        <Input value={form.gmp_date || ''} onChange={(e) => setForm({ ...form, gmp_date: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">IPO Price Band</label>
+                        <Input value={form.gmp_ipo_price || ''} onChange={(e) => setForm({ ...form, gmp_ipo_price: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Latest GMP</label>
+                        <Input value={form.gmp || ''} onChange={(e) => setForm({ ...form, gmp: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">GMP Last Updated</label>
+                        <Input value={form.gmp_last_updated || ''} onChange={(e) => setForm({ ...form, gmp_last_updated: e.target.value })} />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">IPO Price</label>
-                      <Input value={form.gmp_ipo_price || ''} onChange={(e) => setForm({ ...form, gmp_ipo_price: e.target.value })} />
+                    <div className="space-y-4 pt-4 border-t">
+                      <h4 className="text-sm font-semibold">Lot Size Information (Comma separated)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">Lots (e.g. Retail Min, Retail Max)</label>
+                          <Input value={form.ipo_lots || ''} onChange={(e) => setForm({ ...form, ipo_lots: e.target.value })} placeholder="Retail Min, Retail Max..." />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">Shares (e.g. 15, 195)</label>
+                          <Input value={form.ipo_lots_share || ''} onChange={(e) => setForm({ ...form, ipo_lots_share: e.target.value })} placeholder="15, 195..." />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">Amounts (e.g. ₹14,850, ₹1,93,050)</label>
+                          <Input value={form.ipo_lots_amount || ''} onChange={(e) => setForm({ ...form, ipo_lots_amount: e.target.value })} placeholder="₹14,850, ₹1,93,050..." />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Lots Application Info (Optional)</label>
+                        <Input value={form.ipo_lots_application || ''} onChange={(e) => setForm({ ...form, ipo_lots_application: e.target.value })} placeholder="e.g. 1 Lot, 13 Lots..." />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">GMP Value</label>
-                      <Input value={form.gmp || ''} onChange={(e) => setForm({ ...form, gmp: e.target.value })} />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Status Code</label>
-                      <Input value={form.status || ''} onChange={(e) => setForm({ ...form, status: e.target.value })} />
-                    </div>
-                  </div>
-                </div>
+                  </TabsContent>
 
-                {/* Extensive Content Data */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold border-b pb-2">Content Sections (HTML allowed)</h3>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Main Content</label>
-                    <Textarea value={form.content || ''} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={5} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">IPO Description</label>
-                    <Textarea value={form.ipo_description || ''} onChange={(e) => setForm({ ...form, ipo_description: e.target.value })} rows={3} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Financial Information (HTML Table)</label>
-                    <Textarea value={form.finantial_information_assets || ''} onChange={(e) => setForm({ ...form, finantial_information_assets: e.target.value })} rows={4} placeholder="Combine/store table structure here if needed..." />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1.5 block">Competitive Strengths</label>
-                    <Textarea value={form.competative_strenght || ''} onChange={(e) => setForm({ ...form, competative_strenght: e.target.value })} rows={3} />
-                  </div>
-                </div>
+                  <TabsContent value="timelines" className="space-y-6">
+                    <h4 className="text-sm font-semibold">IPO Timelines (Comma separated)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Timeline Labels</label>
+                        <Textarea
+                          value={form.ipo_timeline_details || ''}
+                          onChange={(e) => setForm({ ...form, ipo_timeline_details: e.target.value })}
+                          placeholder="IPO Open Date, IPO Close Date, Allotment Date..."
+                          rows={4}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Timeline Dates</label>
+                        <Textarea
+                          value={form.ipo_timeline_description || ''}
+                          onChange={(e) => setForm({ ...form, ipo_timeline_description: e.target.value })}
+                          placeholder="Mar 19, 2025, Mar 21, 2025, Mar 24, 2025..."
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <label className="text-sm font-medium mb-1.5 block">Additional IPO Details (Summary)</label>
+                      <Textarea value={form.ipo_details || ''} onChange={(e) => setForm({ ...form, ipo_details: e.target.value })} rows={3} />
+                    </div>
+                  </TabsContent>
 
-                {/* SEO */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold border-b pb-2">SEO Setup</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Meta Title</label>
-                      <Input value={form.meta_title || ''} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} />
+                  <TabsContent value="financials" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-semibold">Promoter Holding</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-medium mb-1 block">Pre-Issue %</label>
+                            <Input value={form.promotor_hold_pre_issue || ''} onChange={(e) => setForm({ ...form, promotor_hold_pre_issue: e.target.value })} />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium mb-1 block">Post-Issue %</label>
+                            <Input value={form.promotor_hold_post_issue || ''} onChange={(e) => setForm({ ...form, promotor_hold_post_issue: e.target.value })} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-semibold">Key KPIs (Comma separated)</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-medium mb-1 block">KPI Names</label>
+                            <Input value={form.key_kpi || ''} onChange={(e) => setForm({ ...form, key_kpi: e.target.value })} placeholder="ROE, ROCE, Debt/Equity..." />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium mb-1 block">KPI Values</label>
+                            <Input value={form.key_value || ''} onChange={(e) => setForm({ ...form, key_value: e.target.value })} placeholder="15%, 20%, 0.5..." />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Meta Keywords</label>
-                      <Input value={form.keyword || ''} onChange={(e) => setForm({ ...form, keyword: e.target.value })} />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium mb-1.5 block">Meta Description</label>
-                      <Textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
-                    </div>
-                  </div>
-                </div>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full bg-primary text-primary-foreground font-semibold">
-                  {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : editingId ? "Save All Changes" : "Create New IPO Record"}
-                </Button>
+                    <div className="space-y-4 pt-4 border-t">
+                      <h4 className="text-sm font-semibold">Financial Summary Table (HTML)</h4>
+                      <Textarea
+                        value={form.finantial_information_assets || ''}
+                        onChange={(e) => setForm({ ...form, finantial_information_assets: e.target.value })}
+                        rows={6}
+                        placeholder="Paste your HTML table here for financial assets/summary..."
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Total Revenue</label>
+                        <Input value={form.finantial_information_revenue || ''} onChange={(e) => setForm({ ...form, finantial_information_revenue: e.target.value })} placeholder="e.g. ₹4,500 Cr" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Profit After Tax</label>
+                        <Input value={form.finantial_information_profit_tax || ''} onChange={(e) => setForm({ ...form, finantial_information_profit_tax: e.target.value })} placeholder="e.g. ₹800 Cr" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Net Worth</label>
+                        <Input value={form.finantial_information_networth || ''} onChange={(e) => setForm({ ...form, finantial_information_networth: e.target.value })} placeholder="e.g. ₹2,100 Cr" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">Total Borrowing</label>
+                        <Input value={form.finantial_information_borrowing || ''} onChange={(e) => setForm({ ...form, finantial_information_borrowing: e.target.value })} placeholder="e.g. ₹150 Cr" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">KPI EPS (Pre/Post)</label>
+                        <div className="flex gap-2">
+                          <Input value={form.key_pri_ipo_eps || ''} onChange={(e) => setForm({ ...form, key_pri_ipo_eps: e.target.value })} placeholder="Pre EPS" />
+                          <Input value={form.key_pos_ipo_eps || ''} onChange={(e) => setForm({ ...form, key_pos_ipo_eps: e.target.value })} placeholder="Post EPS" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">KPI P/E (Pre/Post)</label>
+                        <div className="flex gap-2">
+                          <Input value={form.key_pre_ipo_pe || ''} onChange={(e) => setForm({ ...form, key_pre_ipo_pe: e.target.value })} placeholder="Pre P/E" />
+                          <Input value={form.key_post_ipo_pe || ''} onChange={(e) => setForm({ ...form, key_post_ipo_pe: e.target.value })} placeholder="Post P/E" />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="content" className="space-y-6">
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Main Long Content (HTML)</label>
+                      <Textarea value={form.content || ''} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={8} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">IPO Short Description</label>
+                      <Textarea value={form.ipo_description || ''} onChange={(e) => setForm({ ...form, ipo_description: e.target.value })} rows={3} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Competitive Strengths (Comma separated)</label>
+                      <Textarea value={form.competative_strenght || ''} onChange={(e) => setForm({ ...form, competative_strenght: e.target.value })} rows={3} placeholder="Strong management, High growth, etc..." />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">FAQs (JSON or Text format)</label>
+                      <Textarea value={form.faqs || ''} onChange={(e) => setForm({ ...form, faqs: e.target.value })} rows={4} placeholder='[{"question": "What is...", "answer": "..."}]' />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="seo" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Meta Title</label>
+                        <Input value={form.meta_title || ''} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Meta Keywords</label>
+                        <Input value={form.keyword || ''} onChange={(e) => setForm({ ...form, keyword: e.target.value })} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium mb-1.5 block">Meta Description</label>
+                        <Textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+                      </div>
+                    </div>
+                    <div className="space-y-4 pt-4 border-t">
+                      <h4 className="text-sm font-semibold flex items-center gap-2"><HelpCircle className="w-4 h-4" /> Official Documents</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">RHP Link/Path</label>
+                          <Input value={form.rhp || ''} onChange={(e) => setForm({ ...form, rhp: e.target.value })} placeholder="rhp-file.pdf" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">DRHP Link/Path</label>
+                          <Input value={form.drhp || ''} onChange={(e) => setForm({ ...form, drhp: e.target.value })} placeholder="drhp-file.pdf" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium mb-1 block">Confidential DRHP</label>
+                          <Input value={form.confidential_drhp || ''} onChange={(e) => setForm({ ...form, confidential_drhp: e.target.value })} placeholder="confidential-drhp.pdf" />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                <div className="pt-6">
+                  <Button onClick={handleSave} disabled={saving} className="w-full bg-primary text-primary-foreground font-semibold h-12 text-lg">
+                    {saving ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Saving...</> : editingId ? "Save All Changes" : "Create New IPO Record"}
+                  </Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -321,8 +559,8 @@ const ManageAdminBlogs = () => {
                           {b.upcoming == "1" ? "Upcoming" : "Current"}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground hidden lg:table-cell">{b.gmp || "—"}</td>
-                      <td className="py-3 px-4 text-muted-foreground hidden lg:table-cell">{b.gmp_ipo_price || "—"}</td>
+                      <td className="py-3 px-4 text-muted-foreground hidden lg:table-cell">{formatDisplayValue(b.gmp)}</td>
+                      <td className="py-3 px-4 text-muted-foreground hidden lg:table-cell">{formatDisplayValue(b.gmp_ipo_price)}</td>
                       <td className="py-3 px-4">
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(b)} disabled={saving}><Pencil className="h-3.5 w-3.5" /></Button>
@@ -334,23 +572,23 @@ const ManageAdminBlogs = () => {
                 </tbody>
               </table>
             </div>
-            
+
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/20">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => fetchBlogs(page - 1)} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchBlogs(page - 1)}
                   disabled={page <= 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" /> Previous
                 </Button>
                 <span className="text-sm font-medium text-muted-foreground">Page {page} of {totalPages}</span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => fetchBlogs(page + 1)} 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchBlogs(page + 1)}
                   disabled={page >= totalPages}
                 >
                   Next <ChevronRight className="h-4 w-4 ml-1" />

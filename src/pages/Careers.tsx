@@ -260,7 +260,7 @@ const Careers = () => {
                       </label>
                       <input
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 74283 37280"
                         className="w-full bg-secondary/30 border border-border hover:border-primary/30 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}

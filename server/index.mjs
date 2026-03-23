@@ -39,8 +39,9 @@ import consultantEnquiryRoutes from './routes/consultant_enquiries.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// Pehle server/.env padho (priority zyada), phir root .env
 dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -55,8 +56,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "https://apis.google.com", "https://www.googletagmanager.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "https:", "wss:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "https:", "wss:", "http:", "http://localhost:5000"],
       mediaSrc: ["'self'", "https:", "data:"],
       objectSrc: ["'none'"],
       frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
@@ -88,13 +89,20 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Serve static files from the public directory (for uploaded images/PDFs)
-// app.use(express.static(path.join(__dirname, '../public')));
+// Uploads path: env se aata hai
+// LOCAL: UPLOADS_PATH=./uploads (server/uploads folder)
+// PRODUCTION: UPLOADS_PATH=/home/u521845907/domains/padmanutri.com/public_html/ipo/uploads
+const uploadsEnvPath = process.env.UPLOADS_PATH || './uploads';
+const resolvedUploadsPath = uploadsEnvPath.startsWith('.')
+  ? path.join(__dirname, uploadsEnvPath)
+  : uploadsEnvPath;
+
+console.log(`📁 Uploads serving from: ${resolvedUploadsPath} (NODE_ENV: ${process.env.NODE_ENV || 'development'})`);
 
 // Explicitly serve uploads folder to ensure PDF access
 app.use(
     "/uploads",
-    express.static("/home/u521845907/domains/padmanutri.com/public_html/ipo/uploads")
+    express.static(resolvedUploadsPath)
 );
 
 // Initialize MySQL tables

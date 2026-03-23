@@ -59,6 +59,7 @@ const Footer = () => {
             <div className="space-y-2.5">
               {[
                 { label: "Home", href: "/" },
+                { label: "IPO Services", href: "/ipo-services" },
                 { label: "Blogs", href: "/blog" },
                 { label: "Consultant", href: "/consultants" },
                 { label: "Youtube Videos", href: "/ipo-and-market-snaps" },

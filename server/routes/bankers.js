@@ -12,37 +12,39 @@ router.get('/', async (req, res) => {
         const search = req.query.search || '';
         const fetchAll = req.query.all === 'true'; // allows bypassing pagination if needed
 
-        let query = 'SELECT * FROM marchantbankers';
-        let countQuery = 'SELECT COUNT(*) as total FROM marchantbankers';
-        const params = [];
-        const conditions = [];
-        
-        // Optional filtering by category (if your DB uses typeofb or another field, adjust appropriately)
-        // Ignoring typeofb for now since we haven't confirmed it, but adding search.
-        if (search) {
-            conditions.push('(title LIKE ? OR sub_title LIKE ?)');
-            params.push(`%${search}%`, `%${search}%`);
-        }
+    let query = "SELECT * FROM marchantbankers WHERE mcat_id = 'list-of-sme-merchant-bankers'";
+    let countQuery = "SELECT COUNT(*) as total FROM marchantbankers WHERE mcat_id = 'list-of-sme-merchant-bankers'";
+    const params = [];
+    const conditions = [];
+    
+    if (search) {
+        const searchClause = " AND (title LIKE ? OR sub_title LIKE ? OR description LIKE ?)";
+        query += searchClause;
+        countQuery += searchClause;
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    
+    query += ' ORDER BY id DESC';
 
-        if (conditions.length > 0) {
-            const whereClause = ' WHERE ' + conditions.join(' AND ');
-            query += whereClause;
-            countQuery += whereClause;
-        }
-        
-        query += ' ORDER BY id DESC';
+    if (!fetchAll) {
+        query += ' LIMIT ? OFFSET ?';
+    }
 
-        if (!fetchAll) {
-            query += ' LIMIT ? OFFSET ?';
-        }
-
-        const [[{ total }]] = await pool.query(countQuery, params);
-        
-        const dataParams = fetchAll ? params : [...params, limit, offset];
-        const [rows] = await pool.query(query, dataParams);
-        
-        res.json({
-            data: rows,
+    const [countResult] = await pool.query(countQuery, params);
+    const total = countResult[0]?.total || 0;
+    
+    const dataParams = fetchAll ? params : [...params, limit, offset];
+    const [rows] = await pool.query(query, dataParams);
+    
+    // Ensure logo_url starts with / for getImageUrl to work correctly across ports
+    const mappedRows = rows.map(r => ({
+        ...r,
+        name: r.title, // Map title to name for consistency
+        logo_url: r.image ? (r.image.startsWith('/') ? r.image : '/' + r.image) : null
+    }));
+    
+    res.json({
+        data: mappedRows,
             pagination: fetchAll ? null : {
                 total,
                 page,

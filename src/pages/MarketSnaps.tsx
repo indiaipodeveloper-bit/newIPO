@@ -7,7 +7,7 @@ import { PlayCircle, Loader2, Calendar, LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SocialMedia {
-  id: number;
+  id: string | number;
   title: string;
   url: string;
   img_url: string;
@@ -21,21 +21,50 @@ const MarketSnaps = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | number | null>(null);
+  
+  // YouTube Pagination State
+  const [pageTokens, setPageTokens] = useState<Record<number, string | null>>({ 1: null });
 
   const limit = 12;
 
   const fetchVideos = async (currentPage: number) => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/social_media?status=published&page=${currentPage}&limit=${limit}`);
+      const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+      const playlistId = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID;
+      
+      const token = pageTokens[currentPage] || null;
+      const tokenParam = token ? `&pageToken=${token}` : "";
+      
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=${limit}&playlistId=${playlistId}&key=${apiKey}${tokenParam}`
+      );
+      
       if (res.ok) {
         const data = await res.json();
-        setVideos(data.data);
-        setTotalPages(data.pagination.totalPages);
+        const mappedVideos: SocialMedia[] = data.items.map((item: any) => ({
+          id: item.snippet.resourceId.videoId,
+          title: item.snippet.title,
+          url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+          img_url: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          status: "published",
+          created_at: item.snippet.publishedAt,
+        }));
+        setVideos(mappedVideos);
+
+        // Update total pages based on YouTube's pageInfo
+        if (data.pageInfo) {
+          setTotalPages(Math.ceil(data.pageInfo.totalResults / limit));
+        }
+
+        // Store the next page token
+        if (data.nextPageToken) {
+          setPageTokens(prev => ({ ...prev, [currentPage + 1]: data.nextPageToken }));
+        }
       }
     } catch (err) {
-      console.error("Failed to load videos", err);
+      console.error("Failed to load videos from YouTube", err);
     } finally {
       setLoading(false);
     }
@@ -238,16 +267,22 @@ const MarketSnaps = () => {
                 </Button>
                 
                 <div className="flex gap-1 overflow-x-auto max-w-[200px] px-2 hide-scrollbar">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <Button
-                      key={i + 1}
-                      variant={page === i + 1 ? "default" : "ghost"}
-                      onClick={() => setPage(i + 1)}
-                      className={`min-w-[40px] h-10 rounded-full font-bold ${page === i + 1 ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground'}`}
-                    >
-                      {i + 1}
-                    </Button>
-                  ))}
+                  {Array.from({ length: totalPages }).map((_, i) => {
+                    const pageNumber = i + 1;
+                    const isAvailable = pageTokens[pageNumber] !== undefined || pageNumber === 1;
+                    
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={page === pageNumber ? "default" : "ghost"}
+                        onClick={() => setPage(pageNumber)}
+                        disabled={!isAvailable}
+                        className={`min-w-[40px] h-10 rounded-full font-bold ${page === pageNumber ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground'} ${!isAvailable ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      >
+                        {pageNumber}
+                      </Button>
+                    );
+                  })}
                 </div>
 
                 <Button 

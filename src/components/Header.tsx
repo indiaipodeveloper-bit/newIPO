@@ -45,6 +45,7 @@ const STATIC_NAV_PREFIX: NavItem[] = [
       {
         title: "IPO",
         items: [
+          { label: "🌟 All IPO Services", href: "/ipo-services", badge: "View All IPO Services →", badgeColor: "bg-[#001529] text-white" },
           { label: "Initial Public Offering (IPO)", href: "/services/initial-public-offering" },
           { label: "SME IPO Consultation", href: "/services/sme-ipo" },
           { label: "Mainline IPO Consultation", href: "/services/mainline-ipo" },
@@ -85,7 +86,7 @@ const STATIC_NAV_PREFIX: NavItem[] = [
       {
         title: "SME",
         items: [
-          { label: "List of SME Merchant Bankers", href: "/merchant-bankers/sme", external: true },
+          { label: "List of SME Merchant Bankers", href: "/merchant-bankers/sme" },
         ],
       },
       {
@@ -125,7 +126,7 @@ const REPORTS_COLUMN: MegaColumn = {
 };
 
 const FALLBACK_KNOWLEDGE: SubItem[] = [
-  { label: "IPO World Magazine", href: "/ipo-knowledge/ipo-world-magazine", badge: "IPO World Magazine", badgeColor: "bg-brand-blue text-primary-foreground" },
+  { label: "IPO World Magazine", href: "https://ipoworld.org/", external: true, badge: "IPO World Magazine", badgeColor: "bg-brand-blue text-primary-foreground" },
   { label: "IPO Process", href: "/ipo-knowledge/ipo-process" },
   { label: "Pre-IPO Process Guidance", href: "/ipo-knowledge/pre-ipo-process" },
   { label: "IPO Blogs", href: "/ipo-blogs" },
@@ -180,14 +181,26 @@ const Header = () => {
           if (active.length > 0) {
             setKnowledgeItems([
               { label: "IPO Blogs", href: "/ipo-blogs" },
-              ...active.map(c => ({
-                label: c.name,
-                href: (c.name.toLowerCase() === "list of ipo registrar" || c.name.toLowerCase() === "registrar")
-                  ? "/list-of-ipo-registrar"
-                  : (c.name.toLowerCase() === "sector wise ipo list in india" || c.slug === "sector-wise-ipo-list")
-                    ? "/sector-wise-ipo"
-                    : `/ipo-knowledge/${c.slug}`
-              }))
+              ...active.map(c => {
+                const nameLower = c.name.toLowerCase();
+                if (nameLower === "ipo world magazine") {
+                  return {
+                    label: "IPO World Magazine",
+                    href: "https://ipoworld.org/",
+                    external: true,
+                    badge: "IPO World Magazine",
+                    badgeColor: "bg-brand-blue text-primary-foreground"
+                  };
+                }
+                return {
+                  label: c.name,
+                  href: (nameLower === "list of ipo registrar" || nameLower === "registrar")
+                    ? "/list-of-ipo-registrar"
+                    : (nameLower === "sector wise ipo list in india" || c.slug === "sector-wise-ipo-list")
+                      ? "/sector-wise-ipo"
+                      : `/ipo-knowledge/${c.slug}`
+                };
+              })
             ]);
           }
         }
@@ -287,12 +300,23 @@ const Header = () => {
                               {col.items.map((item) => (
                                 <div key={item.label}>
                                   {item.badge ? (
-                                    <Link
-                                      to={item.href}
-                                      className={`inline-block px-3 py-1 rounded-md text-xs font-semibold mb-2 ${item.badgeColor}`}
-                                    >
-                                      {item.badge}
-                                    </Link>
+                                    item.external ? (
+                                      <a
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`inline-block px-3 py-1 rounded-md text-xs font-semibold mb-2 ${item.badgeColor}`}
+                                      >
+                                        {item.badge}
+                                      </a>
+                                    ) : (
+                                      <Link
+                                        to={item.href}
+                                        className={`inline-block px-3 py-1 rounded-md text-xs font-semibold mb-2 ${item.badgeColor}`}
+                                      >
+                                        {item.badge}
+                                      </Link>
+                                    )
                                   ) : item.external ? (
                                     <a
                                       href={item.href}
@@ -403,12 +427,24 @@ const Header = () => {
               </div>
             </div>
           ) : (
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-full px-5" asChild>
-              <Link to="/ipo-feasibility">
-                Check IPO Feasibility
-                <ArrowUpRight className="h-4 w-4 ml-1" />
+            <>
+              <Link
+                to="/ipo-services"
+                className={`px-4 py-2 text-sm font-bold rounded-full border-2 transition-all ${
+                  location.pathname === "/ipo-services"
+                    ? "border-[#001529] bg-[#001529] text-white"
+                    : "border-[#001529] text-[#001529] hover:bg-[#001529] hover:text-white"
+                }`}
+              >
+                IPO Services
               </Link>
-            </Button>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-full px-5" asChild>
+                <Link to="/ipo-feasibility">
+                  Check IPO Feasibility
+                  <ArrowUpRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
+            </>
           )}
         </div>
 
@@ -509,6 +545,13 @@ const Header = () => {
                   )}
                 </div>
               ))}
+              <Link
+                to="/ipo-services"
+                className="block px-3 py-2.5 text-sm font-bold text-[#001529] bg-[#001529]/5 hover:bg-[#001529]/10 rounded-md transition-colors border border-[#001529]/20"
+                onClick={() => setMobileOpen(false)}
+              >
+                🌟 IPO Services (All)
+              </Link>
               <div className="pt-3 border-t border-border space-y-2">
                 {isAuthenticated ? (
                   <>

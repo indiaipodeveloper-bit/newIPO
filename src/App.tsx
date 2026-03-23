@@ -73,6 +73,7 @@ const ConsultantDetail = lazy(() => import("./pages/ConsultantDetail"));
 const ManageConsultants = lazy(() => import("./pages/admin/ManageConsultants"));
 const ManageConsultantEnquiries = lazy(() => import("./pages/admin/ManageConsultantEnquiries"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const IPOServices = lazy(() => import("./pages/IPOServices"));
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,7 @@ const App = () => (
               <Route path="/ipo-calendar" element={<IPOCalendar />} />
               <Route path="/services" element={<Services />} />
               <Route path="/services/:slug" element={<ServiceDetail />} />
+              <Route path="/ipo-services" element={<IPOServices />} />
               <Route path="/about" element={<About />} />
               <Route path="/about-us" element={<About />} />
               <Route path="/contact" element={<Contact />} />

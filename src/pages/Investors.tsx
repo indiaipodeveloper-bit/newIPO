@@ -273,7 +273,7 @@ const Investors = () => {
                         <label className="text-sm font-semibold">Mobile Number *</label>
                         <Input 
                           type="tel" 
-                          placeholder="+91 98765 43210" 
+                          placeholder="+91 74283 37280" 
                           className="bg-muted/50 border-transparent focus:bg-background h-12" 
                           value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})}
                           required

@@ -11,28 +11,40 @@ router.get("/", async (req, res) => {
     const offset = (page - 1) * limit;
     const search = req.query.search || "";
 
-    let countQuery = "SELECT COUNT(*) as total FROM merchant_bankers";
-    let dataQuery = "SELECT * FROM merchant_bankers";
+    let countQuery = "SELECT COUNT(*) as total FROM marchantbankers WHERE mcat_id = 'list-of-mainboard-merchant-bankers'";
+    let dataQuery = "SELECT * FROM marchantbankers WHERE mcat_id = 'list-of-mainboard-merchant-bankers'";
     const queryParams = [];
 
     if (search) {
-      const searchClause = " WHERE title LIKE ? OR name LIKE ? OR category LIKE ? OR services LIKE ?";
+      // Searching in title, description, slug which exist in marchantbankers
+      const searchClause = " AND (title LIKE ? OR description LIKE ? OR slug LIKE ?)";
       countQuery += searchClause;
       dataQuery += searchClause;
       const searchPattern = `%${search}%`;
-      queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      queryParams.push(searchPattern, searchPattern, searchPattern);
     }
 
     dataQuery += " ORDER BY id DESC LIMIT ? OFFSET ?";
     const dataParams = [...queryParams, limit, offset];
 
-    const [[{ total }]] = await pool.query(countQuery, queryParams);
+    const [countResult] = await pool.query(countQuery, queryParams);
+    const total = countResult[0]?.total || 0;
+    
     const [data] = await pool.query(dataQuery, dataParams);
 
-    // Some legacy rows might have 'title' instead of 'name' or vice versa. Map gracefully
+    // Map marchantbankers columns to frontend expectations
     const mappedData = data.map(row => ({
       ...row,
-      name: row.title || row.name || "Unknown Banker"
+      name: row.title || "Unknown Banker",
+      logo_url: row.image ? (row.image.startsWith('/') ? row.image : '/' + row.image) : null,
+      total_ipos: row.noOfiposofar || 0,
+      total_raised: row.totalfundraised || 0,
+      avg_size: row.avgiposize || 0,
+      avg_subscription: row.avgsubscription || 0,
+      website: row.cweblink || "",
+      location: row.caddress || "",
+      sebi_registration: row.slug || "", // slug might contain reg info or similar unique ID
+      is_active: 1
     }));
 
     res.json({

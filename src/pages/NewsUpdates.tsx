@@ -71,19 +71,38 @@ const NewsUpdates = () => {
       });
   }, [activeCategory]);
 
-  // ── fetch videos from social_media (same source as IPO & Market Snaps page) ──
+  // ── fetch videos from YouTube (same source as IPO &    Snaps page) ──
   useEffect(() => {
-    setVideosLoading(true);
-    fetch("/api/social_media?status=published&page=1&limit=6")
-      .then((r) => r.json())
-      .then((d) => {
-        setVideos(Array.isArray(d?.data) ? d.data : []);
+    const fetchYouTubeVideos = async () => {
+      try {
+        setVideosLoading(true);
+        const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+        const playlistId = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID;
+        
+        const res = await fetch(
+          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=6&playlistId=${playlistId}&key=${apiKey}`
+        );
+        
+        if (res.ok) {
+          const data = await res.json();
+          const mappedVideos: SocialVideo[] = data.items.map((item: any) => ({
+            id: item.snippet.resourceId.videoId,
+            title: item.snippet.title,
+            url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+            img_url: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+            status: "published",
+            created_at: item.snippet.publishedAt,
+          }));
+          setVideos(mappedVideos);
+        }
+      } catch (err) {
+        console.error("Failed to fetch videos from YouTube in NewsUpdates", err);
+      } finally {
         setVideosLoading(false);
-      })
-      .catch(() => {
-        setVideos([]);
-        setVideosLoading(false);
-      });
+      }
+    };
+
+    fetchYouTubeVideos();
   }, []);
 
   // ── fetch dynamic banner ────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const WHATSAPP_NUMBER = "919876543210";
+const WHATSAPP_NUMBER = "917428337280";
 const DEFAULT_MESSAGE = "Hi! I'm interested in IPO advisory services. Can you help?";
 
 const WhatsAppButton = () => {
