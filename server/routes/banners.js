@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
                 groupName = 'group:knowledge';
             } else if (page.startsWith('/notifications')) {
                 groupName = 'group:notifications';
-            } else if (page.startsWith('/services')) {
+            } else if (page.startsWith('/services') || page === '/ipo-services') {
                 groupName = 'group:services';
             }
 

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { lazy, Suspense } from "react";
 import WhatsAppButton from "./components/WhatsAppButton";
+import ApkDownloadButton from "./components/ApkDownloadButton";
 import MobileNav from "./components/MobileNav";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -197,6 +198,7 @@ const App = () => (
           <MobileNav />
         </BrowserRouter>
         <WhatsAppButton />
+        <ApkDownloadButton />
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

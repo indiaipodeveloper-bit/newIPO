@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getImageUrl } from "@/lib/utils";
 
 /* ─── Animation helpers ─── */
 const MarqueeStyles = () => (
@@ -461,6 +462,10 @@ const IPOServices = () => {
   const [comparisonData, setComparisonData] = useState<any[]>(defaultComparison);
   const [loading, setLoading] = useState(true);
 
+  const { pathname } = useLocation();
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -493,6 +498,16 @@ const IPOServices = () => {
             }
           }
         }
+        // 3. Fetch Banner
+        const bannerRes = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (bannerRes.ok) {
+          const bannerData = await bannerRes.json();
+          const activeBanner = bannerData.find((b: any) => b.video_url || b.image_url);
+          if (activeBanner) {
+            if (activeBanner.video_url) setBannerVideo(activeBanner.video_url);
+            if (activeBanner.image_url) setBannerImage(activeBanner.image_url);
+          }
+        }
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
@@ -501,7 +516,7 @@ const IPOServices = () => {
     };
 
     fetchData();
-  }, []);
+  }, [pathname]);
 
   // Update stats with real values from dashboard
   const displayStats = defaultStats.map(s => {
@@ -524,12 +539,34 @@ const IPOServices = () => {
 
         {/* ═══ HERO ═══ */}
         <section className="bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] pt-16 pb-36 relative overflow-hidden">
-          {/* Decorative blobs */}
-          <div className="absolute top-0 right-0 w-1/2 h-full opacity-5">
-            <div className="absolute top-10 right-10 w-96 h-96 rounded-full bg-[#f59e08] blur-3xl" />
-            <div className="absolute bottom-0 right-1/3 w-72 h-72 rounded-full bg-blue-400 blur-3xl" />
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-b from-transparent to-[#F8FAFC]" />
+          {/* Dynamic Background */}
+          {bannerVideo ? (
+            <div className="absolute inset-0 z-0">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover opacity-40 mix-blend-overlay"
+                src={getImageUrl(bannerVideo)}
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] opacity-80 mix-blend-multiply" />
+            </div>
+          ) : bannerImage ? (
+            <div className="absolute inset-0 z-0">
+               <div 
+                 className="w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
+                 style={{ backgroundImage: `url(${getImageUrl(bannerImage)})` }}
+               />
+               <div className="absolute inset-0 bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] opacity-80 mix-blend-multiply" />
+            </div>
+          ) : (
+            <div className="absolute top-0 right-0 w-1/2 h-full opacity-5 pointer-events-none z-0">
+              <div className="absolute top-10 right-10 w-96 h-96 rounded-full bg-[#f59e08] blur-3xl" />
+              <div className="absolute bottom-0 right-1/3 w-72 h-72 rounded-full bg-blue-400 blur-3xl" />
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-b from-transparent to-[#F8FAFC] z-0" />
 
           <div className="container mx-auto px-4 relative z-10">
             {/* Breadcrumb */}

@@ -5,16 +5,7 @@ import { Building2, TrendingUp, BarChart3, Wallet, CheckCircle, ArrowRight } fro
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getImgSrc } from "@/utils/image";
-
-interface Banner {
-  id: string;
-  title: string | null;
-  subtitle: string | null;
-  image_url: string;
-  video_url?: string | null;
-  is_active: boolean;
-}
+import { getImageUrl } from "@/lib/utils";
 
 const allServices = [
   {
@@ -52,61 +43,64 @@ const allServices = [
 ];
 
 const Services = () => {
-  const location = useLocation();
-  const [banner, setBanner] = useState<Banner | null>(null);
+  const { pathname } = useLocation();
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchBanner = async () => {
+    const fetchBanners = async () => {
       try {
-        const res = await fetch(`/api/banners?page=${location.pathname}`);
-        const data = await res.json();
-        if (data.length > 0) {
-          setBanner(data[0]);
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const activeBanner = data.find((b: any) => b.video_url || b.image_url);
+          if (activeBanner) {
+            if (activeBanner.video_url) setBannerVideo(activeBanner.video_url);
+            if (activeBanner.image_url) setBannerImage(activeBanner.image_url);
+          }
         }
-      } catch (err) {
-        console.error("Failed to fetch banner:", err);
-      }
+      } catch (err) { console.error(err); }
     };
-    fetchBanner();
-  }, [location.pathname]);
+    fetchBanners();
+  }, [pathname]);
 
   return (
     <div className="min-h-screen">
       <SEOHead title="Services" description="SME IPO, Mainline IPO, FPO Advisory, and Pre-IPO Funding — comprehensive IPO consultancy services by IndiaIPO." keywords="SME IPO, Mainline IPO, FPO, Pre-IPO funding, IPO advisory services" />
       <Header />
       <main>
-        <section className="relative overflow-hidden pt-16 pb-20">
-          {/* Banner background if exists */}
-          {banner ? (
+        <section className="relative py-24 overflow-hidden bg-[#001529]">
+          {/* Dynamic Background */}
+          {bannerVideo ? (
             <div className="absolute inset-0 z-0">
-               {banner.video_url ? (
-                <video
-                  src={getImgSrc(banner.video_url) || ""}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img
-                  src={getImgSrc(banner.image_url) || ""}
-                  alt={banner.title || "Banner"}
-                  className="w-full h-full object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-slate-900/65" />
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover opacity-40 mix-blend-overlay"
+                src={getImageUrl(bannerVideo)}
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] opacity-80 mix-blend-multiply" />
+            </div>
+          ) : bannerImage ? (
+            <div className="absolute inset-0 z-0">
+               <div 
+                 className="w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
+                 style={{ backgroundImage: `url(${getImageUrl(bannerImage)})` }}
+               />
+               <div className="absolute inset-0 bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] opacity-80 mix-blend-multiply" />
             </div>
           ) : (
-            <div className="absolute inset-0 gradient-navy z-0" />
+            <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380]" />
           )}
 
           <div className="container mx-auto px-4 text-center relative z-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Our <span className="text-accent">Services</span>
+            <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
+              Our <span className="text-[#f59e08]">Services</span>
             </h1>
-            <p className="text-white/70 max-w-lg mx-auto text-lg">
-              {banner?.subtitle || "Comprehensive IPO advisory solutions tailored for companies at every stage."}
+            <p className="text-white/70 max-w-lg mx-auto text-lg font-medium">
+              Comprehensive IPO advisory solutions tailored for companies at every stage.
             </p>
           </div>
         </section>

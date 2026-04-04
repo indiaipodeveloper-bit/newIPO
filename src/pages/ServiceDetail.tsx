@@ -5,7 +5,7 @@ import SEOHead from "@/components/SEOHead";
 import { servicesData } from "@/data/servicesData";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { getImgSrc } from "@/utils/image";
+import { getImageUrl } from "@/lib/utils";
 import {
   ArrowRight, CheckCircle, ChevronRight, Phone, Mail, Home,
   Shield, Clock, Users, Star, Award, Zap, Target,
@@ -13,15 +13,6 @@ import {
   MessageSquare, Building2, Globe, BarChart3
 } from "lucide-react";
 import NotFound from "./NotFound";
-
-interface Banner {
-  id: string;
-  title: string | null;
-  subtitle: string | null;
-  image_url: string;
-  video_url?: string | null;
-  is_active: boolean;
-}
 
 /* ─── Animation helpers ─── */
 const MarqueeStyles = () => (
@@ -159,24 +150,27 @@ const FAQItem = ({ faq, index }: { faq: typeof commonFaqs[0]; index: number }) =
 /* ── Main Page ── */
 const ServiceDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const location = useLocation();
   const service = servicesData.find((s) => s.slug === slug);
-  const [banner, setBanner] = useState<Banner | null>(null);
+  const { pathname } = useLocation();
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchBanner = async () => {
+    const fetchBanners = async () => {
       try {
-        const res = await fetch(`/api/banners?page=${location.pathname}`);
-        const data = await res.json();
-        if (data.length > 0) {
-          setBanner(data[0]); // The API returns the best match (page path or group) first
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const activeBanner = data.find((b: any) => b.video_url || b.image_url);
+          if (activeBanner) {
+            if (activeBanner.video_url) setBannerVideo(activeBanner.video_url);
+            if (activeBanner.image_url) setBannerImage(activeBanner.image_url);
+          }
         }
-      } catch (err) {
-        console.error("Failed to fetch banner:", err);
-      }
+      } catch (err) { console.error(err); }
     };
-    fetchBanner();
-  }, [location.pathname]);
+    fetchBanners();
+  }, [pathname]);
 
   if (!service) return <NotFound />;
 
@@ -200,32 +194,29 @@ const ServiceDetail = () => {
         <section
           className={`bg-gradient-to-br ${cfg.gradient} pt-14 pb-40 relative overflow-hidden`}
         >
-          {/* Banner background if exists */}
-          {banner && (
+          {/* Dynamic Background */}
+          {bannerVideo ? (
             <div className="absolute inset-0 z-0">
-               {banner.video_url ? (
-                <video
-                  src={getImgSrc(banner.video_url) || ""}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img
-                  src={getImgSrc(banner.image_url) || ""}
-                  alt={banner.title || "Banner"}
-                  className="w-full h-full object-cover"
-                />
-              )}
-              <div className="absolute inset-0 bg-slate-900/65" />
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover opacity-40 mix-blend-overlay"
+                src={getImageUrl(bannerVideo)}
+              />
+              <div className={`absolute inset-0 bg-gradient-to-br ${cfg.gradient} opacity-80 mix-blend-multiply`} />
             </div>
-          )}
-
-          {/* Decorative blobs */}
-          {!banner && (
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          ) : bannerImage ? (
+            <div className="absolute inset-0 z-0">
+               <div 
+                 className="w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay"
+                 style={{ backgroundImage: `url(${getImageUrl(bannerImage)})` }}
+               />
+               <div className={`absolute inset-0 bg-gradient-to-br ${cfg.gradient} opacity-80 mix-blend-multiply`} />
+            </div>
+          ) : (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
               <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
                 style={{ background: cfg.accent, filter: "blur(120px)", transform: "translate(30%,-20%)" }} />
               <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-5"
@@ -233,7 +224,7 @@ const ServiceDetail = () => {
             </div>
           )}
           {/* Bottom fade */}
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]" />
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC] z-0" />
 
           <div className="container mx-auto px-4 relative z-10">
             {/* Breadcrumb */}
@@ -655,7 +646,9 @@ const ServiceDetail = () => {
           </div>
         </section>
 
-        {/* ─── WHY CHOOSE US ─── */}
+        {/* ══════════════════════════════════
+            WHY CHOOSE US
+        ══════════════════════════════════ */}
         <section className="bg-white py-20 border-t border-slate-200">
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
@@ -684,12 +677,27 @@ const ServiceDetail = () => {
                     <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
+                {/* Duplicate set for mobile marquee loop */}
+                {whyUs.map((item, i) => (
+                  <div
+                    key={`dup-${i}`}
+                    className="md:hidden w-[280px] bg-[#F8FAFC] rounded-2xl p-7 border border-slate-200 shadow-sm transition-all"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001529] to-[#003380] flex items-center justify-center mb-5 shadow-sm">
+                      <item.icon className="h-7 w-7 text-[#f59e08]" />
+                    </div>
+                    <h3 className="text-base font-black text-[#001529] mb-2">{item.title}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ─── FINAL CTA BAND ─── */}
+        {/* ══════════════════════════════════
+            FINAL CTA BAND
+        ══════════════════════════════════ */}
         <section className="bg-gradient-to-r from-[#001529] via-[#002147] to-[#003380] py-20 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-5"

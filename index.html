@@ -19,7 +19,7 @@
 
 
   <link rel="icon" href="/favicon.png" type="image/png" />
-
+  <link rel="manifest" href="/manifest.json" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,6 +53,16 @@
   <div id="root"></div>
 
   <script type="module" src="/src/main.tsx"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => console.log('SW Registered!', registration.scope))
+          .catch(err => console.log('SW Registration failed!', err));
+      });
+    }
+  </script>
 
 </body>
 
