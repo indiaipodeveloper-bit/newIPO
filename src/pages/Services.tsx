@@ -3,7 +3,18 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Building2, TrendingUp, BarChart3, Wallet, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getImgSrc } from "@/utils/image";
+
+interface Banner {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  image_url: string;
+  video_url?: string | null;
+  is_active: boolean;
+}
 
 const allServices = [
   {
@@ -41,18 +52,61 @@ const allServices = [
 ];
 
 const Services = () => {
+  const location = useLocation();
+  const [banner, setBanner] = useState<Banner | null>(null);
+
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${location.pathname}`);
+        const data = await res.json();
+        if (data.length > 0) {
+          setBanner(data[0]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch banner:", err);
+      }
+    };
+    fetchBanner();
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen">
       <SEOHead title="Services" description="SME IPO, Mainline IPO, FPO Advisory, and Pre-IPO Funding — comprehensive IPO consultancy services by IndiaIPO." keywords="SME IPO, Mainline IPO, FPO, Pre-IPO funding, IPO advisory services" />
       <Header />
       <main>
-        <section className="gradient-navy py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
-              Our <span className="text-gradient-gold">Services</span>
+        <section className="relative overflow-hidden pt-16 pb-20">
+          {/* Banner background if exists */}
+          {banner ? (
+            <div className="absolute inset-0 z-0">
+               {banner.video_url ? (
+                <video
+                  src={getImgSrc(banner.video_url) || ""}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={getImgSrc(banner.image_url) || ""}
+                  alt={banner.title || "Banner"}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-slate-900/65" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 gradient-navy z-0" />
+          )}
+
+          <div className="container mx-auto px-4 text-center relative z-10">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Our <span className="text-accent">Services</span>
             </h1>
-            <p className="text-primary-foreground/60 max-w-lg mx-auto">
-              Comprehensive IPO advisory solutions tailored for companies at every stage.
+            <p className="text-white/70 max-w-lg mx-auto text-lg">
+              {banner?.subtitle || "Comprehensive IPO advisory solutions tailored for companies at every stage."}
             </p>
           </div>
         </section>

@@ -4,6 +4,8 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlayCircle, Loader2, Calendar, LayoutGrid, List } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface SocialMedia {
@@ -22,6 +24,22 @@ const MarketSnaps = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [playingVideoId, setPlayingVideoId] = useState<string | number | null>(null);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
   
   // YouTube Pagination State
   const [pageTokens, setPageTokens] = useState<Record<number, string | null>>({ 1: null });
@@ -115,12 +133,20 @@ const MarketSnaps = () => {
 
       <main className="flex-1">
         {/* Dynamic Hero Section */}
-        <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-foreground text-background">
+        <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-[#010b14] text-white">
+          {/* Background Video */}
           <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-background/5 to-accent/10 opacity-30 mix-blend-overlay" />
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#010b14]/80 via-[#010b14]/40 to-[#010b14]" />
           </div>
-          
+
           <div className="container relative z-10 px-4 text-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}

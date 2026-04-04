@@ -16,9 +16,7 @@ const router = express.Router();
 
 // Ensure upload directories exist
 const uploadEnvPath = process.env.UPLOADS_PATH || './uploads';
-const uploadDir = uploadEnvPath.startsWith('.')
-    ? path.join(__dirname, '..', uploadEnvPath)
-    : uploadEnvPath;
+const uploadDir = path.resolve(__dirname, '..', uploadEnvPath);
 
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -48,9 +46,11 @@ router.post('/', upload.single('file'), (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        const folder = req.body.folder || 'misc';
-        // Return a relative path relative to the public directory
-        const relativePath = `uploads/${folder}/${req.file.filename}`;
+        
+        // Use path.relative to get the full relative path from uploadDir
+        const relativePathFromUploads = path.relative(uploadDir, req.file.path).replace(/\\/g, '/');
+        const relativePath = `uploads/${relativePathFromUploads}`;
+        
         res.json({ url: relativePath });
     } catch (err) {
         res.status(500).json({ error: err.message });

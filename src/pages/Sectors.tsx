@@ -5,7 +5,8 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { LayoutGrid, Search, ArrowRight, ChevronRight, TrendingUp, BarChart3, Home, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
 
 interface Sector {
   id: string; name: string; description: string;
@@ -19,6 +20,22 @@ const Sectors = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   useEffect(() => {
     sectorApi.getAll().then(setSectors).catch(console.error).finally(() => setLoading(false));
@@ -40,13 +57,25 @@ const Sectors = () => {
       <Header />
       <main>
         {/* ── HERO ── */}
-        <section className="py-14 relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${N} 0%, #002147 55%, #003380 100%)` }}>
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <section className="py-14 relative overflow-hidden bg-[#001529]">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
               style={{ background: G, filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1"
+          <div className="absolute bottom-0 left-0 right-0 h-1 z-1"
             style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
           <div className="container mx-auto px-4 relative z-10">
@@ -113,7 +142,7 @@ const Sectors = () => {
 
         {/* ── TABLE ── */}
         <section className="py-12">
-          <div className="container mx-auto px-4 max-w-6xl">
+          <div className="container mx-auto px-4">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-1 h-7 rounded-full" style={{ background: G }} />
               <h2 className="text-xl font-black" style={{ color: N }}>All Industry Sectors</h2>

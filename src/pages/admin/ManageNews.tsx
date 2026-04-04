@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import RichEditor from "@/components/ui/RichEditor";
 
 interface NewsItem {
   id: number;
@@ -188,7 +189,7 @@ const ManageNews = () => {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">Full Content *</label>
-                    <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={10} placeholder="Full HTML or text content here..." />
+                    <RichEditor value={form.content} onChange={(val) => setForm({ ...form, content: val })} placeholder="Full HTML or text content here..." />
                   </div>
                   <Button onClick={handleSave} disabled={saving} className="w-full bg-primary text-primary-foreground font-semibold">
                     {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : editingId ? "Update News" : "Publish News"}

@@ -36,6 +36,9 @@ interface Sector {
   name: string;
   description: string;
   status: 'Active' | 'Inactive';
+  mainline_count: number;
+  sme_count: number;
+  total_count: number;
 }
 
 const ManageSectors = () => {
@@ -152,6 +155,7 @@ const ManageSectors = () => {
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead>Sector Name</TableHead>
+                <TableHead>IPOs (Mainline/SME)</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -160,13 +164,13 @@ const ManageSectors = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-48 text-center">
+                  <TableCell colSpan={5} className="h-48 text-center">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary opacity-20" />
                   </TableCell>
                 </TableRow>
               ) : filteredSectors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-48 text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="h-48 text-center text-muted-foreground">
                     No sectors found
                   </TableCell>
                 </TableRow>
@@ -174,6 +178,19 @@ const ManageSectors = () => {
                 filteredSectors.map((sector) => (
                   <TableRow key={sector.id} className="hover:bg-muted/30">
                     <TableCell className="font-semibold">{sector.name}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1 border-blue-200 text-blue-700 bg-blue-50">
+                            Mainline: {sector.mainline_count || 0}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] py-0 px-1 border-purple-200 text-purple-700 bg-purple-50">
+                            SME: {sector.sme_count || 0}
+                          </Badge>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">Total: {sector.total_count || 0} IPOs</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="max-w-[300px] truncate opacity-70">
                       {sector.description || "—"}
                     </TableCell>
@@ -205,6 +222,32 @@ const ManageSectors = () => {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{editingSector ? "Edit Sector" : "Add New Sector"}</DialogTitle>
+              {editingSector && (
+                <div className="mt-4 border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="px-3 py-2 font-medium">Category</th>
+                        <th className="px-3 py-2 font-medium text-right">IPO Count</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr>
+                        <td className="px-3 py-2">Mainline / Mainboard</td>
+                        <td className="px-3 py-2 text-right font-semibold text-blue-600">{editingSector.mainline_count || 0}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-2">SME IPOs</td>
+                        <td className="px-3 py-2 text-right font-semibold text-purple-600">{editingSector.sme_count || 0}</td>
+                      </tr>
+                      <tr className="bg-muted/20">
+                        <td className="px-3 py-2 font-medium">Total IPOs</td>
+                        <td className="px-3 py-2 text-right font-bold">{editingSector.total_count || 0}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="space-y-2">

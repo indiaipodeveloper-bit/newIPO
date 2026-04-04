@@ -2,13 +2,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { lazy, Suspense } from "react";
 import WhatsAppButton from "./components/WhatsAppButton";
+import MobileNav from "./components/MobileNav";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Lazy-loaded pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
+const Index2 = lazy(() => import("./pages/Index2"));
 const IPOCalendar = lazy(() => import("./pages/IPOCalendar"));
 const Services = lazy(() => import("./pages/Services"));
 const About = lazy(() => import("./pages/About"));
@@ -60,6 +63,7 @@ const NotificationView = lazy(() => import("./pages/NotificationView"));
 const ManageNotifications = lazy(() => import("./pages/admin/ManageNotifications"));
 const ManageVideos = lazy(() => import("./pages/admin/ManageVideos"));
 const ManagePopup = lazy(() => import("./pages/admin/ManagePopup"));
+const ManageMagazines = lazy(() => import("./pages/admin/ManageMagazines"));
 const Registrars = lazy(() => import("./pages/Registrars"));
 const ManageRegistrars = lazy(() => import("./pages/admin/ManageRegistrars"));
 const ManageRegistrarFaqs = lazy(() => import("./pages/admin/ManageRegistrarFaqs"));
@@ -72,6 +76,8 @@ const ConsultantPage = lazy(() => import("./pages/ConsultantPage"));
 const ConsultantDetail = lazy(() => import("./pages/ConsultantDetail"));
 const ManageConsultants = lazy(() => import("./pages/admin/ManageConsultants"));
 const ManageConsultantEnquiries = lazy(() => import("./pages/admin/ManageConsultantEnquiries"));
+const ManageMerchantEnquiries = lazy(() => import("./pages/admin/ManageMerchantEnquiries"));
+const MerchantContact = lazy(() => import("./pages/MerchantContact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const IPOServices = lazy(() => import("./pages/IPOServices"));
 
@@ -86,6 +92,100 @@ const PageLoader = () => (
   </div>
 );
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <Suspense fallback={<PageLoader />}>
+          <Routes location={location} key={location.pathname}>
+            <Route path="/2" element={<Index />} />
+            <Route path="/" element={<Index2 />} />
+            <Route path="/ipo-calendar" element={<IPOCalendar />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/services/:slug" element={<ServiceDetail />} />
+            <Route path="/ipo-services" element={<IPOServices />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/about-us" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogDetails />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/ipo-calculator" element={<IPOCalculator />} />
+            <Route path="/ipo-feasibility" element={<IPOFeasibility />} />
+            <Route path="/investors" element={<Investors />} />
+            <Route path="/news-updates" element={<NewsUpdates />} />
+            <Route path="/ipo-and-market-snaps" element={<MarketSnaps />} />
+            <Route path="/csr" element={<CSR />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/news/:slug" element={<NewsDetails />} />
+            <Route path="/reports/daily-reporter" element={<DailyReporter />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/reports/:slug" element={<Reports />} />
+            <Route path="/ipo-knowledge" element={<IPOKnowledge />} />
+            <Route path="/ipo-knowledge/ipo-process" element={<IPOProcess />} />
+            <Route path="/ipo-knowledge/pre-ipo-process" element={<PreIPOProcess />} />
+            <Route path="/ipo-knowledge/:slug" element={<IPOKnowledge />} />
+            <Route path="/ipo-blogs" element={<IPOBlogs />} />
+            <Route path="/ipo-blogs/:slug" element={<IPOBlogDetails />} />
+            <Route path="/sector-wise-ipo" element={<Sectors />} />
+            <Route path="/merchant-bankers/:category" element={<MerchantBankersPage />} />
+            <Route path="/merchant-bankers/mainboard-list" element={<MainboardBankersPage />} />
+            <Route path="/merchant-contact" element={<MerchantContact />} />
+            <Route path="/notifications/:slug" element={<NotificationView />} />
+            <Route path="/list-of-ipo-registrar" element={<Registrars />} />
+            <Route path="/list-of-ipo-registrar/:slug" element={<RegistrarDetails />} />
+            <Route path="/consultants" element={<ConsultantPage />} />
+            <Route path="/consultants/:id" element={<ConsultantDetail />} />
+
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/ipos" element={<ManageIPOs />} />
+            <Route path="/admin/blogs" element={<ManageBlogs />} />
+            <Route path="/admin/news" element={<ManageNews />} />
+            <Route path="/admin/leads" element={<ManageLeads />} />
+            <Route path="/admin/investors" element={<ManageInvestors />} />
+            <Route path="/admin/ipo-feasibility" element={<ManageIPOFeasibility />} />
+            <Route path="/admin/ipo-blogs" element={<ManageAdminBlogs />} />
+            <Route path="/admin/csr" element={<ManageCSR />} />
+            <Route path="/admin/market-snaps" element={<ManageMarketSnaps />} />
+            <Route path="/admin/users" element={<ManageUsers />} />
+            <Route path="/admin/reports" element={<ManageReports />} />
+            <Route path="/admin/seo" element={<AdminSEO />} />
+            <Route path="/admin/pages" element={<ManagePages />} />
+            <Route path="/admin/navigation" element={<ManageNavigation />} />
+            <Route path="/admin/banners" element={<ManageBanners />} />
+            <Route path="/admin/merchant-bankers" element={<ManageMerchantBankers />} />
+            <Route path="/admin/mainboard-bankers" element={<ManageMainboardBankers />} />
+            <Route path="/admin/career-applications" element={<ManageCareerApplications />} />
+            <Route path="/admin/knowledge" element={<ManageKnowledge />} />
+            <Route path="/admin/notifications" element={<ManageNotifications />} />
+            <Route path="/admin/videos" element={<ManageVideos />} />
+            <Route path="/admin/subscriptions" element={<ManageSubscriptions />} />
+            <Route path="/admin/popup" element={<ManagePopup />} />
+            <Route path="/admin/magazines" element={<ManageMagazines />} />
+            <Route path="/admin/registrars" element={<ManageRegistrars />} />
+            <Route path="/admin/registrar-faqs" element={<ManageRegistrarFaqs />} />
+            <Route path="/admin/sectors" element={<ManageSectors />} />
+            <Route path="/admin/daily-digests" element={<ManageDailyDigests />} />
+            <Route path="/admin/consultants" element={<ManageConsultants />} />
+            <Route path="/admin/consultant-enquiries" element={<ManageConsultantEnquiries />} />
+            <Route path="/admin/merchant-enquiries" element={<ManageMerchantEnquiries />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -93,80 +193,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/ipo-calendar" element={<IPOCalendar />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/services/:slug" element={<ServiceDetail />} />
-              <Route path="/ipo-services" element={<IPOServices />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/about-us" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogDetails />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/ipo-calculator" element={<IPOCalculator />} />
-              <Route path="/ipo-feasibility" element={<IPOFeasibility />} />
-              <Route path="/investors" element={<Investors />} />
-              <Route path="/news-updates" element={<NewsUpdates />} />
-              <Route path="/ipo-and-market-snaps" element={<MarketSnaps />} />
-              <Route path="/csr" element={<CSR />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/news/:slug" element={<NewsDetails />} />
-              <Route path="/reports/daily-reporter" element={<DailyReporter />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/reports/:slug" element={<Reports />} />
-              <Route path="/ipo-knowledge" element={<IPOKnowledge />} />
-              <Route path="/ipo-knowledge/ipo-process" element={<IPOProcess />} />
-              <Route path="/ipo-knowledge/pre-ipo-process" element={<PreIPOProcess />} />
-              <Route path="/ipo-knowledge/:slug" element={<IPOKnowledge />} />
-              <Route path="/ipo-blogs" element={<IPOBlogs />} />
-              <Route path="/ipo-blogs/:slug" element={<IPOBlogDetails />} />
-              <Route path="/sector-wise-ipo" element={<Sectors />} />
-              <Route path="/merchant-bankers/:category" element={<MerchantBankersPage />} />
-              <Route path="/merchant-bankers/mainboard-list" element={<MainboardBankersPage />} />
-              <Route path="/notifications/:slug" element={<NotificationView />} />
-              <Route path="/list-of-ipo-registrar" element={<Registrars />} />
-              <Route path="/list-of-ipo-registrar/:slug" element={<RegistrarDetails />} />
-              <Route path="/consultants" element={<ConsultantPage />} />
-              <Route path="/consultants/:id" element={<ConsultantDetail />} />
-
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/ipos" element={<ManageIPOs />} />
-              <Route path="/admin/blogs" element={<ManageBlogs />} />
-              <Route path="/admin/news" element={<ManageNews />} />
-              <Route path="/admin/leads" element={<ManageLeads />} />
-              <Route path="/admin/investors" element={<ManageInvestors />} />
-              <Route path="/admin/ipo-feasibility" element={<ManageIPOFeasibility />} />
-              <Route path="/admin/ipo-blogs" element={<ManageAdminBlogs />} />
-              <Route path="/admin/csr" element={<ManageCSR />} />
-              <Route path="/admin/market-snaps" element={<ManageMarketSnaps />} />
-              <Route path="/admin/users" element={<ManageUsers />} />
-              <Route path="/admin/reports" element={<ManageReports />} />
-              <Route path="/admin/seo" element={<AdminSEO />} />
-              <Route path="/admin/pages" element={<ManagePages />} />
-              <Route path="/admin/navigation" element={<ManageNavigation />} />
-              <Route path="/admin/banners" element={<ManageBanners />} />
-              <Route path="/admin/merchant-bankers" element={<ManageMerchantBankers />} />
-              <Route path="/admin/mainboard-bankers" element={<ManageMainboardBankers />} />
-              <Route path="/admin/career-applications" element={<ManageCareerApplications />} />
-              <Route path="/admin/knowledge" element={<ManageKnowledge />} />
-              <Route path="/admin/notifications" element={<ManageNotifications />} />
-              <Route path="/admin/videos" element={<ManageVideos />} />
-              <Route path="/admin/subscriptions" element={<ManageSubscriptions />} />
-              <Route path="/admin/popup" element={<ManagePopup />} />
-              <Route path="/admin/registrars" element={<ManageRegistrars />} />
-              <Route path="/admin/registrar-faqs" element={<ManageRegistrarFaqs />} />
-              <Route path="/admin/sectors" element={<ManageSectors />} />
-              <Route path="/admin/daily-digests" element={<ManageDailyDigests />} />
-              <Route path="/admin/consultants" element={<ManageConsultants />} />
-              <Route path="/admin/consultant-enquiries" element={<ManageConsultantEnquiries />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <AnimatedRoutes />
+          <MobileNav />
         </BrowserRouter>
         <WhatsAppButton />
       </TooltipProvider>

@@ -118,7 +118,7 @@ export default function BlogDetails() {
         <section className="container mx-auto px-4 pt-12">
           <div className="max-w-3xl mx-auto">
             <div 
-              className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-primary"
+              className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-primary prose-h2:bg-blue-50 prose-h2:border-l-4 prose-h2:border-primary prose-h2:pl-4 prose-h2:py-3 prose-h2:my-8 prose-h2:rounded-r-lg prose-h3:bg-slate-50 prose-h3:border-l-4 prose-h3:border-slate-300 prose-h3:pl-4 prose-h3:py-2 prose-h3:my-6 prose-h3:rounded-r-md"
               dangerouslySetInnerHTML={{ __html: post.content || "<p>No content available.</p>" }}
             />
             

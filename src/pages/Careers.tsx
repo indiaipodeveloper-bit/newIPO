@@ -28,7 +28,8 @@ const Careers = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const fd = new FormData();
-    fd.append("file", file); fd.append("folder", "career");
+    fd.append("folder", "career");
+    fd.append("file", file);
     setUploading(true);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd });

@@ -33,8 +33,11 @@ import sectorRoutes from './routes/sectors.js';
 import subscriptionRoutes from './routes/subscriptions.js';
 import consultantRoutes from './routes/consultants.js';
 import consultantEnquiryRoutes from './routes/consultant_enquiries.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 
+
+import magazineRoutes from './routes/magazines.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,42 +49,20 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Uploads path: env se aata hai
+// LOCAL: UPLOADS_PATH=./uploads (server/uploads folder)
+const uploadsEnvPath = process.env.UPLOADS_PATH || './uploads';
+const resolvedUploadsPath = path.resolve(__dirname, uploadsEnvPath);
+
+console.log(`📁 Uploads serving from: ${resolvedUploadsPath} (NODE_ENV: ${process.env.NODE_ENV || 'development'})`);
+
+// Explicitly serve uploads folder BEFORE middleware that might block it
+app.use(
+    "/uploads",
+    express.static(resolvedUploadsPath)
+);
+
 // Middleware
-// Use Helmet for security headers
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://apis.google.com", "https://www.googletagmanager.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "https:", "wss:", "http:", "http://localhost:5000"],
-      mediaSrc: ["'self'", "https:", "data:"],
-      objectSrc: ["'none'"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://youtube.com"],
-    },
-  },
-  frameguard: {
-    action: 'deny'
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true
-  }
-}));
-
-// Fallback manual headers in case helmet misses any specific route early on
-app.disable('x-powered-by');
-app.use((req, res, next) => {
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader('Cache-Control', 'no-store, no-cache');
-  next();
-});
-
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -89,21 +70,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Uploads path: env se aata hai
-// LOCAL: UPLOADS_PATH=./uploads (server/uploads folder)
-// PRODUCTION: UPLOADS_PATH=/home/u521845907/domains/padmanutri.com/public_html/ipo/uploads
-const uploadsEnvPath = process.env.UPLOADS_PATH || './uploads';
-const resolvedUploadsPath = uploadsEnvPath.startsWith('.')
-  ? path.join(__dirname, uploadsEnvPath)
-  : uploadsEnvPath;
-
-console.log(`📁 Uploads serving from: ${resolvedUploadsPath} (NODE_ENV: ${process.env.NODE_ENV || 'development'})`);
-
-// Explicitly serve uploads folder to ensure PDF access
-app.use(
-    "/uploads",
-    express.static(resolvedUploadsPath)
-);
+app.disable('x-powered-by');
 
 // Initialize MySQL tables
 async function initDB() {
@@ -116,7 +83,8 @@ async function initDB() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 subtitle TEXT,
-                image_url VARCHAR(512) NOT NULL,
+                image_url VARCHAR(512) DEFAULT NULL,
+                video_url VARCHAR(512) DEFAULT NULL,
                 cta_text VARCHAR(255),
                 cta_link VARCHAR(512),
                 badge_text VARCHAR(255) DEFAULT '',
@@ -180,6 +148,13 @@ async function initDB() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
+
+        // Ensure marchantbankers (legacy table with 'a') has established_year
+        try {
+            await conn.execute("ALTER TABLE marchantbankers ADD COLUMN IF NOT EXISTS established_year INT DEFAULT NULL");
+        } catch (e) {
+            console.log("marchantbankers column adjustment not supported or already exists");
+        }
 
         await conn.execute(`
             CREATE TABLE IF NOT EXISTS leads (
@@ -341,6 +316,21 @@ async function initDB() {
             )
         `);
 
+        await conn.execute(`
+            CREATE TABLE IF NOT EXISTS merchant_contact_enquiries (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ipo_type VARCHAR(100) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                mobile VARCHAR(20) DEFAULT '',
+                company VARCHAR(255) DEFAULT '',
+                message TEXT NOT NULL,
+                is_read TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+
         // Check if a record exists, if not insert a default one
         const [popupRows] = await conn.execute('SELECT COUNT(*) as count FROM site_popup');
         if (popupRows[0].count === 0) {
@@ -360,6 +350,9 @@ async function initDB() {
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'API is running with MySQL' });
 });
+
+// Import Merchant Enquiries Route
+import merchantEnquiryRoutes from './routes/merchant_contact_enquiries.js';
 
 // API Routes
 app.use('/api/videos', videoRoutes);
@@ -388,6 +381,9 @@ app.use('/api/sectors', sectorRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/consultants', consultantRoutes);
 app.use('/api/consultant-enquiries', consultantEnquiryRoutes);
+app.use('/api/magazines', magazineRoutes);
+app.use('/api/merchant-contact-enquiries', merchantEnquiryRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 
 // Start server after DB init

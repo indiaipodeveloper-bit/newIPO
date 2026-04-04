@@ -9,9 +9,9 @@ router.get('/', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const offset = (page - 1) * limit;
-        
+
         // Optional filtering
-        const { category, upcoming, status } = req.query;
+        const { category, upcoming, status, search } = req.query;
         let whereClauses = [];
         let params = [];
 
@@ -27,6 +27,11 @@ router.get('/', async (req, res) => {
             whereClauses.push('status = ?');
             params.push(status);
         }
+        if (search) {
+            whereClauses.push('(title LIKE ? OR new_slug LIKE ? OR slug LIKE ?)');
+            const searchParam = `%${search}%`;
+            params.push(searchParam, searchParam, searchParam);
+        }
 
         const whereString = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
@@ -41,7 +46,7 @@ router.get('/', async (req, res) => {
 
         // Add pagination params
         params.push(limit, offset);
-        
+
         const [rows] = await pool.query(
             `SELECT ${selectColumns} FROM admin_blogs ${whereString} ORDER BY id DESC LIMIT ? OFFSET ?`,
             params
@@ -84,7 +89,7 @@ router.get('/id/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const allowedFields = ['title', 'new_slug', 'slug', 'image', 'content', 'faqs', 'user_id', 'status', 'confidential', 'upcoming', 'category', 'new_highlight_text', 'gmp_date', 'gmp_ipo_price', 'gmp', 'gmp_last_updated', 'ipo_details', 'ipo_description', 'ipo_timeline_details', 'ipo_timeline_description', 'ipo_lots_application', 'ipo_lots', 'ipo_lots_share', 'ipo_lots_amount', 'promotor_hold_pre_issue', 'promotor_hold_post_issue', 'finantial_information_ended', 'finantial_information_assets', 'finantial_information_revenue', 'finantial_information_profit_tax', 'financial_info_reserves_surplus', 'finantial_information_networth', 'finantial_information_borrowing', 'key_kpi', 'key_value', 'key_pri_ipo_eps', 'key_pos_ipo_eps', 'key_pre_ipo_pe', 'key_post_ipo_pe', 'competative_strenght', 'meta_title', 'description', 'keyword', 'rhp', 'drhp', 'confidential_drhp'];
-        
+
         let keys = [];
         let values = [];
         let placeholders = [];
@@ -92,16 +97,29 @@ router.post('/', async (req, res) => {
         for (const [key, val] of Object.entries(req.body)) {
             if (allowedFields.includes(key)) {
                 keys.push(key);
-                values.push(val === '' ? null : val);
+
+                if (key === 'user_id') {
+                    values.push(Number(val) || 1);
+                } else {
+                    values.push(val === '' ? null : val);
+                }
+
                 placeholders.push('?');
             }
+        }
+
+        // 👇 IMPORTANT: ensure user_id always added
+        if (!keys.includes('user_id')) {
+            keys.push('user_id');
+            values.push(1);
+            placeholders.push('?');
         }
 
         if (keys.length === 0) return res.status(400).json({ error: 'No valid fields provided' });
 
         const query = `INSERT INTO admin_blogs (${keys.join(', ')}) VALUES (${placeholders.join(', ')})`;
         const [result] = await pool.execute(query, values);
-        
+
         const [rows] = await pool.execute('SELECT * FROM admin_blogs WHERE id = ?', [result.insertId]);
         res.status(201).json(rows[0]);
     } catch (err) {
@@ -113,14 +131,18 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const allowedFields = ['title', 'new_slug', 'slug', 'image', 'content', 'faqs', 'user_id', 'status', 'confidential', 'upcoming', 'category', 'new_highlight_text', 'gmp_date', 'gmp_ipo_price', 'gmp', 'gmp_last_updated', 'ipo_details', 'ipo_description', 'ipo_timeline_details', 'ipo_timeline_description', 'ipo_lots_application', 'ipo_lots', 'ipo_lots_share', 'ipo_lots_amount', 'promotor_hold_pre_issue', 'promotor_hold_post_issue', 'finantial_information_ended', 'finantial_information_assets', 'finantial_information_revenue', 'finantial_information_profit_tax', 'financial_info_reserves_surplus', 'finantial_information_networth', 'finantial_information_borrowing', 'key_kpi', 'key_value', 'key_pri_ipo_eps', 'key_pos_ipo_eps', 'key_pre_ipo_pe', 'key_post_ipo_pe', 'competative_strenght', 'meta_title', 'description', 'keyword', 'rhp', 'drhp', 'confidential_drhp'];
-        
+
         let updates = [];
         let values = [];
 
         for (const [key, val] of Object.entries(req.body)) {
             if (allowedFields.includes(key)) {
                 updates.push(`${key} = ?`);
-                values.push(val === '' ? null : val);
+                if (typeof val === "string") {
+                    values.push(val.trim());
+                } else {
+                    values.push(val);
+                }
             }
         }
 
@@ -133,7 +155,7 @@ router.put('/:id', async (req, res) => {
 
         const [rows] = await pool.execute('SELECT * FROM admin_blogs WHERE id = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Blog not found after update' });
-        
+
         res.json(rows[0]);
     } catch (err) {
         res.status(400).json({ error: err.message });

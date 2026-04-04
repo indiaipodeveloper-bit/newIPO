@@ -33,7 +33,7 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-full bg-background/10 flex items-center justify-center text-background/70 transition-all hover:scale-110 shadow-sm"
-                  style={{ 
+                  style={{
                     color: social.color,
                     backgroundColor: `${social.color}15` // 15 is hex for ~8% opacity
                   }}
@@ -60,7 +60,7 @@ const Footer = () => {
               {[
                 { label: "Home", href: "/" },
                 { label: "IPO Services", href: "/ipo-services" },
-                { label: "Blogs", href: "/blog" },
+                { label: "Blogs", href: "/ipo-blogs" },
                 { label: "Consultant", href: "/consultants" },
                 { label: "Youtube Videos", href: "/ipo-and-market-snaps" },
                 { label: "News", href: "/news-updates" },

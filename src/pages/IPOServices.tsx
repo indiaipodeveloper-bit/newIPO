@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,11 +8,37 @@ import {
   Building2, TrendingUp, BarChart3, Wallet, CheckCircle,
   ArrowRight, Phone, Mail, ChevronDown, ChevronUp,
   Shield, Clock, Users, Star, Target, Zap, Home,
-  FileText, Award, BookOpen, Globe, DollarSign
+  FileText, Award, BookOpen, Globe, DollarSign, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 /* ─── Animation helpers ─── */
+const MarqueeStyles = () => (
+  <style>{`
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee-mobile {
+      display: flex;
+      width: max-content;
+      animation: marquee 30s linear infinite;
+    }
+    .animate-marquee-mobile > * {
+      flex-shrink: 0;
+    }
+    @media (min-width: 768px) {
+      .animate-marquee-mobile {
+        display: grid;
+        animation: none;
+        width: 100%;
+        transform: none !important;
+      }
+    }
+  `}</style>
+);
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: (i: number = 0) => ({
@@ -23,11 +49,22 @@ const fadeUp: Variants = {
 };
 
 /* ─── Data layer ─── */
-const stats = [
-  { value: "500+", label: "IPOs Advised", icon: TrendingUp },
-  { value: "₹25,000 Cr+", label: "Capital Raised", icon: DollarSign },
-  { value: "18+", label: "Years Experience", icon: Award },
-  { value: "98%", label: "Success Rate", icon: Star },
+const defaultStats = [
+  { value: "500+", label: "IPOs Advised", icon: TrendingUp, dbKey: "totalIPOs" },
+  { value: "₹25,000 Cr+", label: "Capital Raised", icon: DollarSign, dbKey: "totalRaised" },
+  { value: "18+", label: "Years Experience", icon: Award, dbKey: "yearsExp" },
+  { value: "98%", label: "Success Rate", icon: Star, dbKey: "successRate" },
+];
+
+const defaultComparison = [
+  { label: "Company Stage", values: ["Private / Unlisted", "Private / Unlisted", "Private / Unlisted", "Listed Company", "Pre-IPO Company"] },
+  { label: "Exchange / Platform", values: ["NSE / BSE Main", "BSE SME / NSE Emerge", "NSE / BSE Main", "NSE / BSE Main", "Private Placement"] },
+  { label: "Min. Issue Size", values: ["₹10 Cr+", "₹1 Cr (Capital)", "₹50 Cr+", "Market-based", "₹25 Lakh (Investor)"] },
+  { label: "Typical Timeline", values: ["9–18 months", "4–6 months", "12–24 months", "4–8 months", "2–6 months"] },
+  { label: "SEBI DRHP Required", values: ["✓ Yes", "✓ Yes", "✓ Yes", "✓ Yes", "✗ No"] },
+  { label: "Institutional Investors", values: ["✓ Yes", "Limited", "✓ Yes (FII/DII)", "✓ Yes", "Case-by-case"] },
+  { label: "Promoter Lock-in", values: ["18 months", "3 years", "3 years", "N/A", "N/A"] },
+  { label: "Complexity", values: ["Medium", "Low", "High", "Medium", "Low-Medium"] },
 ];
 
 const services = [
@@ -113,8 +150,8 @@ const services = [
     title: "Mainline IPO Consultation",
     shortTitle: "Mainline IPO",
     icon: Globe,
-    color: "#10b981",
-    gradient: "from-[#064e3b] to-[#065f46]",
+    color: "#1a56db",
+    gradient: "from-[#001529] to-[#003380]",
     tagline: "Full-scale public listing on NSE/BSE Mainboard",
     description:
       "Mainline IPO is for established companies targeting large-scale capital raising on the NSE or BSE Mainboard. Our team of SEBI-registered professionals manages the entire lifecycle — from DRHP to post-listing ongoing compliance — with precision and expertise that comes from decades of deal experience.",
@@ -151,8 +188,8 @@ const services = [
     title: "Follow-On Public Offer (FPO)",
     shortTitle: "FPO",
     icon: BarChart3,
-    color: "#8b5cf6",
-    gradient: "from-[#2e1065] to-[#4c1d95]",
+    color: "#f59e08",
+    gradient: "from-[#78340a] to-[#b45309]",
     tagline: "Secondary capital raise for listed companies",
     description:
       "A Follow-On Public Offer (FPO) allows an already-listed company to raise additional equity capital from the public. Whether for expansion, debt reduction, or improving public float, our FPO advisory ensures optimal pricing, regulatory compliance, and maximum subscription success.",
@@ -189,8 +226,8 @@ const services = [
     title: "Pre-IPO Funding Consultants",
     shortTitle: "Pre-IPO",
     icon: Wallet,
-    color: "#ef4444",
-    gradient: "from-[#7f1d1d] to-[#991b1b]",
+    color: "#1a56db",
+    gradient: "from-[#001529] to-[#003380]",
     tagline: "Unlock capital before your IPO launch",
     description:
       "Pre-IPO funding allows companies to raise capital from institutional investors, HNIs, family offices, and strategic partners before listing publicly. We help you discover optimal pre-IPO valuation, structure the round efficiently, and bring on board investors who add both capital and strategic value.",
@@ -420,6 +457,59 @@ const FAQItem = ({ faq, index }: { faq: typeof faqs[0]; index: number }) => {
 /* ─── Page component ─── */
 const IPOServices = () => {
   const [activeTab, setActiveTab] = useState(services[0].id);
+  const [platformStats, setPlatformStats] = useState<any>(null);
+  const [comparisonData, setComparisonData] = useState<any[]>(defaultComparison);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // 1. Fetch Dashboard Stats
+        const statsRes = await fetch("/api/dashboard/stats");
+        if (statsRes.ok) {
+          const statsData = await statsRes.ok ? await statsRes.json() : null;
+          setPlatformStats(statsData);
+        }
+
+        // 2. Fetch Comparison Table Data from Knowledge Base
+        // We look for a category with slug 'service-comparison'
+        const catRes = await fetch("/api/knowledge/categories");
+        if (catRes.ok) {
+          const categories = await catRes.json();
+          const comparisonCat = categories.find((c: any) => c.slug === "service-comparison");
+          
+          if (comparisonCat) {
+            const itemsRes = await fetch(`/api/knowledge/items?category_id=${comparisonCat.id}`);
+            if (itemsRes.ok) {
+              const items = await itemsRes.json();
+              if (items && items.length > 0) {
+                const mapped = items.map((item: any) => ({
+                  label: item.title,
+                  values: [item.col1, item.col2, item.col3, item.col4, item.col5].filter(Boolean)
+                }));
+                setComparisonData(mapped);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Update stats with real values from dashboard
+  const displayStats = defaultStats.map(s => {
+    if (s.dbKey === "totalIPOs" && platformStats?.totalIPOs) {
+      return { ...s, value: `${platformStats.totalIPOs}+` };
+    }
+    return s;
+  });
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -428,6 +518,7 @@ const IPOServices = () => {
         description="Complete IPO advisory services in India. Expert consultation for SME IPO, Mainline IPO, Follow-On Public Offer (FPO), and Pre-IPO Funding. SEBI-registered advisors, 500+ successful IPOs."
         keywords="IPO advisory India, SME IPO consultants, Mainline IPO, FPO advisory, Pre-IPO funding, SEBI IPO process, BSE SME listing, NSE Emerge IPO"
       />
+      <MarqueeStyles />
       <Header />
       <main>
 
@@ -464,7 +555,7 @@ const IPOServices = () => {
                 <Button asChild className="bg-[#f59e08] hover:bg-[#d97706] text-[#001529] font-black rounded-xl px-8 h-12 text-sm shadow-xl shadow-[#f59e08]/20">
                   <Link to="/contact">Get Free Consultation <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
-                <Button asChild variant="outline" className="border-white/30 bg-white/10 text-white rounded-xl px-8 h-12 text-sm font-bold">
+                <Button asChild variant="outlineWhite" className="rounded-xl px-8 h-12 text-sm font-bold shadow-lg">
                   <Link to="/ipo-calendar">View Live IPOs</Link>
                 </Button>
               </div>
@@ -476,7 +567,7 @@ const IPOServices = () => {
         <section className="bg-gradient-to-r from-[#001529] to-[#003380] py-12 -mt-1">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((s, i) => <StatCard key={i} {...s} index={i} />)}
+              {displayStats.map((s, i) => <StatCard key={i} {...s} index={i} />)}
             </div>
           </div>
         </section>
@@ -552,20 +643,11 @@ const IPOServices = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { label: "Company Stage", values: ["Private / Unlisted", "Private / Unlisted", "Private / Unlisted", "Listed Company", "Pre-IPO Company"] },
-                    { label: "Exchange / Platform", values: ["NSE / BSE Main", "BSE SME / NSE Emerge", "NSE / BSE Main", "NSE / BSE Main", "Private Placement"] },
-                    { label: "Min. Issue Size", values: ["₹10 Cr+", "₹1 Cr (Capital)", "₹50 Cr+", "Market-based", "₹25 Lakh (Investor)"] },
-                    { label: "Typical Timeline", values: ["9–18 months", "4–6 months", "12–24 months", "4–8 months", "2–6 months"] },
-                    { label: "SEBI DRHP Required", values: ["✓ Yes", "✓ Yes", "✓ Yes", "✓ Yes", "✗ No"] },
-                    { label: "Institutional Investors", values: ["✓ Yes", "Limited", "✓ Yes (FII/DII)", "✓ Yes", "Case-by-case"] },
-                    { label: "Promoter Lock-in", values: ["18 months", "3 years", "3 years", "N/A", "N/A"] },
-                    { label: "Complexity", values: ["Medium", "Low", "High", "Medium", "Low-Medium"] },
-                  ].map((row, ri) => (
+                  {comparisonData.map((row, ri) => (
                     <tr key={ri} className={`border-b border-slate-100 ${ri % 2 === 0 ? "bg-slate-50/50" : "bg-white"}`}>
                       <td className="px-6 py-4 font-bold text-slate-700 whitespace-nowrap">{row.label}</td>
-                      {row.values.map((v, vi) => (
-                        <td key={vi} className={`px-6 py-4 text-center font-medium ${v.startsWith("✓") ? "text-green-600" : v.startsWith("✗") ? "text-red-400" : "text-slate-600"}`}>
+                      {row.values.map((v: string, vi: number) => (
+                        <td key={vi} className={`px-6 py-4 text-center font-medium ${v?.startsWith("✓") ? "text-green-600" : v?.startsWith("✗") ? "text-red-400" : "text-slate-600"}`}>
                           {v}
                         </td>
                       ))}
@@ -588,24 +670,39 @@ const IPOServices = () => {
                 Our edge comes from deep domain expertise, a verified SEBI compliance framework, and a relentless focus on client success.
               </p>
             </motion.div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {whyChooseUs.map((item, i) => (
-                <motion.div
-                  key={i}
-                  custom={i}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-                  className="bg-white rounded-2xl p-7 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001529] to-[#003380] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                    <item.icon className="h-7 w-7 text-[#f59e08]" />
+            <div className="overflow-hidden md:overflow-visible pb-8 -mx-4 px-4 scrollbar-hide">
+              <div className="animate-marquee-mobile flex gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 hover:[animation-play-state:paused]">
+                {whyChooseUs.map((item, i) => (
+                  <motion.div
+                    key={i}
+                    custom={i}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    variants={fadeUp}
+                    className="w-[280px] md:w-auto bg-white rounded-2xl p-7 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001529] to-[#003380] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                      <item.icon className="h-7 w-7 text-[#f59e08]" />
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900 mb-2">{item.title}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
+                  </motion.div>
+                ))}
+                {/* Duplicate set for mobile marquee loop */}
+                {whyChooseUs.map((item, i) => (
+                  <div
+                    key={`dup-${i}`}
+                    className="md:hidden w-[280px] bg-white rounded-2xl p-7 border border-slate-200 shadow-sm transition-all"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001529] to-[#003380] flex items-center justify-center mb-5">
+                      <item.icon className="h-7 w-7 text-[#f59e08]" />
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900 mb-2">{item.title}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
                   </div>
-                  <h3 className="text-lg font-black text-slate-900 mb-2">{item.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
-                </motion.div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -641,7 +738,7 @@ const IPOServices = () => {
                     <Phone className="mr-2 h-5 w-5" /> Talk to an Expert
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-xl px-10 h-14 text-base font-bold">
+                <Button asChild variant="outlineWhite" className="rounded-xl px-10 h-14 text-base font-bold shadow-lg">
                   <a href="mailto:info@indiaipo.in">
                     <Mail className="mr-2 h-5 w-5" /> info@indiaipo.in
                   </a>

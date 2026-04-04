@@ -62,6 +62,7 @@ const ServicesSection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
                 >
                   <Link
                     to="/services"

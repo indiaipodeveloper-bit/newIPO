@@ -6,7 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { Heart, Globe, Users, ShieldCheck, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
-
+import { useNavigate } from "react-router-dom";
 interface CSREntry {
   id: number;
   title: string;
@@ -18,6 +18,7 @@ interface CSREntry {
 const CSR = () => {
   const [entries, setEntries] = useState<CSREntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchCSR = async () => {
@@ -163,9 +164,9 @@ const CSR = () => {
                       className="text-muted-foreground text-lg leading-relaxed prose prose-lg dark:prose-invert max-w-none"
                       dangerouslySetInnerHTML={{ __html: entry.dsc }}
                     />
-                    <button className="flex items-center gap-2 text-primary font-bold hover:gap-4 transition-all">
+                    {/* <button className="flex items-center gap-2 text-primary font-bold hover:gap-4 transition-all">
                       See Project Impact <ArrowRight className="w-5 h-5" />
-                    </button>
+                    </button> */}
                   </div>
                 </motion.div>
               ))}
@@ -182,7 +183,7 @@ const CSR = () => {
               <p className="text-primary-foreground/70 text-lg mb-12">
                 Are you an NGO or a social startup looking for strategic support? We are always looking for impactful projects to support.
               </p>
-              <button className="bg-accent text-accent-foreground px-10 py-5 rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-accent/40">
+              <button onClick={() => navigate("/contact")} className="bg-accent text-accent-foreground px-10 py-5 rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-accent/40">
                 Contact CSR Division
               </button>
             </div>

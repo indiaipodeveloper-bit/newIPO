@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Edit, Upload, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RichEditor from "@/components/ui/RichEditor";
 
 interface Banker {
   id: string;
@@ -74,11 +75,11 @@ const JsonArrayEditor = ({ value, onChange, template, placeholder }: any) => {
       {items.map((item: any, i: number) => (
         <div key={i} className="flex flex-col sm:flex-row items-center gap-2">
           {Object.keys(template).map(key => (
-            <Input 
-              key={key} 
-              placeholder={placeholder[key] || key} 
-              value={item[key] || ''} 
-              onChange={e => updateItem(i, key, e.target.value)} 
+            <Input
+              key={key}
+              placeholder={placeholder[key] || key}
+              value={item[key] || ''}
+              onChange={e => updateItem(i, key, e.target.value)}
               className="flex-1"
             />
           ))}
@@ -88,7 +89,7 @@ const JsonArrayEditor = ({ value, onChange, template, placeholder }: any) => {
         </div>
       ))}
       <Button variant="outline" size="sm" onClick={addItem} className="w-full border-dashed border-2 hover:border-primary hover:text-primary transition-colors mt-2">
-        <Plus className="h-4 w-4 mr-1"/> Add Row
+        <Plus className="h-4 w-4 mr-1" /> Add Row
       </Button>
     </div>
   );
@@ -101,7 +102,7 @@ const ManageMerchantBankers = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
-  
+
   // Pagination & Search States
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -236,11 +237,11 @@ const ManageMerchantBankers = () => {
       <div className="space-y-6 pb-20">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-             <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-               Manage Merchant Bankers
-               <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">{total} Total</span>
-             </h1>
-             <p className="text-sm text-muted-foreground mt-1">Add, update, and manage expansive analytics data</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              Manage Merchant Bankers
+              <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">{total} Total</span>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">Add, update, and manage expansive analytics data</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative w-full md:w-64">
@@ -266,12 +267,12 @@ const ManageMerchantBankers = () => {
           <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-xl relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
             {/* Soft background decor */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-50"></div>
-            
+
             <h3 className="font-semibold text-foreground text-xl mb-4 flex items-center gap-2">
               <Edit className="w-5 h-5 text-primary" />
               {editId ? `Edit Banker: ${form.title}` : "Create New Merchant Banker"}
             </h3>
-            
+
             <Tabs defaultValue="general" className="w-full">
               <TabsList className="flex flex-wrap h-auto gap-2 bg-transparent justify-start border-b border-border mb-6 pb-3">
                 <TabsTrigger value="general" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all">General Details</TabsTrigger>
@@ -280,20 +281,25 @@ const ManageMerchantBankers = () => {
                 <TabsTrigger value="contact" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all">Contact Info</TabsTrigger>
                 <TabsTrigger value="seo" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary transition-all">SEO & Meta</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="general" className="space-y-4 animate-in fade-in duration-300">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <label className="text-sm font-semibold">Banker Title/Name *</label>
                     <Input placeholder="Enter title..." value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="shadow-sm" />
                   </div>
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <label className="text-sm font-semibold">Category / Sub-title</label>
                     <Input placeholder="e.g. SME, Mainboard..." value={form.sub_title} onChange={(e) => setForm({ ...form, sub_title: e.target.value })} className="shadow-sm" />
-                  </div>
+                  </div> */}
                   <div className="space-y-3 md:col-span-2">
                     <label className="text-sm font-semibold">Description (HTML supported)</label>
-                    <Textarea placeholder="Full comprehensive description..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} className="shadow-sm" />
+                    <RichEditor
+                      value={form.description}
+                      onChange={(val) => setForm({ ...form, description: val })}
+                      placeholder="Full comprehensive description..."
+                      className="min-h-[300px]"
+                    />
                   </div>
                   <div className="space-y-3 md:col-span-2">
                     <label className="text-sm font-semibold">Banker Logo</label>
@@ -320,7 +326,7 @@ const ManageMerchantBankers = () => {
                   <div className="space-y-3"><label className="text-sm font-semibold">Total IPOs Managed</label><Input placeholder="e.g. 50+" value={form.noOfiposofar} onChange={(e) => setForm({ ...form, noOfiposofar: e.target.value })} className="shadow-sm" /></div>
                   <div className="space-y-3"><label className="text-sm font-semibold">Total Fund Raised</label><Input placeholder="e.g. ₹5,000 Cr" value={form.totalfundraised} onChange={(e) => setForm({ ...form, totalfundraised: e.target.value })} className="shadow-sm" /></div>
                   <div className="space-y-3"><label className="text-sm font-semibold">Avg IPO Size</label><Input placeholder="e.g. ₹100 Cr" value={form.avgiposize} onChange={(e) => setForm({ ...form, avgiposize: e.target.value })} className="shadow-sm" /></div>
-                  <div className="space-y-3"><label className="text-sm font-semibold">Avg Listing Gain</label><Input placeholder="e.g. 20%" value={form.avglisting_gain} onChange={(e) => setForm({ ...form, avglisting_gain: e.target.value })} className="shadow-sm" /></div>
+                  {/* <div className="space-y-3"><label className="text-sm font-semibold">Avg Listing Gain</label><Input placeholder="e.g. 20%" value={form.avglisting_gain} onChange={(e) => setForm({ ...form, avglisting_gain: e.target.value })} className="shadow-sm" /></div> */}
                   <div className="space-y-3"><label className="text-sm font-semibold">Avg Subscription</label><Input placeholder="e.g. 45x" value={form.avgsubscription} onChange={(e) => setForm({ ...form, avgsubscription: e.target.value })} className="shadow-sm" /></div>
                   <div className="space-y-3"><label className="text-sm font-semibold">NSE Emerge count</label><Input placeholder="0" value={form.nseemer} onChange={(e) => setForm({ ...form, nseemer: e.target.value })} className="shadow-sm" /></div>
                   <div className="space-y-3"><label className="text-sm font-semibold">BSE SME count</label><Input placeholder="0" value={form.bsesme} onChange={(e) => setForm({ ...form, bsesme: e.target.value })} className="shadow-sm" /></div>
@@ -330,33 +336,33 @@ const ManageMerchantBankers = () => {
               <TabsContent value="analytics" className="space-y-6 animate-in fade-in duration-300">
                 <div className="bg-accent/5 p-4 rounded-xl border border-accent/20 mb-4">
                   <p className="text-sm text-foreground/80 font-medium leading-relaxed">
-                    <span className="font-bold text-primary">Dynamic Row Builders:</span> You no longer need to write raw JSON manually! 
+                    <span className="font-bold text-primary">Dynamic Row Builders:</span> You no longer need to write raw JSON manually!
                     Just click <span className="text-xs bg-background border px-1.5 py-0.5 rounded shadow">Add Row</span> and fill in the boxes mapping correctly to the frontend charts. The system will encode it automatically behind the scenes for the database.
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-sm font-semibold flex items-center justify-between">
                       <span>Year-wise IPO Listing</span>
                     </label>
                     <p className="text-xs text-muted-foreground mb-2">Build timeline series data for visual line charts.</p>
-                    <JsonArrayEditor 
-                      value={form.yearwise_ipolisting} 
-                      onChange={(v: string) => setForm({...form, yearwise_ipolisting: v})}
+                    <JsonArrayEditor
+                      value={form.yearwise_ipolisting}
+                      onChange={(v: string) => setForm({ ...form, yearwise_ipolisting: v })}
                       template={{ year: "", no_of_ipos: "" }}
                       placeholder={{ year: "Year (e.g. FY25)", no_of_ipos: "Count (e.g. 2)" }}
                     />
                   </div>
-                  
+
                   <div className="space-y-3">
                     <label className="text-sm font-semibold flex items-center justify-between">
                       <span>SME IPOs by Size</span>
                     </label>
                     <p className="text-xs text-muted-foreground mb-2">Build categorized volume data for visual bar charts.</p>
-                    <JsonArrayEditor 
-                      value={form.sme_ipos_by_size} 
-                      onChange={(v: string) => setForm({...form, sme_ipos_by_size: v})}
+                    <JsonArrayEditor
+                      value={form.sme_ipos_by_size}
+                      onChange={(v: string) => setForm({ ...form, sme_ipos_by_size: v })}
                       template={{ title: "", size: "" }}
                       placeholder={{ title: "Size (e.g. Above 50Cr)", size: "Total Count (e.g. 3 (10%))" }}
                     />
@@ -367,9 +373,9 @@ const ManageMerchantBankers = () => {
                       <span>IPOs by Subscription Level</span>
                     </label>
                     <p className="text-xs text-muted-foreground mb-2">Build specific segment multiplier logic for pie charts.</p>
-                    <JsonArrayEditor 
-                      value={form.sme_ipos_by_subscription} 
-                      onChange={(v: string) => setForm({...form, sme_ipos_by_subscription: v})}
+                    <JsonArrayEditor
+                      value={form.sme_ipos_by_subscription}
+                      onChange={(v: string) => setForm({ ...form, sme_ipos_by_subscription: v })}
                       template={{ title: "", subscription: "" }}
                       placeholder={{ title: "Group (e.g. Subscribed 5 times)", subscription: "Value (e.g. 1 (50%))" }}
                     />
@@ -380,9 +386,9 @@ const ManageMerchantBankers = () => {
                       <span>Frequently Asked Questions</span>
                     </label>
                     <p className="text-xs text-muted-foreground mb-2">Compile an FAQ block specifically tailored to this banker.</p>
-                    <JsonArrayEditor 
-                      value={form.faqs} 
-                      onChange={(v: string) => setForm({...form, faqs: v})}
+                    <JsonArrayEditor
+                      value={form.faqs}
+                      onChange={(v: string) => setForm({ ...form, faqs: v })}
                       template={{ question: "", answer: "" }}
                       placeholder={{ question: "Question", answer: "Answer text..." }}
                     />
@@ -456,7 +462,7 @@ const ManageMerchantBankers = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 shrink-0 sm:opacity-70 group-hover:opacity-100 transition-opacity w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-border">
                       <Button variant="outline" size="sm" className="h-9 flex-1 sm:flex-auto border-border hover:bg-primary hover:text-primary-foreground hover:border-primary" onClick={() => startEdit(b)}>
                         <Edit className="h-4 w-4 mr-1.5" /> Edit
@@ -469,42 +475,42 @@ const ManageMerchantBankers = () => {
                 ))}
               </div>
             )}
-            
+
             {/* Massive Pagination Controls Segment */}
             {!loading && totalPages > 0 && (
               <div className="p-4 border-t border-border bg-gradient-to-r from-secondary/5 via-secondary/10 to-transparent flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-sm text-muted-foreground font-medium">
                   Showing <span className="font-bold text-foreground mx-1">{(page - 1) * limit + 1}-{Math.min(page * limit, total)}</span> of <span className="font-bold text-foreground ml-1">{total}</span> total entries
                 </p>
-                
+
                 <div className="flex items-center gap-1.5 bg-background p-1.5 rounded-lg border border-border shadow-sm">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 px-2 text-foreground font-medium" 
-                    disabled={page === 1} 
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-foreground font-medium"
+                    disabled={page === 1}
                     onClick={() => setPage(page - 1)}
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" /> Prev
                   </Button>
-                  
-                  <div className="h-4 w-[1px] bg-border mx-1"></div>
-                  
-                  <span className="text-sm font-semibold px-3 py-1 bg-primary text-primary-foreground rounded-md">
-                    {page}
-                   </span>
-                   <span className="text-sm text-muted-foreground px-1 font-medium">of</span> 
-                   <span className="text-sm font-semibold px-2">
-                     {totalPages}
-                   </span>
-                  
+
                   <div className="h-4 w-[1px] bg-border mx-1"></div>
 
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 px-2 text-foreground font-medium" 
-                    disabled={page >= totalPages} 
+                  <span className="text-sm font-semibold px-3 py-1 bg-primary text-primary-foreground rounded-md">
+                    {page}
+                  </span>
+                  <span className="text-sm text-muted-foreground px-1 font-medium">of</span>
+                  <span className="text-sm font-semibold px-2">
+                    {totalPages}
+                  </span>
+
+                  <div className="h-4 w-[1px] bg-border mx-1"></div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-foreground font-medium"
+                    disabled={page >= totalPages}
                     onClick={() => setPage(page + 1)}
                   >
                     Next <ChevronRight className="h-4 w-4 ml-1" />

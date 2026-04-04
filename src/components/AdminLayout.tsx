@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LayoutDashboard, FileText, BookOpen, Users, MessageSquare, Settings, LogOut, Menu, X, TrendingUp, Globe, Navigation, Layout, Image, Building2, GraduationCap, Bell, Video, Newspaper, Briefcase, PlayCircle, ClipboardCheck, Megaphone, HelpCircle, LayoutGrid, Mail } from "lucide-react";
@@ -7,13 +7,14 @@ import logo from "@/assets/logo.png";
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Manage IPOs", href: "/admin/ipos", icon: TrendingUp },
+  { label: "Manage IPO Calendar", href: "/admin/ipos", icon: TrendingUp },
   { label: "Manage Sectors", href: "/admin/sectors", icon: LayoutGrid },
   { label: "Manage Blogs", href: "/admin/blogs", icon: BookOpen },
+  { label: "Manage Magazines", href: "/admin/magazines", icon: BookOpen },
   { label: "News / Updates", href: "/admin/news", icon: Newspaper },
   { label: "Merchant Bankers (SME)", href: "/admin/merchant-bankers", icon: Building2 },
   { label: "Mainboard Bankers", href: "/admin/mainboard-bankers", icon: Building2 },
-  { label: "Reports", href: "/admin/reports", icon: FileText },
+  // { label: "Reports", href: "/admin/reports", icon: FileText },
   { label: "IPO Knowledge", href: "/admin/knowledge", icon: GraduationCap },
   { label: "Manage Registrars", href: "/admin/registrars", icon: Users },
   { label: "Registrar FAQs", href: "/admin/registrar-faqs", icon: HelpCircle },
@@ -21,17 +22,18 @@ const sidebarLinks = [
   // { label: "IPO Videos", href: "/admin/videos", icon: Video },
   { label: "Market Snaps", href: "/admin/market-snaps", icon: PlayCircle },
   { label: "Daily Reporter", href: "/admin/daily-digests", icon: FileText },
+  { label: "Leads", href: "/admin/leads", icon: MessageSquare, badgeKey: "leads" },
+  { label: "Consultant Enquiries", href: "/admin/consultant-enquiries", icon: MessageSquare, badgeKey: "consultantEnquiries" },
+  { label: "Merchant Enquiries", href: "/admin/merchant-enquiries", icon: MessageSquare, badgeKey: "merchantEnquiries" },
+  { label: "Investor Enquiries", href: "/admin/investors", icon: Briefcase },
   { label: "Check IPO Feasibility", href: "/admin/ipo-feasibility", icon: ClipboardCheck },
   { label: "Career Applications", href: "/admin/career-applications", icon: GraduationCap },
   { label: "Subscriptions", href: "/admin/subscriptions", icon: Mail },
   { label: "Manage CSR", href: "/admin/csr", icon: Globe },
-  { label: "Investor Enquiries", href: "/admin/investors", icon: Briefcase },
-  { label: "Leads", href: "/admin/leads", icon: MessageSquare, badgeKey: "leads" },
   { label: "Manage Consultants", href: "/admin/consultants", icon: Users },
-  { label: "Consultant Enquiries", href: "/admin/consultant-enquiries", icon: MessageSquare, badgeKey: "consultantEnquiries" },
-  { label: "Users", href: "/admin/users", icon: Users },
+  // { label: "Users", href: "/admin/users", icon: Users },
   { label: "Pages", href: "/admin/pages", icon: Layout },
-  { label: "Navigation", href: "/admin/navigation", icon: Navigation },
+  // { label: "Navigation", href: "/admin/navigation", icon: Navigation },
   { label: "Manage IPO Blogs", href: "/admin/ipo-blogs", icon: BookOpen },
   { label: "Site Popup", href: "/admin/popup", icon: Megaphone },
   { label: "Manage Banners", href: "/admin/banners", icon: Image },
@@ -45,15 +47,17 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadLeads, setUnreadLeads] = useState(0);
   const [unreadConsultantEnquiries, setUnreadConsultantEnquiries] = useState(0);
+  const [unreadMerchantEnquiries, setUnreadMerchantEnquiries] = useState(0);
 
 
   useEffect(() => {
     // Fetch unread leads count
     const fetchUnread = async () => {
       try {
-        const res = await fetch("/api/leads");
+        const res = await fetch("/api/leads?limit=1000");
         if (res.ok) {
-          const leads = await res.json();
+          const result = await res.json();
+          const leads = result.data || [];
           const unread = leads.filter((l: any) => !l.is_read).length;
           setUnreadLeads(unread);
         }
@@ -63,6 +67,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           const enquiries = await resConsultant.json();
           const unread = enquiries.filter((e: any) => !e.is_read).length;
           setUnreadConsultantEnquiries(unread);
+        }
+
+        const resMerchant = await fetch("/api/merchant-contact-enquiries");
+        if (resMerchant.ok) {
+          const enquiries = await resMerchant.json();
+          const unread = enquiries.filter((e: any) => !e.is_read).length;
+          setUnreadMerchantEnquiries(unread);
         }
       } catch (err) { console.error(err); }
     };
@@ -87,6 +98,19 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  const scrollRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const savedScrollPos = sessionStorage.getItem("adminSidebarScroll");
+    if (savedScrollPos && scrollRef.current) {
+      scrollRef.current.scrollTop = parseInt(savedScrollPos);
+    }
+  }, []);
+
+  const handleScroll = (e: React.UIEvent<HTMLElement>) => {
+    sessionStorage.setItem("adminSidebarScroll", e.currentTarget.scrollTop.toString());
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-primary transform transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
@@ -100,7 +124,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </button>
         </div>
 
-        <nav className="p-3 space-y-1 overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 64px - 100px)' }}>
+        <nav 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="p-3 space-y-1 overflow-y-auto flex-1" 
+          style={{ maxHeight: 'calc(100vh - 64px - 160px)' }}
+        >
           {sidebarLinks.map((link) => {
             const Icon = link.icon;
             const active = location.pathname === link.href;
@@ -108,7 +137,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               ? unreadLeads 
               : link.badgeKey === "consultantEnquiries" 
                 ? unreadConsultantEnquiries 
-                : 0;
+                : link.badgeKey === "merchantEnquiries"
+                  ? unreadMerchantEnquiries
+                  : 0;
             return (
               <Link
                 key={link.href}

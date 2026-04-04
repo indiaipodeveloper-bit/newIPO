@@ -3,7 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { getImageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichEditor from "@/components/ui/RichEditor";
 import {
   Trash2,
   Plus,
@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Eye,
   EyeOff,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -32,6 +33,8 @@ interface CSREntry {
   status: string;
   create_at: string;
 }
+
+const DESC_LIMIT = 700;
 
 const ManageCSR = () => {
   const [entries, setEntries] = useState<CSREntry[]>([]);
@@ -96,6 +99,14 @@ const ManageCSR = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check limit (strip HTML to check plain text length or total length?)
+    // Usually user means total length in editor or plain text. Let's check plain text for logical limit.
+    const plainText = formData.dsc.replace(/<[^>]*>/g, "");
+    if (plainText.length > DESC_LIMIT) {
+      return toast.error(`Description cannot exceed ${DESC_LIMIT} characters`);
+    }
+
     try {
       const url = editingEntry ? `/api/csr/${editingEntry.id}` : "/api/csr";
       const method = editingEntry ? "PUT" : "POST";
@@ -150,6 +161,9 @@ const ManageCSR = () => {
     setIsDialogOpen(true);
   };
 
+  const currentLength = formData.dsc.replace(/<[^>]*>/g, "").length;
+  const isOverLimit = currentLength > DESC_LIMIT;
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -159,7 +173,7 @@ const ManageCSR = () => {
               Manage Corporate Social Responsibility (CSR)
             </h1>
             <p className="text-sm text-muted-foreground">
-              Manage CSR activities, images, and descriptions
+              Manage CSR activities with rich text descriptions (Max {DESC_LIMIT} chars)
             </p>
           </div>
           <Dialog
@@ -183,7 +197,7 @@ const ManageCSR = () => {
                 Add CSR Initiative
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingEntry
@@ -191,9 +205,9 @@ const ManageCSR = () => {
                     : "Add New CSR Initiative"}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 py-4">
+              <form onSubmit={handleSubmit} className="space-y-6 py-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Title *</label>
+                  <label className="text-sm font-semibold text-foreground">Title *</label>
                   <Input
                     required
                     value={formData.title}
@@ -201,13 +215,14 @@ const ManageCSR = () => {
                       setFormData({ ...formData, title: e.target.value })
                     }
                     placeholder="e.g. Education for All"
+                    className="h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Image</label>
-                  <div className="flex items-center gap-4">
+                  <label className="text-sm font-semibold text-foreground">Image</label>
+                  <div className="flex items-center gap-4 bg-muted/20 p-4 rounded-xl border border-dashed border-border/60">
                     {formData.image && (
-                      <div className="w-20 h-20 rounded-lg overflow-hidden border">
+                      <div className="w-20 h-20 rounded-lg overflow-hidden border bg-card shrink-0 shadow-sm">
                         <img
                           src={getImageUrl(formData.image)}
                           alt="Preview"
@@ -216,13 +231,13 @@ const ManageCSR = () => {
                       </div>
                     )}
                     <label className="flex-1">
-                      <div className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="border border-border bg-card rounded-lg p-4 text-center cursor-pointer hover:bg-muted/10 transition-all group">
                         {uploading ? (
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-accent" />
                         ) : (
                           <>
-                            <ImageIcon className="w-6 h-6 mx-auto text-muted-foreground mb-2" />
-                            <span className="text-xs text-muted-foreground">
+                            <ImageIcon className="w-6 h-6 mx-auto text-muted-foreground mb-2 group-hover:text-accent group-hover:scale-110 transition-all" />
+                            <span className="text-xs text-muted-foreground font-medium">
                               Click to upload image
                             </span>
                           </>
@@ -242,23 +257,32 @@ const ManageCSR = () => {
                       setFormData({ ...formData, image: e.target.value })
                     }
                     placeholder="Or paste image URL"
+                    className="h-10 text-xs"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea
-                    rows={5}
-                    value={formData.dsc}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dsc: e.target.value })
-                    }
-                    placeholder="Details about this initiative..."
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-foreground">Description *</label>
+                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isOverLimit ? "bg-destructive/10 text-destructive" : "bg-accent/10 text-accent"}`}>
+                      {currentLength} / {DESC_LIMIT}
+                    </div>
+                  </div>
+                  <div className={`rounded-lg border overflow-hidden ${isOverLimit ? "border-destructive ring-1 ring-destructive/20" : "border-border"}`}>
+                    <RichEditor
+                      value={formData.dsc}
+                      onChange={(val) => setFormData({ ...formData, dsc: val })}
+                    />
+                  </div>
+                  {isOverLimit && (
+                    <p className="text-[10px] text-destructive flex items-center gap-1 font-medium">
+                       <AlertCircle className="w-3 h-3" /> Please shorten the description to {DESC_LIMIT} characters.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
+                  <label className="text-sm font-semibold text-foreground">Status</label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-accent outline-none"
                     value={formData.status}
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
@@ -268,7 +292,7 @@ const ManageCSR = () => {
                     <option value="draft">Draft</option>
                   </select>
                 </div>
-                <Button type="submit" className="w-full" disabled={uploading}>
+                <Button type="submit" className="w-full h-12 text-base font-bold bg-accent text-accent-foreground hover:bg-accent/90" disabled={uploading || isOverLimit}>
                   {editingEntry ? "Update Initiative" : "Create Initiative"}
                 </Button>
               </form>

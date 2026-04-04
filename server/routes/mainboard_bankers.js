@@ -3,6 +3,16 @@ import pool from "../db.js";
 
 const router = express.Router();
 
+// Utility to extract number from strings like "₹3,49,962.23 Cr"
+const cleanNumeric = (val) => {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  // Remove everything except digits, decimal point, and minus sign
+  const cleaned = val.toString().replace(/[^\d.-]/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+};
+
 // GET all mainboard bankers with search and pagination
 router.get("/", async (req, res) => {
   try {
@@ -11,12 +21,12 @@ router.get("/", async (req, res) => {
     const offset = (page - 1) * limit;
     const search = req.query.search || "";
 
-    let countQuery = "SELECT COUNT(*) as total FROM marchantbankers WHERE mcat_id = 'list-of-mainboard-merchant-bankers'";
-    let dataQuery = "SELECT * FROM marchantbankers WHERE mcat_id = 'list-of-mainboard-merchant-bankers'";
-    const queryParams = [];
+    const mcat_id = 'list-of-mainboard-merchant-bankers';
+    let countQuery = "SELECT COUNT(*) as total FROM marchantbankers WHERE mcat_id = ?";
+    let dataQuery = "SELECT * FROM marchantbankers WHERE mcat_id = ?";
+    const queryParams = [mcat_id];
 
     if (search) {
-      // Searching in title, description, slug which exist in marchantbankers
       const searchClause = " AND (title LIKE ? OR description LIKE ? OR slug LIKE ?)";
       countQuery += searchClause;
       dataQuery += searchClause;
@@ -32,18 +42,18 @@ router.get("/", async (req, res) => {
     
     const [data] = await pool.query(dataQuery, dataParams);
 
-    // Map marchantbankers columns to frontend expectations
     const mappedData = data.map(row => ({
       ...row,
       name: row.title || "Unknown Banker",
       logo_url: row.image ? (row.image.startsWith('/') ? row.image : '/' + row.image) : null,
-      total_ipos: row.noOfiposofar || 0,
-      total_raised: row.totalfundraised || 0,
-      avg_size: row.avgiposize || 0,
-      avg_subscription: row.avgsubscription || 0,
+      total_ipos: cleanNumeric(row.noOfiposofar),
+      total_raised: cleanNumeric(row.totalfundraised),
+      avg_size: cleanNumeric(row.avgiposize),
+      avg_subscription: cleanNumeric(row.avgsubscription),
+      established_year: row.established_year || null,
       website: row.cweblink || "",
       location: row.caddress || "",
-      sebi_registration: row.slug || "", // slug might contain reg info or similar unique ID
+      sebi_registration: row.slug || "",
       is_active: 1
     }));
 
@@ -62,36 +72,29 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET single mainboard banker by ID (full details)
+// GET single mainboard banker by ID
 router.get("/:id", async (req, res) => {
   try {
     const [data] = await pool.query(
       "SELECT * FROM marchantbankers WHERE id = ? AND mcat_id = 'list-of-mainboard-merchant-bankers'",
       [req.params.id]
     );
-    if (data.length === 0) {
-      // fallback: search without mcat filter
-      const [fallback] = await pool.query("SELECT * FROM marchantbankers WHERE id = ?", [req.params.id]);
-      if (fallback.length === 0) return res.status(404).json({ error: "Banker not found" });
-      const r = fallback[0];
-      return res.json({
-        ...r,
-        name: r.title || "Unknown Banker",
-        logo_url: r.image ? (r.image.startsWith('/') ? r.image : '/' + r.image) : null,
-      });
-    }
-    const r = data[0];
+    if (data.length === 0) return res.status(404).json({ error: "Banker not found" });
+    
+    const row = data[0];
     res.json({
-      ...r,
-      name: r.title || "Unknown Banker",
-      logo_url: r.image ? (r.image.startsWith('/') ? r.image : '/' + r.image) : null,
-      total_ipos: r.noOfiposofar || 0,
-      total_raised: r.totalfundraised || 0,
-      avg_size: r.avgiposize || 0,
-      avg_subscription: r.avgsubscription || 0,
-      avg_listing_gain: r.avglisting_gain || 0,
-      website: r.cweblink || "",
-      location: r.caddress || "",
+      ...row,
+      name: row.title || "Unknown Banker",
+      logo_url: row.image ? (row.image.startsWith('/') ? row.image : '/' + row.image) : null,
+      total_ipos: cleanNumeric(row.noOfiposofar),
+      total_raised: cleanNumeric(row.totalfundraised),
+      avg_size: cleanNumeric(row.avgiposize),
+      avg_subscription: cleanNumeric(row.avgsubscription),
+      established_year: row.established_year || null,
+      website: row.cweblink || "",
+      location: row.caddress || "",
+      sebi_registration: row.slug || "",
+      is_active: 1
     });
   } catch (error) {
     console.error("Error fetching single mainboard banker:", error);
@@ -103,44 +106,34 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const {
-      name, category, location, sebi_registration, website, services,
+      name, location, sebi_registration, website, services,
       total_ipos, established_year, description, logo_url, is_active,
-      sort_order, total_raised, avg_size, avg_subscription
+      total_raised, avg_size, avg_subscription
     } = req.body;
 
     const query = `
-      INSERT INTO merchant_bankers 
-      (name, category, location, sebi_registration, website, services, 
-       total_ipos, established_year, description, logo_url, is_active, 
-       sort_order, total_raised, avg_size, avg_subscription) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO marchantbankers 
+      (title, mcat_id, caddress, slug, cweblink, description, 
+       noOfiposofar, established_year, image, totalfundraised, avgiposize, avgsubscription) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
       name || 'Unknown Banker', 
-      category || 'Mainboard', 
+      'list-of-mainboard-merchant-bankers',
       location || '', 
       sebi_registration || '', 
       website || '', 
-      services || '', 
-      parseInt(total_ipos) || 0, 
-      parseInt(established_year) || null, 
       description || '', 
+      total_ipos?.toString() || '0', 
+      established_year || null, 
       logo_url || '', 
-      is_active !== undefined ? is_active : 1, 
-      parseInt(sort_order) || 0, 
-      parseFloat(total_raised) || 0.00, 
-      parseFloat(avg_size) || 0.00, 
-      parseFloat(avg_subscription) || 0.00
+      total_raised?.toString() || '0', 
+      avg_size?.toString() || '0', 
+      avg_subscription?.toString() || '0'
     ];
 
     const [result] = await pool.query(query, values);
-    
-    // Set 'title' if schema expects it.
-    try {
-        await pool.query("UPDATE merchant_bankers SET title = ? WHERE id = ?", [name || 'Unknown Banker', result.insertId]);
-    } catch(e) {}
-
     res.status(201).json({ id: result.insertId, message: "Mainboard banker created successfully" });
   } catch (error) {
     console.error("Error creating mainboard banker:", error);
@@ -152,51 +145,38 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const {
-      name, title, category, location, sebi_registration, website, services,
-      total_ipos, established_year, description, logo_url, is_active,
-      sort_order, total_raised, avg_size, avg_subscription
+      name, location, sebi_registration, website,
+      total_ipos, established_year, description, logo_url,
+      total_raised, avg_size, avg_subscription
     } = req.body;
 
     const query = `
-      UPDATE merchant_bankers SET 
-        name = ?, category = ?, location = ?, sebi_registration = ?, 
-        website = ?, services = ?, total_ipos = ?, established_year = ?, 
-        description = ?, logo_url = ?, is_active = ?, sort_order = ?, 
-        total_raised = ?, avg_size = ?, avg_subscription = ?
-      WHERE id = ?
+      UPDATE marchantbankers SET 
+        title = ?, caddress = ?, slug = ?, cweblink = ?, 
+        noOfiposofar = ?, established_year = ?, description = ?, 
+        image = ?, totalfundraised = ?, avgiposize = ?, avgsubscription = ?
+      WHERE id = ? AND mcat_id = 'list-of-mainboard-merchant-bankers'
     `;
 
-    const useName = name || title || 'Unknown Banker'; // Fallback mapping
-
     const values = [
-      useName,
-      category || 'Mainboard',
+      name,
       location || '',
       sebi_registration || '',
       website || '',
-      services || '',
-      parseInt(total_ipos) || 0,
-      parseInt(established_year) || null,
+      total_ipos?.toString() || '0',
+      established_year || null,
       description || '',
       logo_url || '',
-      is_active !== undefined ? is_active : 1,
-      parseInt(sort_order) || 0,
-      parseFloat(total_raised) || 0.00,
-      parseFloat(avg_size) || 0.00,
-      parseFloat(avg_subscription) || 0.00,
+      total_raised?.toString() || '0',
+      avg_size?.toString() || '0',
+      avg_subscription?.toString() || '0',
       req.params.id
     ];
 
     const [result] = await pool.query(query, values);
-    
-    try {
-        await pool.query("UPDATE merchant_bankers SET title = ? WHERE id = ?", [useName, req.params.id]);
-    } catch(e) {}
-
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Banker not found" });
+      return res.status(404).json({ error: "Banker not found in Mainboard list" });
     }
-    
     res.json({ message: "Mainboard banker updated successfully" });
   } catch (error) {
     console.error("Error updating mainboard banker:", error);
@@ -207,7 +187,10 @@ router.put("/:id", async (req, res) => {
 // DELETE mainboard banker
 router.delete("/:id", async (req, res) => {
   try {
-    const [result] = await pool.query("DELETE FROM merchant_bankers WHERE id = ?", [req.params.id]);
+    const [result] = await pool.query(
+      "DELETE FROM marchantbankers WHERE id = ? AND mcat_id = 'list-of-mainboard-merchant-bankers'", 
+      [req.params.id]
+    );
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Banker not found" });
     }

@@ -4,7 +4,7 @@ import SEOHead from "@/components/SEOHead";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Building2, MapPin, Calendar, ArrowRight, Search, Activity, Users, Globe, ChevronLeft, ChevronRight, Shield, Home, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface Registrar {
   id: number; name: string; image: string; slug: string;
@@ -27,6 +27,22 @@ const Registrars = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   useEffect(() => {
     (async () => {
@@ -59,13 +75,25 @@ const Registrars = () => {
       <Header />
       <main>
         {/* ── HERO ── */}
-        <section className="py-16 lg:py-24 relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${N} 0%, #002147 55%, #003380 100%)` }}>
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <section className="py-16 lg:py-24 relative overflow-hidden bg-[#001529]">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
               style={{ background: G, filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1"
+          <div className="absolute bottom-0 left-0 right-0 h-1 z-1"
             style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
           <div className="container mx-auto px-4 relative z-10">
@@ -204,16 +232,6 @@ const Registrars = () => {
                     </div>
 
                     <div className="p-6 pt-4 mt-auto">
-                      <div className="space-y-2 mb-5">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400 font-medium">Latest Mainboard:</span>
-                          <span className="font-black truncate max-w-[140px]" style={{ color: N }}>{r.latest_mainbord || "—"}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400 font-medium">Latest SME:</span>
-                          <span className="font-black truncate max-w-[140px]" style={{ color: G2 }}>{r.latest_sme || "—"}</span>
-                        </div>
-                      </div>
                       <Link to={`/list-of-ipo-registrar/${r.slug}`}
                         className="flex items-center justify-center gap-2 w-full h-11 rounded-xl font-black text-sm transition-all hover:scale-105"
                         style={{ background: `linear-gradient(135deg, ${N}, #003380)`, color: "white", boxShadow: "0 4px 16px rgba(0,21,41,0.2)" }}>

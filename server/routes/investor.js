@@ -28,11 +28,39 @@ const initTable = async () => {
 
 initTable();
 
-// Get all investor enquiries
+// Get all investor enquiries with pagination and search
 router.get('/', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM investor ORDER BY created_at DESC');
-        res.json(rows);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        let whereClause = '';
+        let params = [];
+
+        if (search) {
+            whereClause = 'WHERE name LIKE ? OR email LIKE ? OR mobile LIKE ?';
+            const searchPattern = `%${search}%`;
+            params = [searchPattern, searchPattern, searchPattern];
+        }
+
+        const [countResult] = await pool.query(`SELECT COUNT(*) as total FROM investor ${whereClause}`, params);
+        const total = countResult[0].total;
+
+        // Add limit and offset to params
+        const queryParams = [...params, limit, offset];
+        const [rows] = await pool.query(
+            `SELECT * FROM investor ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+            queryParams
+        );
+
+        res.json({
+            data: rows,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
     } catch (err) {
         console.error("Error fetching investors:", err);
         res.status(500).json({ error: err.message });

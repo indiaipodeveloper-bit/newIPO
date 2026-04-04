@@ -7,7 +7,8 @@ import {
   Home, ChevronRight, FileText, Calendar, Download, Eye,
   Search, ArrowRight, Newspaper, Loader2, TrendingUp, BarChart3, Zap,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
 
 interface DailyDigest {
   id: number;
@@ -37,6 +38,22 @@ const DailyReporter = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   const fetchData = async (currentPage: number) => {
     try {
@@ -72,12 +89,25 @@ const DailyReporter = () => {
 
       <main>
         {/* ── HERO ── */}
-        <section className="bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] pt-14 pb-36 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <section className="bg-[#001529] pt-14 pb-36 relative overflow-hidden">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
               style={{ background: "#f59e08", filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]" />
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC] z-10" />
 
           <div className="container mx-auto px-4 relative z-10">
             {/* Breadcrumb */}

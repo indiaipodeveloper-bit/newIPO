@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -27,6 +28,22 @@ const IPOBlogs = () => {
   const [filter, setFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -63,13 +80,25 @@ const IPOBlogs = () => {
       <Header />
 
       {/* ── HERO ── */}
-      <section className="py-14 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${N} 0%, #002147 55%, #003380 100%)` }}>
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <section className="py-14 relative overflow-hidden bg-[#001529]">
+        {/* Background Video */}
+        <div className="absolute inset-0 z-0">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-30"
+            src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+        </div>
+
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
             style={{ background: G, filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-1"
+        <div className="absolute bottom-0 left-0 right-0 h-1 z-1"
           style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
         <div className="container mx-auto px-4 relative z-10">
@@ -172,32 +201,7 @@ const IPOBlogs = () => {
                           <h3 className="font-black text-sm leading-snug mb-3 line-clamp-2 transition-colors group-hover:text-[#f59e08]"
                             style={{ color: N }} title={blog.title}>{blog.title}</h3>
 
-                          <div className="mt-auto space-y-2 pt-3 border-t border-slate-100">
-                            {isValid(blog.gmp_ipo_price) && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-400 flex items-center gap-1 font-medium">
-                                  <IndianRupee className="w-3 h-3" /> Price
-                                </span>
-                                <span className="font-black" style={{ color: N }}>{blog.gmp_ipo_price}</span>
-                              </div>
-                            )}
-                            {isValid(blog.gmp) && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-400 flex items-center gap-1 font-medium">
-                                  <TrendingUp className="w-3 h-3" /> GMP
-                                </span>
-                                <span className="font-black" style={{ color: G2 }}>{blog.gmp}</span>
-                              </div>
-                            )}
-                            {isValid(blog.gmp_date) && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-400 flex items-center gap-1 font-medium">
-                                  <Calendar className="w-3 h-3" /> Date
-                                </span>
-                                <span className="font-medium text-slate-600">{blog.gmp_date}</span>
-                              </div>
-                            )}
-                          </div>
+
 
                           <div className="mt-4 flex items-center gap-1 text-xs font-black opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"
                             style={{ color: G }}>

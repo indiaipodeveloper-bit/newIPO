@@ -15,6 +15,29 @@ import aboutLeadership from "@/assets/about-leadership.jpg";
 import aboutVision from "@/assets/about-vision.jpg";
 import logo from "@/assets/logo.png";
 
+const MarqueeStyles = () => (
+  <style>{`
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee-mobile {
+      width: max-content;
+      animation: marquee 20s linear infinite;
+    }
+    .animate-marquee-mobile > * {
+      flex-shrink: 0;
+    }
+    @media (min-width: 768px) {
+      .animate-marquee-mobile {
+        animation: none;
+        width: 100%;
+        transform: none !important;
+      }
+    }
+  `}</style>
+);
+
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
@@ -76,6 +99,7 @@ const services = [
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
+      <MarqueeStyles />
       <SEOHead
         title="About IndiaIPO - India's Premier IPO Consultancy"
         description="Learn about IndiaIPO — India's premier IPO consultancy with 450+ successful listings and ₹85,000 Cr funds raised. SEBI registered, trusted by hundreds of companies."
@@ -110,7 +134,7 @@ const About = () => {
                 <Button asChild size="lg" className="bg-white text-blue-900 hover:bg-white/90 font-bold rounded-full px-8">
                   <Link to="/contact">Check IPO Feasibility <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8">
+                <Button asChild size="lg" variant="outlineWhite" className="rounded-full px-8 shadow-sm">
                   <Link to="/services">Our Services</Link>
                 </Button>
               </motion.div>
@@ -236,26 +260,41 @@ const About = () => {
                 These principles guide every decision we make and every IPO we manage.
               </p>
             </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {values.map((v, idx) => {
-                const Icon = v.icon;
-                return (
-                  <motion.div
-                    key={v.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg hover:border-primary/30 transition-all group"
-                  >
-                    <div className="w-14 h-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Icon className="h-6 w-6" />
+            <div className="overflow-hidden">
+              <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-marquee-mobile md:animate-none hover:[animation-play-state:paused] pb-4">
+                {/* First set */}
+                {values.map((v, idx) => {
+                  const Icon = v.icon;
+                  return (
+                    <motion.div
+                      key={`${v.title}-1`}
+                      className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg hover:border-primary/30 transition-all group w-[280px] md:w-auto"
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground mb-2">{v.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
+                    </motion.div>
+                  );
+                })}
+                {/* Duplicate set for mobile marquee */}
+                {values.map((v, idx) => {
+                  const Icon = v.icon;
+                  return (
+                    <div
+                      key={`${v.title}-2`}
+                      className="md:hidden bg-card border border-border rounded-2xl p-6 transition-all w-[280px]"
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground mb-2">{v.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
                     </div>
-                    <h3 className="text-lg font-bold text-foreground mb-2">{v.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
-                  </motion.div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
@@ -325,24 +364,37 @@ const About = () => {
                 </p>
               </motion.div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {team.map((member, idx) => (
-                <motion.div
-                  key={member.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-card border border-border rounded-2xl p-6 text-center hover:shadow-lg hover:border-primary/30 transition-all"
-                >
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                    {member.name.split(" ").map((n) => n[0]).join("")}
+            <div className="overflow-hidden">
+              <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 animate-marquee-mobile md:animate-none hover:[animation-play-state:paused] pb-4">
+                {/* First set */}
+                {team.map((member, idx) => (
+                  <motion.div
+                    key={`${member.name}-1`}
+                    className="bg-card border border-border rounded-2xl p-6 text-center hover:shadow-lg hover:border-primary/30 transition-all w-[240px] md:w-auto"
+                  >
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                      {member.name.split(" ").map((n) => n[0]).join("")}
+                    </div>
+                    <h4 className="font-bold text-foreground text-lg">{member.name}</h4>
+                    <p className="text-sm text-primary font-medium mb-2">{member.role}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{member.desc}</p>
+                  </motion.div>
+                ))}
+                {/* Duplicate set for mobile marquee */}
+                {team.map((member, idx) => (
+                  <div
+                    key={`${member.name}-2`}
+                    className="md:hidden bg-card border border-border rounded-2xl p-6 text-center w-[240px]"
+                  >
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                      {member.name.split(" ").map((n) => n[0]).join("")}
+                    </div>
+                    <h4 className="font-bold text-foreground text-lg">{member.name}</h4>
+                    <p className="text-sm text-primary font-medium mb-2">{member.role}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{member.desc}</p>
                   </div>
-                  <h4 className="font-bold text-foreground text-lg">{member.name}</h4>
-                  <p className="text-sm text-primary font-medium mb-2">{member.role}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{member.desc}</p>
-                </motion.div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -406,30 +458,49 @@ const About = () => {
               <span className="text-sm font-semibold text-primary uppercase tracking-wider">Why IndiaIPO</span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-2">Why Companies Choose Us</h2>
             </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {[
-                { title: "SEBI Registered & Compliant", desc: "Fully registered with SEBI and compliant with all ICDR regulations. We ensure your IPO meets every regulatory requirement." },
-                { title: "End-to-End Support", desc: "From initial feasibility assessment to listing day celebrations and post-listing support — we're with you at every step." },
-                { title: "Sector Expertise", desc: "Deep experience across IT, Manufacturing, FMCG, Pharma, Finance, Real Estate, and 20+ other sectors." },
-                { title: "Fastest Time-to-Market", desc: "Our streamlined processes and regulatory expertise ensure the fastest possible time from DRHP filing to listing." },
-                { title: "Strong Network", desc: "Extensive network of institutional investors, HNIs, anchor investors, and market makers across India." },
-                { title: "Post-Listing Support", desc: "Our relationship doesn't end at listing. We provide ongoing support for investor relations, compliance, and growth." },
-              ].map((item, idx) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg hover:border-primary/30 transition-all"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center mb-4 text-lg font-bold">
-                    {idx + 1}
+            <div className="overflow-hidden">
+              <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-marquee-mobile md:animate-none hover:[animation-play-state:paused] pb-4">
+                {/* First set */}
+                {[
+                  { title: "SEBI Registered & Compliant", desc: "Fully registered with SEBI and compliant with all ICDR regulations. We ensure your IPO meets every regulatory requirement." },
+                  { title: "End-to-End Support", desc: "From initial feasibility assessment to listing day celebrations and post-listing support — we're with you at every step." },
+                  { title: "Sector Expertise", desc: "Deep experience across IT, Manufacturing, FMCG, Pharma, Finance, Real Estate, and 20+ other sectors." },
+                  { title: "Fastest Time-to-Market", desc: "Our streamlined processes and regulatory expertise ensure the fastest possible time from DRHP filing to listing." },
+                  { title: "Strong Network", desc: "Extensive network of institutional investors, HNIs, anchor investors, and market makers across India." },
+                  { title: "Post-Listing Support", desc: "Our relationship doesn't end at listing. We provide ongoing support for investor relations, compliance, and growth." },
+                ].map((item, idx) => (
+                  <motion.div
+                    key={`${item.title}-1`}
+                    className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg hover:border-primary/30 transition-all w-[280px] md:w-auto"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center mb-4 text-lg font-bold">
+                      {idx + 1}
+                    </div>
+                    <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </motion.div>
+                ))}
+                {/* Duplicate set for mobile marquee */}
+                {[
+                  { title: "SEBI Registered & Compliant", desc: "Fully registered with SEBI and compliant with all ICDR regulations. We ensure your IPO meets every regulatory requirement." },
+                  { title: "End-to-End Support", desc: "From initial feasibility assessment to listing day celebrations and post-listing support — we're with you at every step." },
+                  { title: "Sector Expertise", desc: "Deep experience across IT, Manufacturing, FMCG, Pharma, Finance, Real Estate, and 20+ other sectors." },
+                  { title: "Fastest Time-to-Market", desc: "Our streamlined processes and regulatory expertise ensure the fastest possible time from DRHP filing to listing." },
+                  { title: "Strong Network", desc: "Extensive network of institutional investors, HNIs, anchor investors, and market makers across India." },
+                  { title: "Post-Listing Support", desc: "Our relationship doesn't end at listing. We provide ongoing support for investor relations, compliance, and growth." },
+                ].map((item, idx) => (
+                  <div
+                    key={`${item.title}-2`}
+                    className="md:hidden bg-card border border-border rounded-2xl p-6 transition-all w-[280px]"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center mb-4 text-lg font-bold">
+                      {idx + 1}
+                    </div>
+                    <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                   </div>
-                  <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -455,7 +526,7 @@ const About = () => {
                     Check IPO Feasibility <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 rounded-full px-8">
+                <Button asChild size="lg" variant="outlineWhite" className="rounded-full px-8 shadow-md">
                   <Link to="/services">View Services</Link>
                 </Button>
               </div>
@@ -477,3 +548,4 @@ const About = () => {
 };
 
 export default About;
+ 

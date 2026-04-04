@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -52,6 +53,22 @@ const IPOKnowledge = () => {
   const [activeCategory, setActiveCategory] = useState<KnowledgeCategory | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   useEffect(() => { fetchCategories(); }, []);
   useEffect(() => {
@@ -95,8 +112,21 @@ const IPOKnowledge = () => {
 
       <main>
         {/* ── HERO ── */}
-        <section className="bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] py-14 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
+        <section className="bg-[#001529] py-14 relative overflow-hidden">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none z-1">
             <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-5"
               style={{ background: "#f59e08", filter: "blur(80px)", transform: "translate(25%,-25%)" }} />
           </div>
@@ -127,7 +157,7 @@ const IPOKnowledge = () => {
         </section>
 
         {/* ── MAIN ── */}
-        <div className="container mx-auto px-4 py-10 max-w-7xl">
+        <div className="container mx-auto px-4 py-10">
           <div className="flex flex-col lg:flex-row gap-8">
 
             {/* Main Content */}
@@ -268,8 +298,8 @@ const IPOKnowledge = () => {
                   <a href="mailto:info@indiaipo.in" className="flex items-center gap-2 text-white/60 text-xs hover:text-white transition-colors">
                     <Mail className="h-3.5 w-3.5 text-[#f59e08]" /> info@indiaipo.in
                   </a>
-                  <a href="tel:+918000000000" className="flex items-center gap-2 text-white/60 text-xs hover:text-white transition-colors">
-                    <Phone className="h-3.5 w-3.5 text-[#f59e08]" /> +91 8000 000 000
+                  <a href="tel:+917428337280" className="flex items-center gap-2 text-white/60 text-xs hover:text-white transition-colors">
+                    <Phone className="h-3.5 w-3.5 text-[#f59e08]" /> +91-74283-37280
                   </a>
                 </div>
               </div>

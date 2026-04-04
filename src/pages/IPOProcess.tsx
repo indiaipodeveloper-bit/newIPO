@@ -1,10 +1,29 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, CheckCircle, ChevronRight, FileText, Globe, Landmark, LayoutDashboard, Target, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getImageUrl } from "@/lib/utils";
 
 const IPOProcess = () => {
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEOHead
@@ -17,9 +36,20 @@ const IPOProcess = () => {
       <main className="flex-grow">
         {/* HERO SECTION */}
         <section 
-          className="pt-20 pb-28 px-4 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #001529 0%, #002147 55%, #003380 100%)' }}
+          className="pt-20 pb-28 px-4 relative overflow-hidden bg-[#001529]"
         >
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
           {/* Background blobs */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full"
@@ -28,7 +58,7 @@ const IPOProcess = () => {
               style={{ background: '#3b82f6', filter: 'blur(80px)', opacity: 0.05, transform: 'translate(-20%,20%)' }} />
           </div>
 
-          <div className="container mx-auto max-w-5xl relative z-10">
+          <div className="container mx-auto px-4 relative z-10">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-white/70 mb-8 font-medium">
               <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -66,7 +96,7 @@ const IPOProcess = () => {
 
         {/* MAIN CONTENT SECTION */}
         <section className="py-20 bg-background relative -mt-10 rounded-t-[40px] z-20">
-          <div className="container mx-auto max-w-4xl px-4 space-y-16">
+          <div className="container mx-auto px-4 space-y-16">
             
             {/* Intro Blocks */}
             <div className="prose prose-lg prose-headings:text-foreground prose-p:text-muted-foreground max-w-none">
@@ -234,7 +264,7 @@ const IPOProcess = () => {
                   </button>
                 </Link>
                 <Link to="/ipo-feasibility">
-                  <button className="px-10 py-4 bg-transparent border-2 border-white/30 text-white text-lg font-black rounded-xl transition-colors hover:bg-white/10 hidden md:inline-block">
+                  <button className="px-10 py-4 bg-transparent border-2 border-white text-white text-lg font-black rounded-xl transition-all hover:bg-white/5 shadow-md hidden md:inline-block">
                     Check Eligibility First
                   </button>
                 </Link>

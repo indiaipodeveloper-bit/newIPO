@@ -66,11 +66,35 @@ const ManageIPOs = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [bankers, setBankers] = useState<{ id: any, title: string }[]>([]);
+  const [adminBlogs, setAdminBlogs] = useState<{ id: any, title: string }[]>([]);
 
   useEffect(() => {
     fetchIPOs();
     fetchSectors();
+    fetchBankers();
+    fetchAdminBlogs();
   }, [pagination.page, searchTerm]);
+
+  const fetchBankers = async () => {
+    try {
+      const res = await fetch("/api/bankers?limit=1000");
+      if (res.ok) {
+        const body = await res.json();
+        setBankers(body.data || []);
+      }
+    } catch (err) { }
+  };
+
+  const fetchAdminBlogs = async () => {
+    try {
+      const res = await fetch("/api/admin-blogs?limit=1000&summary=1");
+      if (res.ok) {
+        const body = await res.json();
+        setAdminBlogs(body.data || []);
+      }
+    } catch (err) { }
+  };
 
   const fetchSectors = async () => {
     try {
@@ -138,7 +162,7 @@ const ManageIPOs = () => {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Manage IPO Master List</h1>
+            <h1 className="text-2xl font-bold text-foreground">Manage IPO Calendar</h1>
             <p className="text-sm text-muted-foreground">{pagination.total} IPOs total in database</p>
           </div>
           <div className="flex items-center gap-2">
@@ -223,7 +247,7 @@ const ManageIPOs = () => {
 
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">Lot Size</label>
-                    <Input type="number" value={form.lot_size} onChange={(e) => setForm({ ...form, lot_size: e.target.value })} />
+                    <Input type="text" value={form.lot_size || ""} onChange={(e) => setForm({ ...form, lot_size: e.target.value })} placeholder="e.g. 1200 or 1,200" />
                   </div>
 
                   <div>
@@ -238,16 +262,32 @@ const ManageIPOs = () => {
 
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">GMP</label>
-                    <Input type="number" value={form.gmp} onChange={(e) => setForm({ ...form, gmp: e.target.value })} />
+                    <Input type="text" value={form.gmp || ""} onChange={(e) => setForm({ ...form, gmp: e.target.value })} placeholder="e.g. ₹13 or 10.5%" />
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1.5 block">Status</label>
-                    <Select value={String(form.status)} onValueChange={(v) => setForm({ ...form, status: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select value={String(form.status || "Active")} onValueChange={(v) => setForm({ ...form, status: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Active">Active</SelectItem>
                         <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Upcoming">Upcoming</SelectItem>
+                        <SelectItem value="Closed">Closed</SelectItem>
+                        <SelectItem value="Listed">Listed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Upcoming Status</label>
+                    <Select value={String(form.upcoming_ipo_status || "none")} onValueChange={(v) => setForm({ ...form, upcoming_ipo_status: v })}>
+                      <SelectTrigger><SelectValue placeholder="Listing Stage" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="filed_with_sebi">Filed with SEBI</SelectItem>
+                        <SelectItem value="drhp_approved">DRHP Approved</SelectItem>
+                        <SelectItem value="observation_received">Observation Received</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -274,9 +314,33 @@ const ManageIPOs = () => {
                     </Select>
                   </div>
 
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Merchant Banker (Primary)</label>
+                    <Select value={String(form.merchant_banker || "")} onValueChange={(v) => setForm({ ...form, merchant_banker: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select Banker" /></SelectTrigger>
+                      <SelectContent>
+                        {bankers.map(b => (
+                          <SelectItem key={b.id} value={String(b.id)}>{b.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Linked IPO Blog</label>
+                    <Select value={String(form.admin_blog_id || "")} onValueChange={(v) => setForm({ ...form, admin_blog_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select Blog" /></SelectTrigger>
+                      <SelectContent>
+                        {adminBlogs.map(b => (
+                          <SelectItem key={b.id} value={String(b.id)}>{b.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="col-span-full">
-                    <label className="text-sm font-medium text-foreground mb-1.5 block">Merchant Bankers</label>
-                    <Textarea value={form.merchant_bankers} onChange={(e) => setForm({ ...form, merchant_bankers: e.target.value })} rows={2} />
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Merchant Bankers (All Names)</label>
+                    <Textarea value={form.merchant_bankers} onChange={(e) => setForm({ ...form, merchant_bankers: e.target.value })} rows={1} placeholder="Enter all banker names separated by commas" />
                   </div>
 
                   <Button onClick={handleSave} className="col-span-full bg-accent text-accent-foreground hover:bg-gold-light font-semibold h-12">

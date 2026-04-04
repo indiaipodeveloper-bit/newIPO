@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Play, Video } from "lucide-react";
+import { Play, Video, Loader2, ChevronRight } from "lucide-react";
 
 interface VideoItem {
   id: string;
   title: string;
   youtube_id: string;
 }
-
-const fallbackVideos: VideoItem[] = [
-  { id: "1", title: "Market Update 1", youtube_id: "" },
-  { id: "2", title: "Market Update 2", youtube_id: "" },
-  { id: "3", title: "Market Update 3", youtube_id: "" },
-];
 
 const extractYoutubeId = (url: string) => {
   if (!url) return null;
@@ -72,23 +68,67 @@ const VideoCard = ({ video, idx }: { video: VideoItem; idx: number }) => {
 };
 
 const IPOVideoSection = () => {
-  const [videos, setVideos] = useState<VideoItem[]>(fallbackVideos);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/social_media?status=published&page=1&limit=3")
-      .then(res => res.json())
-      .then((data) => {
-        if (data.data && data.data.length > 0) {
-          const mappedVideos = data.data.map((v: any) => ({
-            id: String(v.id),
-            title: v.title,
-            youtube_id: extractYoutubeId(v.url) || "dQw4w9WgXcQ"
-          }));
-          setVideos(mappedVideos);
+    const fetchVideos = async () => {
+      setLoading(true);
+      try {
+        const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+        const playlistId = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID;
+        
+        if (apiKey && playlistId) {
+          const res = await fetch(
+            `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=3&playlistId=${playlistId}&key=${apiKey}`
+          );
+          
+          if (res.ok) {
+            const data = await res.json();
+            const mappedVideos: VideoItem[] = data.items.map((item: any) => ({
+              id: item.snippet.resourceId.videoId,
+              title: item.snippet.title,
+              youtube_id: item.snippet.resourceId.videoId
+            }));
+            setVideos(mappedVideos);
+          } else {
+            throw new Error("YouTube fetch failed");
+          }
+        } else {
+          // Fallback to local API
+          const res = await fetch("/api/videos");
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setVideos(data.map((v: any) => ({
+              id: String(v.id),
+              title: v.title,
+              youtube_id: v.youtube_id || extractYoutubeId(v.url) || ""
+            })));
+          }
         }
-      })
-      .catch(console.error);
+      } catch (err) {
+        console.error("Failed to load videos", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
   }, []);
+
+  if (loading) {
+    return (
+      <section className="py-24 bg-secondary/30">
+        <div className="container mx-auto px-4 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+          <p className="text-muted-foreground">Loading latest updates...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (videos.length === 0) return null;
+
 
   return (
     <section className="py-24 bg-secondary/30">
@@ -111,6 +151,15 @@ const IPOVideoSection = () => {
           {videos.map((video, idx) => (
             <VideoCard key={video.id} video={video} idx={idx} />
           ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/5 rounded-xl font-semibold" asChild>
+            <Link to="/ipo-and-market-snaps">
+              View All Videos
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

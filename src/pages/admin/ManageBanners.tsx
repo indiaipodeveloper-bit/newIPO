@@ -14,6 +14,7 @@ interface Banner {
   title: string | null;
   subtitle: string | null;
   image_url: string;
+  video_url: string | null;
   cta_text: string | null;
   cta_link: string | null;
   badge_text: string | null;
@@ -27,8 +28,18 @@ interface Banner {
 
 const PAGES = [
   { label: "Home Page (Slider)", value: "home" },
+  { label: "SME Merchant Bankers", value: "/merchant-bankers/sme" },
+  { label: "Mainboard Merchant Bankers", value: "/merchant-bankers/mainboard-list" },
+  { label: "Daily Reporter", value: "/reports/daily-reporter" },
   { label: "News & Updates", value: "/news-updates" },
+  { label: "Market Snaps", value: "/ipo-and-market-snaps" },
   { label: "Contact Us", value: "/contact" },
+  { label: "----------------", value: "" },
+  { label: "All Reports (Group)", value: "group:reports" },
+  { label: "All IPO Knowledge (Group)", value: "group:knowledge" },
+  { label: "All Notifications/Circulars (Group)", value: "group:notifications" },
+  { label: "All Services (Group)", value: "group:services" },
+  { label: "----------------", value: "" },
   { label: "Consultants", value: "/consultants" },
   { label: "Blog", value: "/blog" },
 ];
@@ -43,6 +54,7 @@ const ManageBanners = () => {
     title: "", 
     subtitle: "", 
     image_url: "", 
+    video_url: "",
     cta_text: "", 
     cta_link: "", 
     badge_text: "", 
@@ -61,7 +73,7 @@ const ManageBanners = () => {
 
   useEffect(() => { fetchBanners(); }, []);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -77,9 +89,14 @@ const ManageBanners = () => {
       });
       if (!res.ok) throw new Error("Upload failed");
       const { url } = await res.json();
-      setForm({ ...form, image_url: url });
+      if (type === 'image') {
+        setForm({ ...form, image_url: url });
+        toast.success("Image uploaded!");
+      } else {
+        setForm({ ...form, video_url: url });
+        toast.success("Video uploaded!");
+      }
       setUploading(false);
-      toast.success("Image uploaded!");
     } catch (error: any) {
       toast.error("Upload failed: " + error.message);
       setUploading(false);
@@ -87,8 +104,8 @@ const ManageBanners = () => {
   };
 
   const handleSave = async () => {
-    if (!form.title.trim()) { toast.error("Please enter a banner title"); return; }
-    if (!form.image_url) { toast.error("Please upload an image"); return; }
+    // Title is no longer mandatory
+    if (!form.image_url && !form.video_url) { toast.error("Please upload at least an image or a video"); return; }
     try {
       const url = editingId ? `/api/banners/${editingId}` : "/api/banners";
       const method = editingId ? "PUT" : "POST";
@@ -100,6 +117,7 @@ const ManageBanners = () => {
           title: form.title || null,
           subtitle: form.subtitle || null,
           image_url: form.image_url,
+          video_url: form.video_url || null,
           cta_text: form.cta_text || null,
           cta_link: form.cta_link || null,
           badge_text: form.badge_text || null,
@@ -114,7 +132,7 @@ const ManageBanners = () => {
         throw new Error(data.error || "Failed to save banner");
       }
       toast.success(editingId ? "Banner updated!" : "Banner added!");
-      setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "", page_path: "home" });
+      setForm({ title: "", subtitle: "", image_url: "", video_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "", page_path: "home" });
       setShowForm(false);
       setEditingId(null);
       fetchBanners();
@@ -126,6 +144,7 @@ const ManageBanners = () => {
       title: banner.title || "",
       subtitle: banner.subtitle || "",
       image_url: banner.image_url || "",
+      video_url: banner.video_url || "",
       cta_text: banner.cta_text || "",
       cta_link: banner.cta_link || "",
       badge_text: banner.badge_text || "",
@@ -167,7 +186,7 @@ const ManageBanners = () => {
             <p className="text-sm text-muted-foreground">Add, reorder, and manage banners for various pages</p>
           </div>
           <Button className="bg-primary text-primary-foreground" onClick={() => {
-            setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "", page_path: "home" });
+            setForm({ title: "", subtitle: "", image_url: "", video_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "", page_path: "home" });
             setEditingId(null);
             setShowForm(!showForm);
           }}>
@@ -191,8 +210,8 @@ const ManageBanners = () => {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Banner Title</label>
-                <Input placeholder="Banner Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <label className="text-sm font-medium">Banner Title (Optional)</label>
+                <Input placeholder="E.g. Invest in IPOs" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
               
               <Input placeholder="Badge Text (Optional)" value={form.badge_text} onChange={(e) => setForm({ ...form, badge_text: e.target.value })} />
@@ -206,21 +225,41 @@ const ManageBanners = () => {
               <div className="md:col-span-1">
                 <label className="flex items-center h-10 gap-2 cursor-pointer border border-dashed border-border rounded-lg px-4 hover:border-primary transition-colors">
                   <Upload className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{uploading ? "Uploading..." : form.image_url ? "Image uploaded ✓" : "Upload Banner Image"}</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                  <span className="text-sm text-muted-foreground truncate">{uploading ? "Uploading..." : form.image_url ? "Image uploaded ✓" : "Upload Banner Image"}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'image')} disabled={uploading} />
+                </label>
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="flex items-center h-10 gap-2 cursor-pointer border border-dashed border-border rounded-lg px-4 hover:border-primary transition-colors">
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground truncate">{uploading ? "Uploading..." : form.video_url ? "Video uploaded ✓" : "Upload Banner Video (Optional)"}</span>
+                  <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, 'video')} disabled={uploading} />
                 </label>
               </div>
             </div>
             <Textarea placeholder="Subtitle / Description" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
-            {form.image_url && (
-              <img src={getImageUrl(form.image_url)} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {form.image_url && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground">Image Preview</p>
+                  <img src={getImageUrl(form.image_url)} alt="Preview" className="h-32 w-full object-cover rounded-lg border border-border" />
+                </div>
+              )}
+              {form.video_url && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground">Video Preview</p>
+                  <video src={getImageUrl(form.video_url)} autoPlay muted loop className="h-32 w-full object-cover rounded-lg border border-border" />
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] text-destructive" onClick={() => setForm({ ...form, video_url: "" })}>Remove Video</Button>
+                </div>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button onClick={handleSave} className="bg-primary text-primary-foreground">{editingId ? "Update Banner" : "Save Banner"}</Button>
               <Button variant="outline" onClick={() => {
                 setShowForm(false);
                 setEditingId(null);
-                setForm({ title: "", subtitle: "", image_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "", page_path: "home" });
+                setForm({ title: "", subtitle: "", image_url: "", video_url: "", cta_text: "", cta_link: "", badge_text: "", cta2_text: "", cta2_link: "", page_path: "home" });
               }}>Cancel</Button>
             </div>
           </div>
@@ -248,6 +287,11 @@ const ManageBanners = () => {
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                       {PAGES.find(p => p.value === (banner.page_path || "home"))?.label}
                     </Badge>
+                    {banner.video_url && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-500 border-blue-500/20">
+                        Video
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{banner.subtitle || "No description"}</p>
                   <p className="text-xs text-primary mt-1">{banner.cta_text} → {banner.cta_link}</p>

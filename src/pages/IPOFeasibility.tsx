@@ -52,8 +52,37 @@ const IPOFeasibility = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  const countWords = (str: string) => {
+    return str.trim().split(/\s+/).filter(word => word.length > 0).length;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Word count validations (Updated to 40 words as requested)
+    if (countWords(formData.company_name) > 40) {
+      toast.error("Company name should not exceed 40 words.");
+      return;
+    }
+    if (countWords(formData.industry) > 40) {
+      toast.error("Industry sector should not exceed 40 words.");
+      return;
+    }
+
+    // Digit limit validations for numerical fields (15 digits as requested)
+    if (formData.current_turn_over.length > 15) {
+      toast.error("Current turnover should not exceed 15 digits.");
+      return;
+    }
+    if (formData.current_pat.length > 15) {
+      toast.error("Current PAT should not exceed 15 digits.");
+      return;
+    }
+    if (formData.networth.length > 15) {
+      toast.error("Estimated networth should not exceed 15 digits.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/ipo_feasibility", {
@@ -79,6 +108,20 @@ const IPOFeasibility = () => {
   };
 
   const handleChange = (field: string, value: string) => {
+    // Sanitize numerical fields: only allow digits
+    // Financial fields limited to 15 digits, vintage to 3 digits
+    if (field === "current_turn_over" || field === "current_pat" || field === "networth") {
+      const sanitized = value.replace(/\D/g, '').slice(0, 15);
+      setFormData((prev) => ({ ...prev, [field]: sanitized }));
+      return;
+    }
+
+    if (field === "vintage") {
+      const sanitized = value.replace(/\D/g, '').slice(0, 3);
+      setFormData((prev) => ({ ...prev, [field]: sanitized }));
+      return;
+    }
+    
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

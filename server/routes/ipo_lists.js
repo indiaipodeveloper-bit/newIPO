@@ -13,8 +13,13 @@ router.get("/", async (req, res) => {
     const category = req.query.category || "";
     const upcoming = req.query.upcoming || "";
     const status = req.query.status || "";
+    const sector_name = req.query.sector_name || "";
 
-    let countQuery = "SELECT COUNT(*) as total FROM ipo_lists i";
+    let countQuery = `
+      SELECT COUNT(*) as total 
+      FROM ipo_lists i
+      LEFT JOIN sectors s ON i.sector_id = s.id
+    `;
     let dataQuery = `
       SELECT i.*, s.name AS sector_name, 
              b.image AS blog_image,
@@ -25,6 +30,11 @@ router.get("/", async (req, res) => {
     `;
     const queryParams = [];
     const whereClauses = [];
+
+    if (sector_name) {
+      whereClauses.push("s.name = ?");
+      queryParams.push(sector_name);
+    }
 
     if (search) {
       whereClauses.push("(i.issuer_company LIKE ? OR i.merchant_bankers LIKE ? OR i.exchange LIKE ?)");
@@ -58,7 +68,29 @@ router.get("/", async (req, res) => {
     const finalSortField = allowedSortFields.includes(sortField) ? sortField : "id";
     const sortFieldSql = finalSortField === "sector_name" ? "s.name" : (finalSortField === "id" ? "i.id" : finalSortField);
     
-    dataQuery += ` ORDER BY ${sortFieldSql} DESC LIMIT ? OFFSET ?`;
+    // Complex Sorting Priority:
+    // 1. Opening Today (open_date = curdate)
+    // 2. Open/Active (open_date < curdate and close_date >= curdate)
+    // 3. Upcoming (open_date > curdate)
+    // 4. Closed (close_date < curdate)
+    // 5. No Dates (dates are null)
+    const prioritySql = `
+      CASE 
+        WHEN i.open_date = CURRENT_DATE() THEN 1
+        WHEN i.open_date < CURRENT_DATE() AND i.close_date >= CURRENT_DATE() THEN 2
+        WHEN i.open_date > CURRENT_DATE() THEN 3
+        WHEN i.close_date < CURRENT_DATE() THEN 4
+        ELSE 5
+      END
+    `;
+
+    dataQuery += ` 
+      ORDER BY 
+        ${prioritySql} ASC, 
+        (CASE WHEN (${prioritySql}) <= 3 THEN i.open_date END) ASC,
+        (CASE WHEN (${prioritySql}) = 4 THEN i.close_date END) DESC,
+        i.id DESC 
+      LIMIT ? OFFSET ?`;
     const dataParams = [...queryParams, limit, offset];
 
     const [[{ total }]] = await pool.query(countQuery, queryParams);

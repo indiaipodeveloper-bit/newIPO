@@ -8,7 +8,7 @@ import {
   Home, Star, Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -115,12 +115,12 @@ const ConnectModal = ({ banker, onClose }: { banker: Banker; onClose: () => void
           </div>
         ))}
         <div className="pt-5 border-t border-slate-100">
-          <a href={`mailto:${banker.cemail || "contact@indiaipo.in"}`} className="block">
+          <Link to={`/merchant-contact?ipo_type=${banker.mcat_id === "SME" ? "SME IPO" : "Mainboard IPO"}&banker=${encodeURIComponent(banker.title)}`} className="block">
             <button className="w-full h-12 rounded-xl font-black transition-all hover:scale-105 shadow-lg text-sm"
               style={{ background: `linear-gradient(135deg, ${G}, ${G2})`, color: N, boxShadow: "0 4px 16px rgba(245,158,8,0.35)" }}>
               Contact Now
             </button>
-          </a>
+          </Link>
         </div>
       </div>
     </motion.div>
@@ -142,6 +142,24 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
   const [hasMore, setHasMore] = useState(false);
   const [detailBanker, setDetailBanker] = useState<Banker | null>(null);
   const [connectBanker, setConnectBanker] = useState<Banker | null>(null);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          // Find first banner that has a video_url
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 500);
@@ -183,7 +201,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
   if (detailBanker) {
     const yearwise = safeParseJSON(detailBanker.yearwise_ipolisting);
     const sizeData = safeParseJSON(detailBanker.sme_ipos_by_size);
-    const subData  = safeParseJSON(detailBanker.sme_ipos_by_subscription);
+    const subData = safeParseJSON(detailBanker.sme_ipos_by_subscription);
     const faqsData = safeParseJSON(detailBanker.faqs);
     const iposData = safeParseJSON(detailBanker.ipos);
 
@@ -241,7 +259,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
             <div className="absolute bottom-0 left-0 right-0 h-1"
               style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
-            <div className="container mx-auto max-w-6xl relative z-10">
+            <div className="container mx-auto px-4 relative z-10">
               <button onClick={() => setDetailBanker(null)}
                 className="flex items-center gap-2 text-white/60 hover:text-white mb-8 transition-colors group">
                 <div className="w-8 h-8 rounded-full border border-white/25 flex items-center justify-center group-hover:bg-white/10">
@@ -288,16 +306,16 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
             </div>
           </div>
 
-          <div className="container mx-auto max-w-6xl px-4 -mt-14 relative z-20 pb-20">
+          <div className="container mx-auto px-4 -mt-14 relative z-20 pb-20">
 
             {/* ── STATS STRIP ── */}
             <div className="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8 overflow-hidden">
               <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
                 {[
-                  { label: "Total IPOs",       value: detailBanker.noOfiposofar || detailBanker.total_ipos || "—" },
-                  { label: "Total Fund Raised", value: detailBanker.totalfundraised || detailBanker.total_raised || "—" },
-                  { label: "Avg IPO Size",      value: detailBanker.avgiposize || detailBanker.avg_size || "—" },
-                  { label: "Avg Subscription",  value: detailBanker.avgsubscription || detailBanker.avg_subscription || "—" },
+                  { label: "Total IPOs", value: detailBanker.noOfiposofar || detailBanker.total_ipos || "—" },
+                  { label: "Total Fund Raised(CR)", value: detailBanker.totalfundraised || detailBanker.total_raised || "—" },
+                  { label: "Avg IPO Size(CR)", value: detailBanker.avgiposize || detailBanker.avg_size || "—" },
+                  { label: "Avg Subscription", value: detailBanker.avgsubscription + "x" || detailBanker.avg_subscription || "—" },
                 ].map((s, i) => (
                   <div key={i} className="flex flex-col items-center text-center py-6 px-4">
                     <p className="text-2xl md:text-3xl font-black mb-1" style={{ color: i % 2 === 0 ? N : G2 }}>{s.value}</p>
@@ -306,6 +324,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                 ))}
               </div>
             </div>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -367,7 +386,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                               <td className="px-5 py-3 text-center">
                                 <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black"
                                   style={{ background: "rgba(245,158,8,0.12)", color: G2 }}>
-                                  {item.count || item.value || item.ipos || 0} IPOs
+                                  {item.count || item.value || item.ipos || item.no_of_ipos || 0} IPOs
                                 </span>
                               </td>
                               {item.amount !== undefined && (
@@ -572,13 +591,13 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                     <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Quick Summary</p>
                     <div className="space-y-3">
                       {[
-                        { label: "Total IPOs",       val: detailBanker.noOfiposofar || detailBanker.total_ipos },
-                        { label: "Fund Raised",       val: detailBanker.totalfundraised || detailBanker.total_raised },
-                        { label: "Avg IPO Size",      val: detailBanker.avgiposize || detailBanker.avg_size },
-                        { label: "Avg Subscription",  val: detailBanker.avgsubscription || detailBanker.avg_subscription },
-                        { label: "Avg Listing Gain",  val: detailBanker.avglisting_gain || detailBanker.avg_listing_gain },
-                        { label: "NSE Emerge",        val: detailBanker.nseemer },
-                        { label: "BSE SME",           val: detailBanker.bsesme },
+                        { label: "Total IPOs", val: detailBanker.noOfiposofar || detailBanker.total_ipos },
+                        { label: "Fund Raised", val: detailBanker.totalfundraised || detailBanker.total_raised },
+                        { label: "Avg IPO Size", val: detailBanker.avgiposize || detailBanker.avg_size },
+                        { label: "Avg Subscription", val: detailBanker.avgsubscription || detailBanker.avg_subscription },
+                        { label: "Avg Listing Gain", val: detailBanker.avglisting_gain || detailBanker.avg_listing_gain },
+                        { label: "NSE Emerge", val: detailBanker.nseemer },
+                        { label: "BSE SME", val: detailBanker.bsesme },
                       ].filter(s => s.val && String(s.val).trim() && String(s.val) !== "0").map((s, i) => (
                         <div key={i} className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-slate-400">{s.label}</span>
@@ -629,15 +648,25 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
       <main className="flex-grow">
 
         {/* ── HERO ── */}
-        <section className="py-16 lg:py-24 relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${N} 0%, #002147 55%, #003380 100%)` }}>
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <section className="py-16 lg:py-24 relative overflow-hidden bg-[#001529]">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
               style={{ background: G, filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
-            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-5"
-              style={{ background: "#3b82f6", filter: "blur(80px)", transform: "translate(-20%,20%)" }} />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1"
+          <div className="absolute bottom-0 left-0 right-0 h-1 z-10"
             style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
           <div className="container mx-auto px-4 relative z-10">
@@ -761,7 +790,7 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                         </div>
                       </div>
 
-                      {/* Stats mini bar */}
+
                       <div className="grid grid-cols-4 gap-0 mx-5 mb-5 rounded-xl overflow-hidden border border-slate-100"
                         style={{ background: "#F8FAFC" }}>
                         {[
@@ -780,12 +809,15 @@ const MerchantBankersPage = ({ type }: { type: "SME" | "Mainboard" }) => {
                       <div className="px-5 pb-5 mt-auto flex gap-3">
                         <button
                           onClick={(e) => { e.stopPropagation(); fetchDetailBanker(banker.id); }}
-                          className="flex-1 h-10 rounded-xl font-black text-xs border transition-all hover:bg-[#001529] hover:text-white"
+                          className="flex-1 h-10 rounded-xl font-black text-xs border transition-all  hover:text-white"
                           style={{ borderColor: "rgba(0,21,41,0.2)", color: N }}>
                           View Details
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setConnectBanker(banker); }}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            navigate(`/merchant-contact?ipo_type=${isSME ? "SME IPO" : "Mainboard IPO"}&banker=${encodeURIComponent(banker.title)}`);
+                          }}
                           className="flex-1 h-10 rounded-xl font-black text-xs transition-all hover:scale-105"
                           style={{ background: `linear-gradient(135deg, ${G}, ${G2})`, color: N, boxShadow: "0 4px 12px rgba(245,158,8,0.3)" }}>
                           Connect

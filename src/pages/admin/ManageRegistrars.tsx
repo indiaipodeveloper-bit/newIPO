@@ -6,9 +6,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, Search, Link as LinkIcon, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, Search, Link as LinkIcon, Building2, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
-import { getImageUrl } from "@/lib/utils";
+import { getImageUrl, cn } from "@/lib/utils";
+import RichEditor from "@/components/ui/RichEditor";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge as UIByadge } from "@/components/ui/badge";
 
 interface Registrar {
   id: number;
@@ -65,6 +81,8 @@ const ManageRegistrars = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [faqItems, setFaqItems] = useState<{question: string, answer: string}[]>([]);
+  const [allIpos, setAllIpos] = useState<any[]>([]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -87,7 +105,22 @@ const ManageRegistrars = () => {
     }
   };
 
-  useEffect(() => { fetchRegistrars(); }, [page, limit]);
+  const fetchIPOs = async () => {
+    try {
+      const res = await fetch("/api/ipo-lists?limit=1000");
+      if (res.ok) {
+        const body = await res.json();
+        setAllIpos(body.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to load IPOs", err);
+    }
+  };
+
+  useEffect(() => { 
+    fetchRegistrars(); 
+    fetchIPOs();
+  }, [page, limit]);
 
   const handleSave = async () => {
     if (!form.name) { toast.error("Registrar Name is required"); return; }
@@ -100,7 +133,10 @@ const ManageRegistrars = () => {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          faqs: JSON.stringify(faqItems)
+        }),
       });
 
       if (!res.ok) { throw new Error("Save failed"); }
@@ -139,6 +175,14 @@ const ManageRegistrars = () => {
       faqs: r.faqs || "",
       status: r.status || "Active",
     });
+
+    try {
+      const parsed = r.faqs ? JSON.parse(r.faqs) : [];
+      setFaqItems(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setFaqItems([]);
+    }
+
     setEditingId(r.id);
     setDialogOpen(true);
   };
@@ -197,7 +241,11 @@ const ManageRegistrars = () => {
 
           <Dialog open={dialogOpen} onOpenChange={(o) => {
             setDialogOpen(o);
-            if (!o) { setForm(emptyForm); setEditingId(null); }
+            if (!o) { 
+              setForm(emptyForm); 
+              setEditingId(null); 
+              setFaqItems([]);
+            }
           }}>
             <DialogTrigger asChild>
               <Button className="bg-primary text-primary-foreground font-semibold">
@@ -281,7 +329,66 @@ const ManageRegistrars = () => {
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Latest SME IPO</label>
-                        <Input value={form.latest_sme} onChange={(e) => setForm({ ...form, latest_sme: e.target.value })} />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between h-auto min-h-10 py-2"
+                            >
+                              <div className="flex flex-wrap gap-1 text-left">
+                                {form.latest_sme ? (
+                                  form.latest_sme.split(",").map((id) => {
+                                    const ipo = allIpos.find((i) => String(i.id) === id.trim());
+                                    return ipo ? (
+                                      <Badge key={id} variant="secondary" className="mr-1 mb-1 bg-primary/10 text-primary border-primary/20">
+                                        {ipo.issuer_company}
+                                      </Badge>
+                                    ) : null;
+                                  })
+                                ) : (
+                                  <span className="text-muted-foreground">Select SME IPOs...</span>
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search SME IPOs..." />
+                              <CommandList>
+                                <CommandEmpty>No IPO found.</CommandEmpty>
+                                <CommandGroup>
+                                  {allIpos
+                                    .filter((i) => String(i.issue_category).toLowerCase() === "sme")
+                                    .map((ipo) => {
+                                      const isSelected = form.latest_sme?.split(",").map(id => id.trim()).includes(String(ipo.id));
+                                      return (
+                                        <CommandItem
+                                          key={ipo.id}
+                                          onSelect={() => {
+                                            const currentIds = form.latest_sme ? form.latest_sme.split(",").map(id => id.trim()).filter(Boolean) : [];
+                                            const newIds = isSelected
+                                              ? currentIds.filter((id) => id !== String(ipo.id))
+                                              : [...currentIds, String(ipo.id)];
+                                            setForm({ ...form, latest_sme: newIds.join(",") });
+                                          }}
+                                        >
+                                          <div className={cn(
+                                            "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                            isSelected ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible"
+                                          )}>
+                                            <Check className="h-4 w-4" />
+                                          </div>
+                                          {ipo.issuer_company}
+                                        </CommandItem>
+                                      );
+                                    })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
 
@@ -301,23 +408,150 @@ const ManageRegistrars = () => {
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-semibold">Latest Mainboard IPO</label>
-                        <Input value={form.latest_mainbord} onChange={(e) => setForm({ ...form, latest_mainbord: e.target.value })} />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between h-auto min-h-10 py-2"
+                            >
+                              <div className="flex flex-wrap gap-1 text-left">
+                                {form.latest_mainbord ? (
+                                  form.latest_mainbord.split(",").map((id) => {
+                                    const ipo = allIpos.find((i) => String(i.id) === id.trim());
+                                    return ipo ? (
+                                      <Badge key={id} variant="secondary" className="mr-1 mb-1 bg-orange-500/10 text-orange-600 border-orange-500/20">
+                                        {ipo.issuer_company}
+                                      </Badge>
+                                    ) : null;
+                                  })
+                                ) : (
+                                  <span className="text-muted-foreground">Select Mainboard IPOs...</span>
+                                )}
+                              </div>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search Mainboard IPOs..." />
+                              <CommandList>
+                                <CommandEmpty>No IPO found.</CommandEmpty>
+                                <CommandGroup>
+                                  {allIpos
+                                    .filter((i) => {
+                                      const cat = String(i.issue_category).toLowerCase();
+                                      return cat === "mainline" || cat === "mainboard";
+                                    })
+                                    .map((ipo) => {
+                                      const isSelected = form.latest_mainbord?.split(",").map(id => id.trim()).includes(String(ipo.id));
+                                      return (
+                                        <CommandItem
+                                          key={ipo.id}
+                                          onSelect={() => {
+                                            const currentIds = form.latest_mainbord ? form.latest_mainbord.split(",").map(id => id.trim()).filter(Boolean) : [];
+                                            const newIds = isSelected
+                                              ? currentIds.filter((id) => id !== String(ipo.id))
+                                              : [...currentIds, String(ipo.id)];
+                                            setForm({ ...form, latest_mainbord: newIds.join(",") });
+                                          }}
+                                        >
+                                          <div className={cn(
+                                            "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                            isSelected ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible"
+                                          )}>
+                                            <Check className="h-4 w-4" />
+                                          </div>
+                                          {ipo.issuer_company}
+                                        </CommandItem>
+                                      );
+                                    })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
                   </div>
                 </TabsContent>
 
                 {/* Description & FAQ Tab */}
-                <TabsContent value="description" className="space-y-4 py-4">
+                <TabsContent value="description" className="space-y-6 py-4">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold">Main Description</label>
-                    <Textarea value={form.dic} onChange={(e) => setForm({ ...form, dic: e.target.value })} rows={5} placeholder="Write about the registrar..." />
+                    <RichEditor
+                      value={form.dic}
+                      onChange={(content) => setForm({ ...form, dic: content })}
+                      placeholder="Enter registrar description here..."
+                      className="min-h-[400px]"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold">FAQs (JSON format suggested)</label>
-                    <Textarea value={form.faqs} onChange={(e) => setForm({ ...form, faqs: e.target.value })} rows={5} placeholder="[
-  { 'q': 'How to check allotment?', 'a': 'Visit official website...' }
-]" />
+
+                  <div className="space-y-4 border-t pt-6">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-semibold">Frequently Asked Questions (FAQs)</label>
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => setFaqItems([...faqItems, { question: "", answer: "" }])}
+                        className="h-8"
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Add Question
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {faqItems.length === 0 ? (
+                        <div className="text-center py-6 bg-muted/20 rounded-lg border-2 border-dashed">
+                          <p className="text-xs text-muted-foreground">No FAQs added yet. Click 'Add Question' to begin.</p>
+                        </div>
+                      ) : (
+                        faqItems.map((item, idx) => (
+                          <div key={idx} className="bg-muted/30 p-4 rounded-xl space-y-3 relative group border border-border">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setFaqItems(faqItems.filter((_, i) => i !== idx))}
+                              className="absolute top-2 right-2 h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                            
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Question {idx + 1}</label>
+                              <Input 
+                                value={item.question} 
+                                onChange={(e) => {
+                                  const newItems = [...faqItems];
+                                  newItems[idx].question = e.target.value;
+                                  setFaqItems(newItems);
+                                }} 
+                                placeholder="Enter question..." 
+                                className="bg-background h-9 text-sm"
+                              />
+                            </div>
+                            
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Answer</label>
+                              <Textarea 
+                                value={item.answer} 
+                                onChange={(e) => {
+                                  const newItems = [...faqItems];
+                                  newItems[idx].answer = e.target.value;
+                                  setFaqItems(newItems);
+                                }} 
+                                placeholder="Enter answer..." 
+                                rows={2}
+                                className="bg-background text-sm min-h-[60px]"
+                              />
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </TabsContent>
 

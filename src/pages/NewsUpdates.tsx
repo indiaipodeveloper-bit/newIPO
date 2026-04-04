@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -60,6 +61,22 @@ const NewsUpdates = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   /* ── fetch news ── */
   useEffect(() => {
@@ -141,7 +158,7 @@ const NewsUpdates = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#F8FAFC] overflow-x-hidden w-full flex flex-col">
       <SEOHead
         title="News & Updates | IndiaIPO — Latest IPO & Market News"
         description="Stay ahead with the latest IPO news, SEBI regulations, BSE/NSE market updates, and capital market insights from IndiaIPO — India's most trusted IPO advisory."
@@ -154,13 +171,24 @@ const NewsUpdates = () => {
         {/* ══════════════════════════════════
             HERO SECTION
         ══════════════════════════════════ */}
-        <section className="bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] pt-14 pb-36 relative overflow-hidden">
+        <section className="bg-[#001529] pt-14 pb-36 relative overflow-hidden">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
           {/* Decorative blobs */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
               style={{ background: "#f59e08", filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
-            <div className="absolute bottom-0 left-0 w-[350px] h-[350px] rounded-full opacity-5"
-              style={{ background: "#3b82f6", filter: "blur(80px)", transform: "translate(-20%,20%)" }} />
           </div>
           {/* Bottom fade */}
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]" />
@@ -350,12 +378,12 @@ const NewsUpdates = () => {
                                   >
                                     <Share2 className="h-3.5 w-3.5" />
                                   </button>
-                                  <button
+                                  {/* <button
                                     onClick={(e) => e.preventDefault()}
                                     className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#f59e08] hover:text-white text-slate-400 flex items-center justify-center transition-all"
                                   >
                                     <Bookmark className="h-3.5 w-3.5" />
-                                  </button>
+                                  </button> */}
                                 </div>
                               </div>
                             </div>
@@ -514,12 +542,12 @@ const NewsUpdates = () => {
                       </div>
                       info@indiaipo.in
                     </a>
-                    <a href="tel:+918000000000"
+                    <a href="tel:+917428337280"
                       className="flex items-center gap-3 text-sm font-semibold text-slate-600 hover:text-[#001529] transition-colors">
                       <div className="w-9 h-9 rounded-xl bg-[#f59e08]/10 flex items-center justify-center">
                         <Phone className="h-4 w-4 text-[#f59e08]" />
                       </div>
-                      +91 8000 000 000
+                      +91-74283-37280
                     </a>
                     <a href="https://wa.me/917428337280" target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm font-semibold text-slate-600 hover:text-[#001529] transition-colors">

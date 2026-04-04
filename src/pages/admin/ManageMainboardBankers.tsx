@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon, Building2, Search, Link as LinkIcon, Info, Users, ArrowRight } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
+import RichEditor from "@/components/ui/RichEditor";
 
 interface MainboardBanker {
   id: number;
@@ -238,7 +239,12 @@ const ManageMainboardBankers = () => {
                     
                     <div className="space-y-2">
                       <label className="text-sm font-semibold">Short Description</label>
-                      <Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={4} placeholder="About the merchant banker..." />
+                      <RichEditor 
+                        value={form.description} 
+                        onChange={(val) => setForm({...form, description: val})} 
+                        placeholder="About the merchant banker..." 
+                        className="min-h-[300px]"
+                      />
                     </div>
                   </TabsContent>
 

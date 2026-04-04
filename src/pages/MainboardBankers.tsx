@@ -8,9 +8,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getImageUrl } from "@/lib/utils";
 
 interface MainboardBanker {
   id: number;
@@ -50,6 +51,23 @@ const MainboardBankersPage = () => {
   const [hasMore, setHasMore] = useState(false);
   const [detailBanker, setDetailBanker] = useState<MainboardBanker | null>(null);
   const [connectBanker, setConnectBanker] = useState<MainboardBanker | null>(null);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const videoBanner = data.find((b: any) => b.video_url);
+          if (videoBanner) setBannerVideo(videoBanner.video_url);
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   useEffect(() => {
     const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 500);
@@ -96,10 +114,10 @@ const MainboardBankersPage = () => {
             <div className="absolute bottom-0 left-0 right-0 h-1"
               style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
-            <div className="container mx-auto max-w-6xl relative z-10">
+            <div className="container mx-auto px-4 relative z-10">
               <button onClick={() => { setDetailBanker(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className="flex items-center gap-2 text-white/60 hover:text-white mb-8 transition-colors group">
-                <div className="w-8 h-8 rounded-full border border-white/25 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                <div className="w-8 h-8 rounded-full border border-white flex items-center justify-center transition-all bg-transparent group-hover:bg-white/5">
                   <ArrowRight className="w-4 h-4 rotate-180" />
                 </div>
                 Back to Directory
@@ -132,18 +150,19 @@ const MainboardBankersPage = () => {
                     <p className="text-white/50 text-sm font-mono mb-5">Reg. No: {detailBanker.sebi_registration}</p>
                   )}
                   <div className="flex flex-wrap gap-3">
-                    <button onClick={(e) => { e.stopPropagation(); setConnectBanker(detailBanker); }}
+                    <button onClick={(e) => { 
+                        e.stopPropagation(); 
+                        navigate(`/merchant-contact?ipo_type=Mainboard IPO&banker=${encodeURIComponent(detailBanker.name)}`);
+                      }}
                       className="flex items-center gap-2 px-6 h-11 rounded-xl font-black text-sm text-[#001529] transition-all hover:scale-105"
                       style={{ background: `linear-gradient(135deg, ${G}, ${G2})`, boxShadow: `0 4px 16px rgba(245,158,8,0.4)` }}>
                       <Mail className="w-4 h-4" /> Connect Now
                     </button>
-                    {detailBanker.website && (
                       <a href={detailBanker.website.startsWith("http") ? detailBanker.website : `https://${detailBanker.website}`}
                         target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-6 h-11 rounded-xl font-black text-sm text-white border border-white/25 hover:bg-white/10 transition-all">
+                        className="flex items-center gap-2 px-6 h-11 rounded-xl font-black text-sm text-white border border-white bg-transparent transition-all hover:bg-white/5 shadow-sm">
                         <Globe className="w-4 h-4" /> Visit Website
                       </a>
-                    )}
                   </div>
                 </div>
               </div>
@@ -151,7 +170,7 @@ const MainboardBankersPage = () => {
           </div>
 
           {/* Stats + Content */}
-          <div className="container mx-auto max-w-6xl px-4 -mt-14 relative z-20 pb-20">
+          <div className="container mx-auto px-4 -mt-14 relative z-20 pb-20">
             {/* Stats strip */}
             <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-10 grid grid-cols-2 md:grid-cols-4 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100">
               {statItems.map((s, i) => (
@@ -227,7 +246,10 @@ const MainboardBankersPage = () => {
                   <p className="text-white/55 text-xs mb-5 leading-relaxed">
                     Connect with {detailBanker.name} for your mainboard IPO journey and capital market needs.
                   </p>
-                  <button onClick={(e) => { e.stopPropagation(); setConnectBanker(detailBanker); }}
+                  <button onClick={(e) => { 
+                      e.stopPropagation(); 
+                      navigate(`/merchant-contact?ipo_type=Mainboard IPO&banker=${encodeURIComponent(detailBanker.name)}`);
+                    }}
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm text-[#001529] transition-all hover:scale-105"
                     style={{ background: `linear-gradient(135deg, ${G}, ${G2})`, boxShadow: `0 4px 16px rgba(245,158,8,0.4)` }}>
                     Initiate Discussion <ArrowRight className="w-4 h-4" />
@@ -258,15 +280,25 @@ const MainboardBankersPage = () => {
 
       <main className="flex-grow">
         {/* ── HERO ── */}
-        <section className="py-16 lg:py-24 relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${N} 0%, #002147 55%, #003380 100%)` }}>
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <section className="py-16 lg:py-24 relative overflow-hidden bg-[#001529]">
+          {/* Background Video */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={getImageUrl(bannerVideo || "/uploads/video/ccvindia1.mp4")}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+          </div>
+
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
             <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-5"
               style={{ background: G, filter: "blur(100px)", transform: "translate(25%,-25%)" }} />
-            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-5"
-              style={{ background: "#3b82f6", filter: "blur(80px)", transform: "translate(-20%,20%)" }} />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1"
+          <div className="absolute bottom-0 left-0 right-0 h-1 z-10"
             style={{ background: `linear-gradient(90deg, ${N}, ${G}, ${N})` }} />
 
           <div className="container mx-auto px-4 relative z-10">
@@ -308,7 +340,7 @@ const MainboardBankersPage = () => {
 
               <div className="flex flex-wrap gap-3 justify-center">
                 <Link to="/merchant-bankers/sme"
-                  className="flex items-center gap-2 px-6 h-11 rounded-xl font-black text-sm text-white border border-white/25 hover:bg-white/10 transition-all">
+                  className="flex items-center gap-2 px-6 h-11 rounded-xl font-black text-sm text-white border border-white bg-transparent transition-all hover:bg-white/5 shadow-sm">
                   View SME Bankers <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link to="/ipo-feasibility"
@@ -429,7 +461,10 @@ const MainboardBankersPage = () => {
                           style={{ borderColor: "rgba(0,21,41,0.2)", color: N }}>
                           View Details
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setConnectBanker(banker); }}
+                        <button onClick={(e) => { 
+                            e.stopPropagation(); 
+                            navigate(`/merchant-contact?ipo_type=Mainboard IPO&banker=${encodeURIComponent(banker.name)}`);
+                          }}
                           className="h-10 rounded-xl font-black text-xs text-[#001529] transition-all hover:scale-105"
                           style={{ background: `linear-gradient(135deg, ${G}, ${G2})`, boxShadow: "0 4px 12px rgba(245,158,8,0.3)" }}>
                           Contact Now
@@ -476,7 +511,7 @@ const MainboardBankersPage = () => {
                 Get Free Consultation <ArrowRight className="h-5 w-5" />
               </Link>
               <Link to="/ipo-feasibility"
-                className="inline-flex items-center gap-2 px-8 h-14 rounded-xl font-black text-base text-white border border-white/25 hover:bg-white/10 transition-all">
+                className="inline-flex items-center gap-2 px-8 h-14 rounded-xl font-black text-base text-white border border-white bg-transparent transition-all hover:bg-white/5 shadow-sm">
                 Check Eligibility
               </Link>
             </div>
@@ -504,7 +539,7 @@ const ConnectModal = ({ banker, onClose }: { banker: MainboardBanker; onClose: (
       <div className="p-6 text-white relative" style={{ background: `linear-gradient(135deg, #001529, #003380)` }}>
         <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, #001529, #f59e08, #001529)` }} />
         <button onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full border border-white/25 flex items-center justify-center hover:bg-white/10 transition-colors">
+          className="absolute top-4 right-4 w-8 h-8 rounded-full border border-white flex items-center justify-center bg-transparent transition-all hover:bg-white/5">
           <X className="w-4 h-4" />
         </button>
         <div className="w-14 h-14 rounded-xl bg-white mb-4 p-2 shadow-xl flex items-center justify-center overflow-hidden">

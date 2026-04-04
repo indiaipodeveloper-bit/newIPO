@@ -16,11 +16,14 @@ import heroBanner1 from "@/assets/hero-banner-1.jpg";
 import heroBanner2 from "@/assets/hero-banner-2.jpg";
 import heroBanner3 from "@/assets/hero-banner-3.jpg";
 
+
 interface Banner {
   id: string;
   title: string | null;
   subtitle: string | null;
   image_url: string;
+  video_url?: string | null;
+  type?: "image" | "video";
   cta_text: string | null;
   cta_link: string | null;
   badge_text?: string | null;
@@ -28,7 +31,7 @@ interface Banner {
   cta2_link?: string | null;
   sort_order: number;
   is_active?: boolean;
-}
+};
 
 const fallbackBanners: Banner[] = [
   {
@@ -36,7 +39,9 @@ const fallbackBanners: Banner[] = [
     title: "India's Leading IPO Consultancy Platform",
     subtitle:
       "Expert advisory for SME IPO, Mainline IPO, FPO, and Pre-IPO funding.",
-    image_url: heroBanner1,
+    image_url: "",
+    video_url: "/video/ccvindia1.mp4",
+    type: "video",
     cta_text: "Check IPO Feasibility",
     cta_link: "/ipo-feasibility",
     badge_text: "SEBI Registered IPO Consultancy",
@@ -44,32 +49,32 @@ const fallbackBanners: Banner[] = [
     cta2_link: "/contact",
     sort_order: 1,
   },
-  {
-    id: "2",
-    title: "SME IPO — Your Gateway to Growth",
-    subtitle:
-      "Get listed on BSE SME or NSE Emerge with our end-to-end IPO consultation services.",
-    image_url: heroBanner2,
-    cta_text: "Explore Services",
-    cta_link: "/services",
-    badge_text: "Unlock Growth Potential",
-    cta2_text: "Contact Us",
-    cta2_link: "/contact",
-    sort_order: 2,
-  },
-  {
-    id: "3",
-    title: "Trusted by 500+ Companies Nationwide",
-    subtitle:
-      "SEBI registered consultancy helping businesses raise capital through public markets.",
-    image_url: heroBanner3,
-    cta_text: "Contact Us",
-    cta_link: "/contact",
-    badge_text: "Proven Track Record",
-    cta2_text: "Our Services",
-    cta2_link: "/services",
-    sort_order: 3,
-  },
+  // {
+  //   id: "2",
+  //   title: "SME IPO — Your Gateway to Growth",
+  //   subtitle:
+  //     "Get listed on BSE SME or NSE Emerge with our end-to-end IPO consultation services.",
+  //   image_url: heroBanner2,
+  //   cta_text: "Explore Services",
+  //   cta_link: "/services",
+  //   badge_text: "Unlock Growth Potential",
+  //   cta2_text: "Contact Us",
+  //   cta2_link: "/contact",
+  //   sort_order: 2,
+  // },
+  // {
+  //   id: "3",
+  //   title: "Trusted by 500+ Companies Nationwide",
+  //   subtitle:
+  //     "SEBI registered consultancy helping businesses raise capital through public markets.",
+  //   image_url: heroBanner3,
+  //   cta_text: "Contact Us",
+  //   cta_link: "/contact",
+  //   badge_text: "Proven Track Record",
+  //   cta2_text: "Our Services",
+  //   cta2_link: "/services",
+  //   sort_order: 3,
+  // },
 ];
 
 const HeroSection = () => {
@@ -80,7 +85,7 @@ const HeroSection = () => {
   useEffect(() => {
     const loadBanners = async () => {
       try {
-        const res = await fetch("/api/banners");
+        const res = await fetch("/api/banners?page=/");
         const data = await res.json();
 
         const activeBanners = data.filter((b: Banner) => b.is_active);
@@ -89,6 +94,9 @@ const HeroSection = () => {
           const mapped = activeBanners.map((b: Banner) => ({
             ...b,
             image_url: b.image_url || fallbackBanners[0].image_url,
+            // If it has a video_url, we should set type as video
+            type: b.video_url ? "video" : (b.type || "image"),
+            video_url: b.video_url
           }));
 
           setBanners(mapped);
@@ -101,20 +109,33 @@ const HeroSection = () => {
     loadBanners();
   }, []);
 
-  // Preload first banner
+  const banner = banners[current];
+
   useEffect(() => {
-    if (!banners[0]?.image_url) return;
+    if ((banner?.type === "video" || banner?.video_url) && banner.video_url) {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "video";
+      link.href = getImgSrc(banner.video_url) || "";
+      document.head.appendChild(link);
 
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
-    link.href = getImgSrc(banners[0].image_url) || "";
-    document.head.appendChild(link);
+      return () => {
+        if (document.head.contains(link)) document.head.removeChild(link);
+      };
+    }
 
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, [banners]);
+    if (banner?.image_url) {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = getImgSrc(banner.image_url) || "";
+      document.head.appendChild(link);
+
+      return () => {
+        if (document.head.contains(link)) document.head.removeChild(link);
+      };
+    }
+  }, [banner]);
 
   const next = useCallback(() => {
     setCurrent((p) => (p + 1) % banners.length);
@@ -129,8 +150,6 @@ const HeroSection = () => {
     return () => clearInterval(timer);
   }, [next]);
 
-  const banner = banners[current];
-
   return (
     <section className="relative overflow-hidden h-[600px] lg:h-[700px]">
       {/* Background image */}
@@ -143,14 +162,25 @@ const HeroSection = () => {
           transition={{ duration: 0.8 }}
           className="absolute inset-0"
         >
-          <img
-            src={getImgSrc(banner.image_url) || ""}
-            alt={banner.title || "IPO Banner"}
-            className="w-full h-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
+          {(banner.type === "video" || banner.video_url) && banner.video_url ? (
+            <video
+              src={getImgSrc(banner.video_url) || ""}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={getImgSrc(banner.image_url) || ""}
+              alt={banner.title || "IPO Banner"}
+              className="w-full h-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          )}
 
           <div className="absolute inset-0 bg-foreground/65" />
         </motion.div>
@@ -255,8 +285,8 @@ const HeroSection = () => {
                 key={i}
                 onClick={() => setCurrent(i)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${i === current
-                    ? "bg-accent w-8"
-                    : "bg-background/40 hover:bg-background/60"
+                  ? "bg-accent w-8"
+                  : "bg-background/40 hover:bg-background/60"
                   }`}
               />
             ))}

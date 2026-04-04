@@ -21,6 +21,53 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import { getImageUrl } from "@/lib/utils";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } }
+};
+
+const MarqueeStyles = () => (
+  <style>{`
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee-mobile {
+      display: flex;
+      width: max-content;
+      animation: marquee 30s linear infinite;
+    }
+    .animate-marquee-mobile > * {
+      flex-shrink: 0;
+      width: 280px; /* Fixed width for marquee items on mobile */
+    }
+    @media (min-width: 768px) {
+      .animate-marquee-mobile {
+        animation: none;
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        transform: none !important;
+      }
+      .animate-marquee-mobile > * {
+        width: auto;
+      }
+    }
+    @media (min-width: 1024px) {
+      .animate-marquee-mobile {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  `}</style>
+);
 
 const faqs = [
   {
@@ -46,24 +93,55 @@ const faqs = [
 ];
 
 const Contact = () => {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", subject: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [banner, setBanner] = useState<any>(null);
+  const [bannerVideo, setBannerVideo] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    fetch("/api/banners")
-      .then(res => res.json())
-      .then(data => {
-        const pageBanner = data.find((b: any) => b.page_path === "/contact" && b.is_active);
-        if (pageBanner) setBanner(pageBanner);
-      })
-      .catch(err => console.error("Failed to fetch banner:", err));
-  }, []);
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${encodeURIComponent(pathname)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const activeBanner = data[0]; // Banners are ordered by priority and sort_order
+          if (activeBanner) {
+            setBannerVideo(activeBanner.video_url);
+            setBannerImage(activeBanner.image_url);
+          }
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchBanners();
+  }, [pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    // Detailed Validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (form.phone && !phoneRegex.test(form.phone)) {
+      toast.error("Please enter a valid 10-digit phone number (Numbers only).");
+      setLoading(false);
+      return;
+    }
+
+    const wordCount = form.message.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > 150) {
+      toast.error(`Message is too long (${wordCount}/150 words). Please shorten it.`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/leads", {
         method: "POST",
@@ -73,12 +151,13 @@ const Contact = () => {
           email: form.email.trim(),
           phone: form.phone.trim() || null,
           company: form.company.trim() || null,
+          subject: form.subject.trim() || null,
           message: form.message.trim(),
         }),
       });
       if (!res.ok) throw new Error("Submission failed");
       toast.success("Thank you! We'll get back to you within 24 hours.");
-      setForm({ name: "", email: "", phone: "", company: "", message: "" });
+      setForm({ name: "", email: "", phone: "", company: "", subject: "", message: "" });
     } catch (err: any) {
       toast.error("Failed to submit. Please try again.");
       console.error(err);
@@ -95,17 +174,42 @@ const Contact = () => {
         keywords="contact IndiaIPO, IPO consultation, IPO advisory contact, IndiaIPO Delhi, IndiaIPO Mumbai"
       />
       <Header />
+      <MarqueeStyles />
 
       <main>
         {/* ── Hero Banner ── */}
         <section
-          className="relative py-24 overflow-hidden"
+          className="relative py-24 overflow-hidden bg-[#001529]"
           style={{
-            background: banner?.image_url 
-              ? `linear-gradient(rgba(10, 25, 47, 0.7), rgba(10, 25, 47, 0.7)), url('${banner.image_url}') center/cover no-repeat`
-              : "linear-gradient(135deg, hsl(220 72% 22%) 0%, hsl(220 72% 38%) 55%, hsl(220 72% 45%) 100%)",
+            minHeight: "450px",
+            backgroundImage: (!bannerVideo && bannerImage) ? `linear-gradient(rgba(10, 25, 47, 0.7), rgba(10, 25, 47, 0.7)), url('${bannerImage}')` : "none",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
+          {/* Background Video */}
+          {bannerVideo && (
+            <div className="absolute inset-0 z-0">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover opacity-30"
+                src={getImageUrl(bannerVideo)}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#001529]/80 via-[#001529]/40 to-[#001529]" />
+            </div>
+          )}
+
+          {!bannerVideo && !bannerImage && (
+             <div className="absolute inset-0 bg-gradient-to-br from-[#001529] via-[#002147] to-[#003380] z-0" />
+          )}
+
+          {/* overlay for texture/depth if no video */}
+          {!bannerVideo && (
+             <div className="absolute inset-0 bg-black/40 z-0" />
+          )}
           {/* decorative circles */}
           <div
             className="absolute top-[-80px] right-[-80px] w-[340px] h-[340px] rounded-full opacity-10"
@@ -117,7 +221,9 @@ const Contact = () => {
           />
 
           <div className="container mx-auto px-4 text-center relative z-10">
-            <span
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               className="inline-block px-5 py-1.5 rounded-full text-sm font-semibold mb-5 tracking-widest uppercase"
               style={{
                 background: "hsl(35 95% 52% / 0.18)",
@@ -126,8 +232,11 @@ const Contact = () => {
               }}
             >
               We're Here to Help
-            </span>
-            <h1
+            </motion.span>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-5 leading-tight"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
@@ -143,22 +252,34 @@ const Contact = () => {
                 Touch
               </span>{" "}
               With Us
-            </h1>
-            <p className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed">
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed"
+            >
               Whether you're planning your IPO journey or looking for capital market advisory —
               our expert team is just a message away.
-            </p>
+            </motion.p>
 
             {/* quick stats */}
-            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            <motion.div 
+              variants={stagger}
+              initial="hidden"
+              animate="visible"
+              className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"
+            >
               {[
                 { icon: <TrendingUp className="h-5 w-5" />, val: "500+", label: "IPOs Advised" },
                 { icon: <Users className="h-5 w-5" />, val: "10,000+", label: "Investors Served" },
                 { icon: <Building2 className="h-5 w-5" />, val: "2", label: "Office Locations" },
                 { icon: <Shield className="h-5 w-5" />, val: "24hrs", label: "Response Time" },
               ].map((s) => (
-                <div
+                <motion.div
                   key={s.label}
+                  variants={fadeUp}
+                  whileHover={{ scale: 1.05, background: "hsl(0 0% 100% / 0.12)" }}
                   className="flex flex-col items-center gap-1 py-4 px-3 rounded-xl"
                   style={{
                     background: "hsl(0 0% 100% / 0.08)",
@@ -174,16 +295,22 @@ const Contact = () => {
                   </div>
                   <span className="text-white font-bold text-xl">{s.val}</span>
                   <span className="text-white/60 text-xs text-center">{s.label}</span>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* ── Contact Cards ── */}
         <section className="py-14 bg-secondary/30">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div 
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
               {[
                 {
                   icon: <MapPin className="h-6 w-6" />,
@@ -212,9 +339,11 @@ const Contact = () => {
                   accent: false,
                 },
               ].map((card) => (
-                <div
+                <motion.div
                   key={card.title}
-                  className="rounded-2xl p-6 flex flex-col gap-3 shadow-md hover:shadow-lg transition-shadow"
+                  variants={fadeUp}
+                  whileHover={{ y: -5, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}
+                  className="rounded-2xl p-6 flex flex-col gap-3 transition-all"
                   style={{
                     background: "white",
                     border: card.accent ? "2px solid hsl(35 95% 52%)" : "1px solid hsl(220 15% 90%)",
@@ -255,9 +384,9 @@ const Contact = () => {
                       )
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {/* Business hours */}
             <div
@@ -416,39 +545,49 @@ const Contact = () => {
                     </div>
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">
-                        Phone Number
+                        Phone Number <span className="text-[10px] text-muted-foreground font-normal ml-1">(10 digits)</span>
                       </label>
                       <Input
                         value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        placeholder="+91 XXXXX XXXXX"
-                        maxLength={20}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                        placeholder="e.g. 9876543210"
+                        maxLength={10}
                       />
                     </div>
                     <div>
                       <label className="text-sm font-semibold text-foreground mb-1.5 block">
-                        Company Name
+                        Company Name <span className="text-[10px] text-muted-foreground font-normal ml-1">(Max 50)</span>
                       </label>
                       <Input
                         value={form.company}
                         onChange={(e) => setForm({ ...form, company: e.target.value })}
                         placeholder="Your company"
-                        maxLength={200}
+                        maxLength={50}
                       />
                     </div>
                   </div>
 
                   <div className="mb-4">
                     <label className="text-sm font-semibold text-foreground mb-1.5 block">
-                      Subject
+                      Subject <span className="text-[10px] text-muted-foreground font-normal ml-1">(Max 50)</span>
                     </label>
-                    <Input placeholder="e.g. IPO Advisory, SME IPO, Pre-IPO Funding" />
+                    <Input 
+                      value={form.subject}
+                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                      placeholder="e.g. IPO Advisory, SME IPO" 
+                      maxLength={50}
+                    />
                   </div>
 
                   <div className="mb-6">
-                    <label className="text-sm font-semibold text-foreground mb-1.5 block">
-                      Your Message <span style={{ color: "hsl(35 95% 52%)" }}>*</span>
-                    </label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-sm font-semibold text-foreground block">
+                        Your Message <span style={{ color: "hsl(35 95% 52%)" }}>*</span>
+                      </label>
+                      <span className={`text-[10px] font-bold ${form.message.trim().split(/\s+/).filter(Boolean).length > 150 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        {form.message.trim().split(/\s+/).filter(Boolean).length}/150 words
+                      </span>
+                    </div>
                     <Textarea
                       required
                       value={form.message}
@@ -515,60 +654,101 @@ const Contact = () => {
               India's trusted capital market advisory platform with a decade of expertise.
             </p>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  icon: <Shield className="h-6 w-6" />,
-                  title: "SEBI Compliant",
-                  desc: "All our services operate under the strict guidelines of SEBI and other regulatory bodies ensuring full compliance.",
-                },
-                {
-                  icon: <TrendingUp className="h-6 w-6" />,
-                  title: "End-to-End IPO Support",
-                  desc: "From DRHP drafting to listing day, we handle every aspect of your IPO journey with precision.",
-                },
-                {
-                  icon: <Users className="h-6 w-6" />,
-                  title: "Expert Team",
-                  desc: "Our team of seasoned investment bankers, CA professionals, and market analysts ensure the best outcomes.",
-                },
-                {
-                  icon: <Building2 className="h-6 w-6" />,
-                  title: "Pan-India Presence",
-                  desc: "With offices in Delhi and Navi Mumbai, we serve clients across the country with dedicated regional support.",
-                },
-                {
-                  icon: <MessageCircle className="h-6 w-6" />,
-                  title: "24-hr Response",
-                  desc: "We value your time. All enquiries receive a dedicated response within 24 business hours.",
-                },
-                {
-                  icon: <ArrowRight className="h-6 w-6" />,
-                  title: "SME & Mainboard",
-                  desc: "Whether it's an NSE Emerge SME IPO or a Mainboard listing, our advisors cater to every scale.",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-2xl p-6 text-left flex gap-4 transition-all hover:scale-[1.02]"
-                  style={{
-                    background: "hsl(0 0% 100% / 0.08)",
-                    border: "1px solid hsl(0 0% 100% / 0.14)",
-                    backdropFilter: "blur(10px)",
-                  }}
-                >
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "hsl(35 95% 52% / 0.25)", color: "hsl(35 95% 65%)" }}
+            <div className="overflow-hidden -mx-4 px-4 md:mx-0 md:px-0">
+              <motion.div 
+                variants={stagger}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="animate-marquee-mobile md:gap-6"
+              >
+                {[
+                  {
+                    icon: <Shield className="h-6 w-6" />,
+                    title: "SEBI Compliant",
+                    desc: "All our services operate under the strict guidelines of SEBI and other regulatory bodies ensuring full compliance.",
+                  },
+                  {
+                    icon: <TrendingUp className="h-6 w-6" />,
+                    title: "End-to-End IPO Support",
+                    desc: "From DRHP drafting to listing day, we handle every aspect of your IPO journey with precision.",
+                  },
+                  {
+                    icon: <Users className="h-6 w-6" />,
+                    title: "Expert Team",
+                    desc: "Our team of seasoned investment bankers, CA professionals, and market analysts ensure the best outcomes.",
+                  },
+                  {
+                    icon: <Building2 className="h-6 w-6" />,
+                    title: "Pan-India Presence",
+                    desc: "With offices in Delhi and Navi Mumbai, we serve clients across the country with dedicated regional support.",
+                  },
+                  {
+                    icon: <MessageCircle className="h-6 w-6" />,
+                    title: "24-hr Response",
+                    desc: "We value your time. All enquiries receive a dedicated response within 24 business hours.",
+                  },
+                  {
+                    icon: <ArrowRight className="h-6 w-6" />,
+                    title: "SME & Mainboard",
+                    desc: "Whether it's an NSE Emerge SME IPO or a Mainboard listing, our advisors cater to every scale.",
+                  },
+                ].concat([
+                  {
+                    icon: <Shield className="h-6 w-6" />,
+                    title: "SEBI Compliant",
+                    desc: "All our services operate under the strict guidelines of SEBI and other regulatory bodies ensuring full compliance.",
+                  },
+                  {
+                    icon: <TrendingUp className="h-6 w-6" />,
+                    title: "End-to-End IPO Support",
+                    desc: "From DRHP drafting to listing day, we handle every aspect of your IPO journey with precision.",
+                  },
+                  {
+                    icon: <Users className="h-6 w-6" />,
+                    title: "Expert Team",
+                    desc: "Our team of seasoned investment bankers, CA professionals, and market analysts ensure the best outcomes.",
+                  },
+                  {
+                    icon: <Building2 className="h-6 w-6" />,
+                    title: "Pan-India Presence",
+                    desc: "With offices in Delhi and Navi Mumbai, we serve clients across the country with dedicated regional support.",
+                  },
+                  {
+                    icon: <MessageCircle className="h-6 w-6" />,
+                    title: "24-hr Response",
+                    desc: "We value your time. All enquiries receive a dedicated response within 24 business hours.",
+                  },
+                  {
+                    icon: <ArrowRight className="h-6 w-6" />,
+                    title: "SME & Mainboard",
+                    desc: "Whether it's an NSE Emerge SME IPO or a Mainboard listing, our advisors cater to every scale.",
+                  },
+                ]).map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    variants={fadeUp}
+                    whileHover={{ scale: 1.02, backgroundColor: "hsl(0 0% 100% / 0.12)" }}
+                    className={`rounded-2xl p-6 text-left flex gap-4 transition-all mr-6 md:mr-0 last:mr-0 md:last:mr-0 ${idx > 5 ? 'md:hidden' : ''}`}
+                    style={{
+                      background: "hsl(0 0% 100% / 0.08)",
+                      border: "1px solid hsl(0 0% 100% / 0.14)",
+                      backdropFilter: "blur(10px)",
+                    }}
                   >
-                    {item.icon}
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold text-sm mb-1">{item.title}</h4>
-                    <p className="text-white/60 text-xs leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: "hsl(35 95% 52% / 0.25)", color: "hsl(35 95% 65%)" }}
+                    >
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-1">{item.title}</h4>
+                      <p className="text-white/60 text-xs leading-relaxed">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
             </div>
           </div>
         </section>

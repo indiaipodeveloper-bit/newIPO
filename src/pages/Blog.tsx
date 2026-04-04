@@ -27,7 +27,7 @@ export default function Blog() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/banners")
+    fetch("/api/banners?page=/blog")
       .then(res => res.json())
       .then(data => {
         const pageBanner = data.find((b: any) => b.page_path === "/blog" && b.is_active);

@@ -11,6 +11,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+interface IPO {
+  id: number;
+  issuer_company: string;
+  listing_date?: string;
+  exchange?: string;
+  lot_size?: string;
+  issue_size?: string;
+  blog_slug?: string;
+  logo?: string;
+}
+
 interface Registrar {
   id: number;
   name: string;
@@ -30,6 +41,8 @@ interface Registrar {
   registrar_year: string;
   latest_sme: string;
   latest_mainbord: string;
+  latest_sme_ipos?: IPO[];
+  latest_mainboard_ipos?: IPO[];
   faqs: string;
   status: string;
 }
@@ -47,13 +60,34 @@ const RegistrarDetails = () => {
         if (res.ok) {
           const data = await res.json();
           setRegistrar(data);
+          
+          // Use registrar-specific faqs if they exist
+          if (data.faqs) {
+             try {
+               const parsedFaqs = JSON.parse(data.faqs);
+               if (Array.isArray(parsedFaqs) && parsedFaqs.length > 0) {
+                 const normalizedFaqs = parsedFaqs.map((f: any) => ({
+                    question: f.q || f.question || "",
+                    answer: f.a || f.answer || ""
+                 }));
+                 setFaqs(normalizedFaqs);
+               } else {
+                 fetchGlobalFaqs();
+               }
+             } catch(err) {
+               console.error("Failed to parse registrar faqs", err);
+               fetchGlobalFaqs();
+             }
+          } else {
+             fetchGlobalFaqs();
+          }
         }
       } catch (err) {
         console.error(err);
       }
     };
 
-    const fetchFaqs = async () => {
+    const fetchGlobalFaqs = async () => {
       try {
         const res = await fetch("/api/registrar-faqs/active");
         if (res.ok) {
@@ -65,7 +99,7 @@ const RegistrarDetails = () => {
       }
     };
 
-    Promise.all([fetchDetails(), fetchFaqs()]).finally(() => setLoading(false));
+    fetchDetails().finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [slug]);
 
@@ -100,6 +134,73 @@ const RegistrarDetails = () => {
     if (!path) return 'https://via.placeholder.com/150';
     if (path.startsWith('http')) return path;
     return window.location.origin + (path.startsWith('/') ? '' : '/') + path;
+  };
+
+  const formatDate = (dateStr: any) => {
+    if (!dateStr || dateStr === "0") return "TBA";
+    try {
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? "TBA" : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    } catch { return "TBA"; }
+  };
+
+  const renderIPOGrid = (ipos: IPO[] | undefined, title: string) => {
+    if (!ipos || ipos.length === 0) return null;
+
+    return (
+      <div className="mt-16">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-black font-heading text-foreground mb-4 tracking-tight">
+            {title}
+          </h2>
+          <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {ipos.map((ipo) => (
+            <motion.div
+              key={ipo.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="bg-card border border-border rounded-[2rem] p-8 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative"
+            >
+              <div className="absolute top-0 right-0 p-4">
+                <span className="bg-primary/5 text-primary text-[10px] font-black px-3 py-1 rounded-full border border-primary/10 uppercase tracking-widest">
+                  {ipo.exchange || "BSE, NSE"}
+                </span>
+              </div>
+              
+              <div className="mb-6 mt-2">
+                <h3 className="text-xl font-black font-heading text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                  {ipo.issuer_company} IPO
+                </h3>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between py-3 border-b border-border/50">
+                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Listing Date</span>
+                   <span className="text-sm font-black text-foreground">{formatDate(ipo.listing_date)}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-border/50">
+                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lot Size</span>
+                   <span className="text-sm font-black text-foreground">{ipo.lot_size || 'TBA'}</span>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Issue Size</span>
+                   <span className="text-sm font-black text-primary italic">₹{ipo.issue_size || '0'} Cr.</span>
+                </div>
+              </div>
+
+              <Button asChild className="w-full h-12 rounded-2xl font-black bg-primary/10 hover:bg-primary text-primary hover:text-white transition-all border-none">
+                <Link to={ipo.blog_slug ? `/ipo-blogs/${ipo.blog_slug}` : `/list-of-ipo-registrar/${slug}`}>
+                  View Details
+                </Link>
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -169,7 +270,7 @@ const RegistrarDetails = () => {
         {/* Stats Grid */}
         <section className="mt-12 mb-16">
           <div className="container mx-auto px-4">
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -197,7 +298,7 @@ const RegistrarDetails = () => {
                   className="bg-card border border-border rounded-3xl p-6 shadow-sm"
                 >
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 font-heading">SME Parentage</p>
-                  <p className="text-4xl font-black text-brand-green font-heading">{registrar.sme_ipo_parentage || '0'}%</p>
+                  <p className="text-4xl font-black text-brand-green font-heading">{registrar.sme_ipo_parentage && String(registrar.sme_ipo_parentage).includes('%') ? registrar.sme_ipo_parentage : (registrar.sme_ipo_parentage || '0') + '%'}</p>
                 </motion.div>
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
@@ -206,11 +307,60 @@ const RegistrarDetails = () => {
                   transition={{ delay: 0.3 }}
                   className="bg-card border border-border rounded-3xl p-6 shadow-sm"
                 >
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 font-heading">Mainboard Parentage</p>
+                  <p className="text-4xl font-black text-brand-green font-heading">{registrar.mainboard_ipo_parentage && String(registrar.mainboard_ipo_parentage).includes('%') ? registrar.mainboard_ipo_parentage : (registrar.mainboard_ipo_parentage || '0') + '%'}</p>
+                </motion.div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-card border border-border rounded-3xl p-6 shadow-sm"
+                >
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 font-heading">SME Avg. Subscription</p>
-                  <p className="text-4xl font-black text-blue-500 font-heading">{registrar.avgsubscription_sme || '0'}x</p>
+                  <p className="text-4xl font-black text-blue-500 font-heading">{registrar.avgsubscription_sme && String(registrar.avgsubscription_sme).includes('x') ? registrar.avgsubscription_sme : (registrar.avgsubscription_sme || '0') + 'x'}</p>
                 </motion.div>
              </div>
           </div>
+        </section>
+
+        {/* Assisted Banner Section */}
+        <section className="mb-20">
+           <div className="container mx-auto px-4">
+              <div className="bg-primary rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden text-center">
+                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                 <div className="relative z-10">
+                    <h2 className="text-3xl md:text-5xl font-black font-heading mb-8 tracking-tight">
+                       {registrar.name} IPOs Assisted So Far
+                    </h2>
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+                       <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 min-w-[200px]">
+                          <p className="text-6xl font-black mb-2">{Number(registrar.mainboard_ipo || 0) + Number(registrar.sme_ipo || 0)}</p>
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Total IPOs Processed</p>
+                       </div>
+                       <div className="flex gap-8">
+                          <div className="text-center">
+                             <p className="text-4xl font-black mb-1 text-orange-400">{registrar.mainboard_ipo || '0'}</p>
+                             <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Mainboard IPOs</p>
+                          </div>
+                          <div className="w-px h-12 bg-white/20"></div>
+                          <div className="text-center">
+                             <p className="text-4xl font-black mb-1 text-green-400">{registrar.sme_ipo || '0'}</p>
+                             <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">SME IPOs</p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+        {/* Latest IPOs Grid Section */}
+        <section className="mb-24">
+           <div className="container mx-auto px-4">
+              {renderIPOGrid(registrar.latest_sme_ipos, "Latest SME IPOs")}
+              {renderIPOGrid(registrar.latest_mainboard_ipos, "Latest Mainboard IPOs")}
+           </div>
         </section>
 
         {/* Content Section */}
@@ -260,18 +410,12 @@ const RegistrarDetails = () => {
                 <ListChecks className="h-5 w-5 text-primary" />
                 Performance Summary
               </h3>
-              <div className="space-y-6 font-poppins">
+              <div className="space-y-6 font-poppins text-center">
                 <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 font-heading">Latest Mainboard IPO</p>
-                  <p className="font-bold text-foreground text-lg">{registrar.latest_mainbord || '0'}</p>
-                </div>
-                <div className="pt-6 border-t border-border/50">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 font-heading">Latest SME IPO</p>
-                  <p className="font-bold text-foreground text-lg">{registrar.latest_sme || '0'}</p>
-                </div>
-                <div className="pt-6 border-t border-border/50">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 font-heading">Mainboard Parentage</p>
-                  <p className="font-bold text-foreground text-lg">{registrar.mainboard_ipo_parentage || '0'}%</p>
+                  <p className="font-black text-primary text-3xl">
+                    {registrar.mainboard_ipo_parentage && String(registrar.mainboard_ipo_parentage).includes('%') ? registrar.mainboard_ipo_parentage : (registrar.mainboard_ipo_parentage || '0') + '%'}
+                  </p>
                 </div>
               </div>
             </div>

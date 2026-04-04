@@ -29,9 +29,21 @@ router.get("/", async (req, res) => {
 // GET all sectors for admin (includes inactive)
 router.get("/admin", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM sectors ORDER BY name ASC");
+    const query = `
+      SELECT 
+        s.*,
+        COUNT(CASE WHEN LOWER(i.issue_category) IN ('mainline', 'mainboard') THEN 1 END) as mainline_count,
+        COUNT(CASE WHEN LOWER(i.issue_category) = 'sme' THEN 1 END) as sme_count,
+        COUNT(i.id) as total_count
+      FROM sectors s
+      LEFT JOIN ipo_lists i ON s.id = i.sector_id
+      GROUP BY s.id
+      ORDER BY s.name ASC
+    `;
+    const [rows] = await pool.query(query);
     res.json(rows);
   } catch (error) {
+    console.error("Error fetching sectors for admin:", error);
     res.status(500).json({ error: "Failed to fetch sectors" });
   }
 });

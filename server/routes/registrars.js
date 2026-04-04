@@ -48,7 +48,32 @@ router.get('/slug/:slug', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT * FROM registrar WHERE slug = ?', [req.params.slug]);
         if (rows.length === 0) return res.status(404).json({ error: 'Registrar not found' });
-        res.json(rows[0]);
+        
+        const registrar = rows[0];
+
+        // Helper function to get full IPO data by IDs
+        const getIPODetails = async (idString) => {
+            if (!idString) return [];
+            const ids = idString.split(',').map(id => id.trim()).filter(id => id && !isNaN(id) && id !== '0');
+            if (ids.length === 0) return [];
+            
+            try {
+                const [ipoRows] = await pool.query(
+                    `SELECT * FROM ipo_lists WHERE id IN (${ids.map(() => '?').join(',')}) ORDER BY created_at DESC LIMIT 3`,
+                    ids
+                );
+                return ipoRows;
+            } catch (err) {
+                console.error("Error fetching IPO details:", err);
+                return [];
+            }
+        };
+
+        // Resolve IPO details for SME and Mainboard
+        registrar.latest_sme_ipos = await getIPODetails(registrar.latest_sme);
+        registrar.latest_mainboard_ipos = await getIPODetails(registrar.latest_mainbord);
+
+        res.json(registrar);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

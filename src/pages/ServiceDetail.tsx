@@ -1,10 +1,11 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { servicesData } from "@/data/servicesData";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getImgSrc } from "@/utils/image";
 import {
   ArrowRight, CheckCircle, ChevronRight, Phone, Mail, Home,
   Shield, Clock, Users, Star, Award, Zap, Target,
@@ -12,6 +13,41 @@ import {
   MessageSquare, Building2, Globe, BarChart3
 } from "lucide-react";
 import NotFound from "./NotFound";
+
+interface Banner {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  image_url: string;
+  video_url?: string | null;
+  is_active: boolean;
+}
+
+/* ─── Animation helpers ─── */
+const MarqueeStyles = () => (
+  <style>{`
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-marquee-mobile {
+      display: flex;
+      width: max-content;
+      animation: marquee 30s linear infinite;
+    }
+    .animate-marquee-mobile > * {
+      flex-shrink: 0;
+    }
+    @media (min-width: 768px) {
+      .animate-marquee-mobile {
+        display: grid;
+        animation: none;
+        width: 100%;
+        transform: none !important;
+      }
+    }
+  `}</style>
+);
 
 /* ── Category-specific color map ── */
 const categoryConfig: Record<string, { accent: string; bg: string; gradient: string; badgeBg: string }> = {
@@ -123,7 +159,24 @@ const FAQItem = ({ faq, index }: { faq: typeof commonFaqs[0]; index: number }) =
 /* ── Main Page ── */
 const ServiceDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
   const service = servicesData.find((s) => s.slug === slug);
+  const [banner, setBanner] = useState<Banner | null>(null);
+
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        const res = await fetch(`/api/banners?page=${location.pathname}`);
+        const data = await res.json();
+        if (data.length > 0) {
+          setBanner(data[0]); // The API returns the best match (page path or group) first
+        }
+      } catch (err) {
+        console.error("Failed to fetch banner:", err);
+      }
+    };
+    fetchBanner();
+  }, [location.pathname]);
 
   if (!service) return <NotFound />;
 
@@ -136,6 +189,7 @@ const ServiceDetail = () => {
         description={service.shortDescription}
         keywords={`${service.title}, IPO Consultancy India, ${service.category}, SEBI registered advisory, financial services India`}
       />
+      <MarqueeStyles />
       <Header />
 
       <main className="flex-grow">
@@ -146,17 +200,42 @@ const ServiceDetail = () => {
         <section
           className={`bg-gradient-to-br ${cfg.gradient} pt-14 pb-40 relative overflow-hidden`}
         >
+          {/* Banner background if exists */}
+          {banner && (
+            <div className="absolute inset-0 z-0">
+               {banner.video_url ? (
+                <video
+                  src={getImgSrc(banner.video_url) || ""}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={getImgSrc(banner.image_url) || ""}
+                  alt={banner.title || "Banner"}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-slate-900/65" />
+            </div>
+          )}
+
           {/* Decorative blobs */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
-              style={{ background: cfg.accent, filter: "blur(120px)", transform: "translate(30%,-20%)" }} />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-5"
-              style={{ background: "#3b82f6", filter: "blur(80px)", transform: "translate(-20%,20%)" }} />
-          </div>
+          {!banner && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
+                style={{ background: cfg.accent, filter: "blur(120px)", transform: "translate(30%,-20%)" }} />
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-5"
+                style={{ background: "#3b82f6", filter: "blur(80px)", transform: "translate(-20%,20%)" }} />
+            </div>
+          )}
           {/* Bottom fade */}
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#F8FAFC]" />
 
-          <div className="container mx-auto max-w-6xl px-4 relative z-10">
+          <div className="container mx-auto px-4 relative z-10">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-white/50 mb-8 flex-wrap">
               <Link to="/" className="hover:text-white flex items-center gap-1 transition-colors">
@@ -212,10 +291,10 @@ const ServiceDetail = () => {
                   </Button>
                   <Button
                     asChild
-                    variant="outline"
-                    className="border-white/25 text-white hover:bg-white/10 rounded-xl px-8 h-12 text-sm font-bold"
+                    variant="outlineWhite"
+                    className="rounded-xl px-8 h-12 text-sm font-bold shadow-md"
                   >
-                    <a href="tel:+918000000000">
+                    <a href="tel:+917428337280">
                       <Phone className="mr-2 h-4 w-4" /> Call Us Now
                     </a>
                   </Button>
@@ -229,7 +308,7 @@ const ServiceDetail = () => {
             TRUST STATS BAR
         ══════════════════════════════════ */}
         <section className="bg-gradient-to-r from-[#001529] to-[#003380] py-10 -mt-1 relative z-10">
-          <div className="container mx-auto max-w-6xl px-4">
+          <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {trustStats.map((s, i) => (
                 <div key={i}
@@ -250,7 +329,7 @@ const ServiceDetail = () => {
             MAIN CONTENT + SIDEBAR
         ══════════════════════════════════ */}
         <section className="py-20 relative -mt-6 rounded-t-[40px] bg-[#F8FAFC] z-20">
-          <div className="container mx-auto max-w-6xl px-4">
+          <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
               {/* ── Left: Main content ── */}
@@ -276,19 +355,19 @@ const ServiceDetail = () => {
                     <div className="w-1 h-8 rounded-full" style={{ background: cfg.accent }} />
                     <h2 className="text-3xl font-black text-[#001529]">Key Benefits</h2>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {service.keyBenefits.map((benefit, idx) => (
                       <div
                         key={idx}
-                        className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex items-start gap-4 group"
+                        className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center gap-3 group h-full"
                       >
                         <div
-                          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform"
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
                           style={{ background: `${cfg.accent}18` }}
                         >
                           <CheckCircle className="h-5 w-5" style={{ color: cfg.accent }} />
                         </div>
-                        <span className="font-semibold text-slate-700 leading-snug text-sm">{benefit}</span>
+                        <span className="font-bold text-slate-800 leading-tight text-[11px] sm:text-xs">{benefit}</span>
                       </div>
                     ))}
                   </div>
@@ -361,24 +440,24 @@ const ServiceDetail = () => {
                     <div className="w-1 h-8 rounded-full" style={{ background: cfg.accent }} />
                     <h2 className="text-3xl font-black text-[#001529]">Industries We Serve</h2>
                   </div>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {[
                       "Manufacturing", "Technology", "Real Estate", "Infrastructure",
                       "Healthcare & Pharma", "FMCG", "Retail & D2C", "Energy & Renewables",
                       "Financial Services", "Education", "Logistics", "Agri-Tech",
                       "Media & Entertainment", "Hospitality", "Auto & EV",
                     ].map((sector, i) => (
-                      <span
+                      <div
                         key={i}
-                        className="px-4 py-2 rounded-full text-sm font-semibold border transition-all hover:scale-105 cursor-default"
+                        className="px-4 py-3 rounded-xl text-xs font-bold border transition-all hover:scale-105 cursor-default flex items-center justify-center text-center leading-tight shadow-sm"
                         style={{
-                          background: i % 3 === 0 ? `${cfg.accent}12` : i % 3 === 1 ? "#001529/08" : "#f1f5f9",
-                          borderColor: i % 3 === 0 ? `${cfg.accent}40` : "#e2e8f0",
+                          background: i % 3 === 0 ? `${cfg.accent}12` : i % 3 === 1 ? "rgba(0,21,41,0.04)" : "#ffffff",
+                          borderColor: i % 3 === 0 ? `${cfg.accent}30` : "#e2e8f0",
                           color: i % 3 === 0 ? cfg.accent : "#475569",
                         }}
                       >
                         {sector}
-                      </span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -389,31 +468,58 @@ const ServiceDetail = () => {
                     <div className="w-1 h-8 rounded-full" style={{ background: cfg.accent }} />
                     <h2 className="text-3xl font-black text-[#001529]">Client Testimonials</h2>
                   </div>
-                  <div className="space-y-4">
-                    {testimonials.map((t, i) => (
-                      <div key={i}
-                        className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative"
-                      >
-                        <div
-                          className="absolute top-0 left-0 w-full h-1 rounded-t-2xl"
-                          style={{ background: `linear-gradient(90deg, #001529, ${cfg.accent})` }}
-                        />
-                        <div className="flex items-start gap-4">
+                  <div className="overflow-hidden md:overflow-visible pb-8 -mx-4 px-4 scrollbar-hide">
+                    <div className="animate-marquee-mobile flex gap-6 md:flex-col md:gap-4 hover:[animation-play-state:paused]">
+                      {testimonials.map((t, i) => (
+                        <div key={i}
+                          className="w-[280px] md:w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative"
+                        >
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0"
-                            style={{ background: `linear-gradient(135deg, #001529, ${cfg.accent})` }}
-                          >
-                            {t.name.charAt(0)}
-                          </div>
-                          <div>
-                            <MessageSquare className="h-5 w-5 mb-2" style={{ color: cfg.accent }} />
-                            <p className="text-slate-600 text-sm leading-relaxed italic mb-3">"{t.quote}"</p>
-                            <div className="font-bold text-slate-900 text-sm">{t.name}</div>
-                            <div className="text-slate-400 text-xs">{t.designation}</div>
+                            className="absolute top-0 left-0 w-full h-1 rounded-t-2xl"
+                            style={{ background: `linear-gradient(90deg, #001529, ${cfg.accent})` }}
+                          />
+                          <div className="flex items-start gap-4">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0"
+                              style={{ background: `linear-gradient(135deg, #001529, ${cfg.accent})` }}
+                            >
+                              {t.name.charAt(0)}
+                            </div>
+                            <div>
+                              <MessageSquare className="h-5 w-5 mb-2" style={{ color: cfg.accent }} />
+                              <p className="text-slate-600 text-sm leading-relaxed italic mb-3">"{t.quote}"</p>
+                              <div className="font-bold text-slate-900 text-sm">{t.name}</div>
+                              <div className="text-slate-400 text-xs">{t.designation}</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                      {/* Duplicate set for mobile marquee loop */}
+                      {testimonials.map((t, i) => (
+                        <div key={`dup-${i}`}
+                          className="md:hidden w-[280px] bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative"
+                        >
+                          <div
+                            className="absolute top-0 left-0 w-full h-1 rounded-t-2xl"
+                            style={{ background: `linear-gradient(90deg, #001529, ${cfg.accent})` }}
+                          />
+                          <div className="flex items-start gap-4">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0"
+                              style={{ background: `linear-gradient(135deg, #001529, ${cfg.accent})` }}
+                            >
+                              {t.name.charAt(0)}
+                            </div>
+                            <div>
+                              <MessageSquare className="h-5 w-5 mb-2" style={{ color: cfg.accent }} />
+                              <p className="text-slate-600 text-sm leading-relaxed italic mb-3">"{t.quote}"</p>
+                              <div className="font-bold text-slate-900 text-sm">{t.name}</div>
+                              <div className="text-slate-400 text-xs">{t.designation}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -467,11 +573,11 @@ const ServiceDetail = () => {
                       <div className="mt-5 pt-5 border-t border-slate-100">
                         <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Or Call Us Directly At</p>
                         <a
-                          href="tel:+918000000000"
+                          href="tel:+917428337280"
                           className="text-lg font-black hover:underline"
                           style={{ color: "#001529" }}
                         >
-                          +91 8000 000 000
+                          +91-74283-37280
                         </a>
                       </div>
                     </div>
@@ -549,11 +655,9 @@ const ServiceDetail = () => {
           </div>
         </section>
 
-        {/* ══════════════════════════════════
-            WHY CHOOSE US
-        ══════════════════════════════════ */}
+        {/* ─── WHY CHOOSE US ─── */}
         <section className="bg-white py-20 border-t border-slate-200">
-          <div className="container mx-auto max-w-6xl px-4">
+          <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <div className="inline-flex items-center gap-2 bg-[#f59e08]/15 border border-[#f59e08]/30 rounded-full px-4 py-1.5 mb-4">
                 <div className="w-2 h-2 rounded-full bg-[#f59e08] animate-pulse" />
@@ -566,32 +670,32 @@ const ServiceDetail = () => {
                 We combine deep domain expertise, a SEBI-compliant advisory framework, hands-on execution, and India's largest financial intermediary network — all under one roof.
               </p>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {whyUs.map((item, i) => (
-                <div
-                  key={i}
-                  className="bg-[#F8FAFC] rounded-2xl p-7 border border-slate-200 hover:shadow-lg hover:-translate-y-1.5 transition-all group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001529] to-[#003380] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-md">
-                    <item.icon className="h-7 w-7 text-[#f59e08]" />
+            <div className="overflow-hidden md:overflow-visible pb-8 -mx-4 px-4 scrollbar-hide">
+              <div className="animate-marquee-mobile flex gap-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 hover:[animation-play-state:paused]">
+                {whyUs.map((item, i) => (
+                  <div
+                    key={i}
+                    className="w-[280px] md:w-auto bg-[#F8FAFC] rounded-2xl p-7 border border-slate-200 hover:shadow-lg hover:-translate-y-1.5 transition-all group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#001529] to-[#003380] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-md">
+                      <item.icon className="h-7 w-7 text-[#f59e08]" />
+                    </div>
+                    <h3 className="text-base font-black text-[#001529] mb-2">{item.title}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
                   </div>
-                  <h3 className="text-base font-black text-[#001529] mb-2">{item.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ══════════════════════════════════
-            FINAL CTA BAND
-        ══════════════════════════════════ */}
+        {/* ─── FINAL CTA BAND ─── */}
         <section className="bg-gradient-to-r from-[#001529] via-[#002147] to-[#003380] py-20 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-5"
               style={{ background: "#f59e08", filter: "blur(80px)", transform: "translate(20%,-30%)" }} />
           </div>
-          <div className="container mx-auto max-w-6xl px-4 text-center relative z-10">
+          <div className="container mx-auto px-4 text-center relative z-10">
             <div className="inline-flex items-center gap-2 bg-[#f59e08]/15 border border-[#f59e08]/30 rounded-full px-4 py-1.5 mb-6">
               <div className="w-2 h-2 rounded-full bg-[#f59e08] animate-pulse" />
               <span className="text-[#f59e08] text-xs font-black uppercase tracking-widest">Take the First Step</span>
@@ -619,8 +723,8 @@ const ServiceDetail = () => {
               </Button>
               <Button
                 asChild
-                variant="outline"
-                className="border-white/25 text-white hover:bg-white/10 rounded-xl px-10 h-14 text-base font-bold"
+                variant="outlineWhite"
+                className="rounded-xl px-10 h-14 text-base font-bold shadow-xl"
               >
                 <a href="mailto:info@indiaipo.in">
                   <Mail className="mr-2 h-5 w-5" /> info@indiaipo.in

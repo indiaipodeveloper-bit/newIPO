@@ -1,25 +1,42 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, Calendar, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { getImageUrl } from "@/lib/utils";
 
-import vol9 from "@/assets/magazine-vol9.jpg";
-import vol8 from "@/assets/magazine-vol8.jpg";
-import vol7 from "@/assets/magazine-vol7.jpg";
-import vol6 from "@/assets/magazine-vol6.jpg";
-
-const magazines = [
-  { title: "IPO World - Volume 9", date: "February 6, 2026", slug: "vol-9", cover: vol9 },
-  { title: "IPO World - Volume 8", date: "January 9, 2026", slug: "vol-8", cover: vol8 },
-  { title: "IPO World - Volume 7", date: "December 11, 2025", slug: "vol-7", cover: vol7 },
-  { title: "IPO World - Volume 6", date: "November 13, 2025", slug: "vol-6", cover: vol6 },
-  { title: "IPO World - Volume 5", date: "October 9, 2025", slug: "vol-5", cover: vol9 },
-  { title: "IPO World - Volume 4", date: "September 11, 2025", slug: "vol-4", cover: vol8 },
-];
+interface Magazine {
+  id: string;
+  title: string;
+  pdf: string;
+  language: string;
+  pdf_lock: boolean | number;
+  report_images: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 const IPOWorldSection = () => {
+  const [magazines, setMagazines] = useState<Magazine[]>([]);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchMagazines = async () => {
+      try {
+        const res = await fetch("/api/magazines");
+        if (res.ok) {
+          const data = await res.json();
+          setMagazines(data);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching magazines:", err);
+        setLoading(false);
+      }
+    };
+    fetchMagazines();
+  }, []);
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -65,45 +82,58 @@ const IPOWorldSection = () => {
             className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 px-2 snap-x snap-mandatory"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {magazines.map((mag, idx) => (
-              <motion.div
-                key={mag.slug}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                viewport={{ once: true }}
-                className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl transition-shadow group"
-              >
-                {/* Magazine Cover */}
-                <div className="relative h-[380px] overflow-hidden">
-                  <img
-                    src={mag.cover}
-                    alt={mag.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <span className="absolute top-3 left-3 bg-accent text-accent-foreground text-[10px] font-bold px-3 py-1 rounded-md shadow-md">
-                    Premium
-                  </span>
-                </div>
-
-                {/* Info */}
-                <div className="p-5">
-                  <h4 className="font-bold font-heading text-foreground text-base mb-2">{mag.title}</h4>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {mag.date}
+            {loading ? (
+              <div className="w-full text-center py-20 text-muted-foreground">Loading magazines...</div>
+            ) : magazines.length === 0 ? (
+              <div className="w-full text-center py-20 text-muted-foreground">No magazines available yet.</div>
+            ) : (
+              magazines.map((mag, idx) => (
+                <motion.div
+                  key={mag.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  viewport={{ once: true }}
+                  className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl transition-shadow group"
+                >
+                  {/* Magazine Cover */}
+                  <div className="relative h-[380px] overflow-hidden">
+                    <img
+                      src={getImageUrl(mag.report_images)}
+                      alt={mag.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                       {Number(mag.pdf_lock) === 1 && (
+                        <span className="bg-accent text-accent-foreground text-[10px] font-bold px-3 py-1 rounded-md shadow-md flex items-center gap-1">
+                          <Lock className="h-3 w-3" /> Premium
+                        </span>
+                      )}
+                      <span className="bg-primary/90 text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-md shadow-md uppercase">
+                        {mag.language}
+                      </span>
+                    </div>
                   </div>
-                  <Button className="w-full bg-brand-green text-primary-foreground hover:bg-brand-green/90 font-semibold text-sm rounded-xl" asChild>
-                    <Link to="/#newsletter-section" onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById('newsletter-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }}>
-                      Read Magazine
-                    </Link>
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Info */}
+                  <div className="p-5">
+                    <h4 className="font-bold font-heading text-foreground text-base mb-2 line-clamp-1">{mag.title}</h4>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {mag.created_at ? new Date(mag.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}
+                    </div>
+                    <Button className="w-full bg-brand-green text-primary-foreground hover:bg-brand-green/90 font-semibold text-sm rounded-xl" asChild>
+                      <Link to="/#newsletter-section" onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById('newsletter-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}>
+                        Read Magazine
+                      </Link>
+                    </Button>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </div>

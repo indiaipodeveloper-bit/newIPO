@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import RichEditor from "@/components/ui/RichEditor";
 
 interface Blog {
   id: string;
@@ -172,13 +173,13 @@ const ManageBlogs = () => {
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Image URL / Upload</label>
                   <div className="flex gap-2">
-                      <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." className="flex-1" />
-                      <div className="relative">
-                          <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" title="Upload Image" />
-                          <Button type="button" variant="outline" className="shrink-0 flex items-center gap-2 pointer-events-none">
-                            <ImageIcon className="w-4 h-4" /> Upload
-                          </Button>
-                      </div>
+                    <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." className="flex-1" />
+                    <div className="relative">
+                      <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" title="Upload Image" />
+                      <Button type="button" variant="outline" className="shrink-0 flex items-center gap-2 pointer-events-none">
+                        <ImageIcon className="w-4 h-4" /> Upload
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -187,7 +188,7 @@ const ManageBlogs = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Content *</label>
-                  <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={10} placeholder="Full blog content here..." />
+                  <RichEditor value={form.content} onChange={(val) => setForm({ ...form, content: val })} placeholder="Full blog content here..." />
                 </div>
                 <Button onClick={handleSave} disabled={saving} className="w-full bg-accent text-accent-foreground hover:bg-gold-light font-semibold">
                   {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : editingId ? "Update Post" : "Create Post"}
